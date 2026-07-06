@@ -7,14 +7,13 @@ import {
   boolean,
   integer,
   jsonb,
-  decimal,
   date,
   uniqueIndex,
   index,
-  primaryKey,
   customType,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 
 // ─── Custom Types ────────────────────────────────────────────
 
@@ -47,25 +46,27 @@ export const organizations = pgTable('organizations', {
 }));
 
 // ─── Users ───────────────────────────────────────────────────
+// Note: id is text because Better Auth generates string IDs (not UUIDs)
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey(),
   email: citext('email').notNull().unique(),
+  name: varchar('name', { length: 200 }),
   passwordHash: varchar('password_hash', { length: 255 }),
-  firstName: varchar('first_name', { length: 100 }).notNull(),
-  lastName: varchar('last_name', { length: 100 }).notNull(),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
   displayName: varchar('display_name', { length: 200 }),
   avatarUrl: text('avatar_url'),
   phone: varchar('phone', { length: 50 }),
 
-  organizationId: uuid('organization_id').notNull().references(() => organizations.id),
+  organizationId: uuid('organization_id').references(() => organizations.id),
 
   designation: varchar('designation', { length: 200 }),
   employeeId: varchar('employee_id', { length: 50 }),
   employmentStatus: varchar('employment_status', { length: 50 }).default('active'),
-  departmentId: uuid('department_id').references(() => departments.id),
-  teamId: uuid('team_id').references(() => teams.id),
-  reportingManagerId: uuid('reporting_manager_id').references(() => users.id),
+  departmentId: uuid('department_id').references((): AnyPgColumn => departments.id),
+  teamId: uuid('team_id').references((): AnyPgColumn => teams.id),
+  reportingManagerId: text('reporting_manager_id').references((): AnyPgColumn => users.id),
   location: varchar('location', { length: 255 }),
   timezone: varchar('timezone', { length: 50 }).default('UTC'),
   dateJoined: date('date_joined'),
@@ -105,8 +106,10 @@ export const departments = pgTable('departments', {
   name: varchar('name', { length: 200 }).notNull(),
   code: varchar('code', { length: 50 }),
   description: text('description'),
-  headUserId: uuid('head_user_id').references(() => users.id),
-  parentId: uuid('parent_id').references(() => departments.id),
+  createdBy: text('created_by').references(() => users.id),
+  updatedBy: text('updated_by').references(() => users.id),
+  headUserId: text('head_user_id').references(() => users.id),
+  parentId: uuid('parent_id').references((): AnyPgColumn => departments.id),
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),
   metadata: jsonb('metadata').default({}),
@@ -128,7 +131,9 @@ export const teams = pgTable('teams', {
   name: varchar('name', { length: 200 }).notNull(),
   code: varchar('code', { length: 50 }),
   description: text('description'),
-  leadUserId: uuid('lead_user_id').references(() => users.id),
+  createdBy: text('created_by').references(() => users.id),
+  updatedBy: text('updated_by').references(() => users.id),
+  leadUserId: text('lead_user_id').references(() => users.id),
   isActive: boolean('is_active').default(true),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -144,7 +149,7 @@ export const teams = pgTable('teams', {
 export const teamMembers = pgTable('team_members', {
   id: uuid('id').primaryKey().defaultRandom(),
   teamId: uuid('team_id').notNull().references(() => teams.id),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  userId: text('user_id').notNull().references(() => users.id),
   role: varchar('role', { length: 50 }).default('member'),
   joinedAt: timestamp('joined_at').defaultNow(),
 }, (table) => ({
@@ -199,40 +204,20 @@ export const rolePermissions = pgTable('role_permissions', {
 
 export const userRoles = pgTable('user_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   roleId: uuid('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
-  assignedBy: uuid('assigned_by').references(() => users.id),
+  assignedBy: text('assigned_by').references(() => users.id),
   assignedAt: timestamp('assigned_at').defaultNow(),
   expiresAt: timestamp('expires_at'),
 }, (table) => ({
   userRoleUnique: uniqueIndex('idx_user_roles_unique').on(table.userId, table.roleId),
 }));
 
-// ─── User Sessions ───────────────────────────────────────────
-
-export const userSessions = pgTable('user_sessions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  sessionToken: varchar('session_token', { length: 500 }).notNull().unique(),
-  refreshToken: varchar('refresh_token', { length: 500 }),
-  ipAddress: inet('ip_address'),
-  userAgent: text('user_agent'),
-  deviceInfo: jsonb('device_info'),
-  location: jsonb('location'),
-  isActive: boolean('is_active').default(true),
-  lastActivityAt: timestamp('last_activity_at').defaultNow(),
-  expiresAt: timestamp('expires_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  userIdx: index('idx_sessions_user').on(table.userId),
-  tokenIdx: uniqueIndex('idx_sessions_token').on(table.sessionToken),
-}));
-
 // ─── Login History ───────────────────────────────────────────
 
 export const loginHistory = pgTable('login_history', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  userId: text('user_id').notNull().references(() => users.id),
   ipAddress: inet('ip_address').notNull(),
   userAgent: text('user_agent'),
   loginMethod: varchar('login_method', { length: 50 }),
@@ -243,6 +228,17 @@ export const loginHistory = pgTable('login_history', {
 }, (table) => ({
   userIdx: index('idx_login_history_user').on(table.userId, table.createdAt),
 }));
+
+// ─── Domain schema files ─────────────────────────────────────
+
+export * from './projects';
+export * from './tasks';
+export * from './auth';
+export * from './audit';
+
+// ─── Import domain tables for relations ──────────────────────
+
+import { sessions } from './auth';
 
 // ─── Relations ───────────────────────────────────────────────
 
@@ -270,7 +266,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.reportingManagerId],
     references: [users.id],
   }),
-  sessions: many(userSessions),
+  sessions: many(sessions),
   loginHistory: many(loginHistory),
   roles: many(userRoles),
 }));

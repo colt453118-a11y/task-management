@@ -1,0 +1,185 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db, schema, apiError } from '@/lib/api/db';
+import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
+import { createAuditEntry } from '@/lib/audit';
+import { eq, desc, and, isNull, sql } from 'drizzle-orm';
+
+export const runtime = 'nodejs';
+
+function getIdFromPath(request: NextRequest): string {
+  return request.nextUrl.pathname.split('/').pop()!;
+}
+
+// GET /api/departments/[id] - Get department with sub-teams, members, and task stats
+export const GET = withAuth(async (request: NextRequest, { orgId }) => {
+  try {
+    const id = getIdFromPath(request);
+
+    const [dept] = await db()
+      .select({
+        id: schema.departments.id,
+        organizationId: schema.departments.organizationId,
+        name: schema.departments.name,
+        code: schema.departments.code,
+        description: schema.departments.description,
+        headUserId: schema.departments.headUserId,
+        isActive: schema.departments.isActive,
+        parentId: schema.departments.parentId,
+        sortOrder: schema.departments.sortOrder,
+        createdAt: schema.departments.createdAt,
+        updatedAt: schema.departments.updatedAt,
+        headUser: {
+          id: schema.users.id,
+          name: schema.users.name,
+          email: schema.users.email,
+          designation: schema.users.designation,
+        },
+      })
+      .from(schema.departments)
+      .leftJoin(schema.users, eq(schema.departments.headUserId, schema.users.id))
+      .where(and(eq(schema.departments.id, id), isNull(schema.departments.deletedAt)))
+      .limit(1);
+
+    if (!dept) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Department not found' } },
+        { status: 404 },
+      );
+    }
+
+    enforceOrgScope(dept.organizationId, orgId);
+
+    // Get sub-teams
+    const teams = await db()
+      .select({
+        id: schema.teams.id,
+        name: schema.teams.name,
+        code: schema.teams.code,
+        description: schema.teams.description,
+        leadUserId: schema.teams.leadUserId,
+        isActive: schema.teams.isActive,
+        memberCount: sql<number>`(
+          SELECT COUNT(*) FROM ${schema.teamMembers}
+          WHERE ${schema.teamMembers.teamId} = ${schema.teams.id}
+        )`,
+      })
+      .from(schema.teams)
+      .where(
+        and(
+          eq(schema.teams.departmentId, id),
+          isNull(schema.teams.deletedAt),
+        ),
+      )
+      .orderBy(desc(schema.teams.createdAt));
+
+    // Get department members (users with this departmentId)
+    const members = await db()
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        designation: schema.users.designation,
+        isActive: schema.users.isActive,
+        teamId: schema.users.teamId,
+      })
+      .from(schema.users)
+      .where(
+        and(
+          eq(schema.users.departmentId, id),
+          isNull(schema.users.deletedAt),
+          eq(schema.users.isArchived, false),
+        ),
+      );
+
+    // Get task stats for tasks belonging to teams in this department
+    const taskStats = await db()
+      .select({
+        status: schema.tasks.status,
+        count: sql<number>`COUNT(*)`.as('count'),
+      })
+      .from(schema.tasks)
+      .innerJoin(schema.teams, eq(schema.tasks.teamId, schema.teams.id))
+      .where(
+        and(
+          eq(schema.teams.departmentId, id),
+          isNull(schema.tasks.deletedAt),
+        ),
+      )
+      .groupBy(schema.tasks.status);
+
+    const totalTasks = taskStats.reduce((sum, t) => sum + t.count, 0);
+    const completedTasks = taskStats.find((t) => t.status === 'completed')?.count ?? 0;
+
+    return NextResponse.json({
+      department: dept,
+      teams,
+      members,
+      taskStats: {
+        total: totalTasks,
+        completed: completedTasks,
+        byStatus: taskStats,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to fetch department:', error);
+    const { error: err, status } = apiError('Failed to fetch department');
+    return NextResponse.json(err, { status });
+  }
+});
+
+// PATCH /api/departments/[id] - Update department
+export const PATCH = withAuth(async (request: NextRequest, { user, orgId }) => {
+  try {
+    const id = getIdFromPath(request);
+    await requirePermission(user.id, 'team:edit');
+
+    const body = await request.json();
+    const { name, description, headUserId, isActive } = body;
+
+    const [existing] = await db()
+      .select()
+      .from(schema.departments)
+      .where(and(eq(schema.departments.id, id), isNull(schema.departments.deletedAt)))
+      .limit(1);
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Department not found' } },
+        { status: 404 },
+      );
+    }
+
+    enforceOrgScope(existing.organizationId, orgId);
+
+    const oldValues: Record<string, unknown> = {};
+    const newValues: Record<string, unknown> = {};
+
+    if (name !== undefined) { oldValues.name = existing.name; newValues.name = name; }
+    if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
+    if (headUserId !== undefined) { oldValues.headUserId = existing.headUserId; newValues.headUserId = headUserId; }
+    if (isActive !== undefined) { oldValues.isActive = existing.isActive; newValues.isActive = isActive; }
+
+    if (Object.keys(newValues).length > 0) {
+      await db()
+        .update(schema.departments)
+        .set({ ...newValues, updatedBy: user.id, updatedAt: new Date() })
+        .where(eq(schema.departments.id, id));
+    }
+
+    await createAuditEntry({
+      organizationId: orgId,
+      userId: user.id,
+      action: 'department.updated',
+      entityType: 'department',
+      entityId: id,
+      oldValues,
+      newValues,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to update department:', error);
+    const { error: err, status } = apiError('Failed to update department');
+    return NextResponse.json(err, { status });
+  }
+});
