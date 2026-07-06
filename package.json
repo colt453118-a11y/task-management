@@ -1,0 +1,33 @@
+{
+  "name": "workmanagement",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Enterprise work & task management platform",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "clean": "turbo clean",
+    "db:generate": "pnpm --filter @workmanagement/database db:generate",
+    "db:migrate": "pnpm --filter @workmanagement/database db:migrate",
+    "db:push": "pnpm --filter @workmanagement/database db:push",
+    "db:seed": "pnpm --filter @workmanagement/database db:seed",
+    "db:studio": "pnpm --filter @workmanagement/database db:studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.0",
+    "prettier-plugin-tailwindcss": "^0.6.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
