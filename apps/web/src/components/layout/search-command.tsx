@@ -56,7 +56,9 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const [loading, setLoading] = useState(false);
   const [searchUnavailable, setSearchUnavailable] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [error, setError] = useState<string | null>(null);    // Focus input and reset state when dialog opens
+  const [error, setError] = useState<string | null>(null);
+
+  // Focus input and reset state when dialog opens
   useEffect(() => {
     if (open) {
       setQuery('');
