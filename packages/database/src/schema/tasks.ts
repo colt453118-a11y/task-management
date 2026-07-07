@@ -32,6 +32,7 @@ export const tasks = pgTable('tasks', {
   updatedBy: text('updated_by').references(() => users.id),
   assignedBy: text('assigned_by').references(() => users.id),
   assignedTo: text('assigned_to').references(() => users.id),
+  mentionedUserIds: text('mentioned_user_ids').array(),
   reviewers: text('reviewers').array(),
   status: varchar('status', { length: 50 }).notNull().default('draft'),
   priority: varchar('priority', { length: 20 }).default('medium'),

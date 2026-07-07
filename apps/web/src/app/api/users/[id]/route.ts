@@ -10,116 +10,122 @@ function getIdFromPath(request: NextRequest): string {
   return request.nextUrl.pathname.split('/').pop()!;
 }
 
-// GET /api/users/[id] - Get single user
-export const GET = withAuth(async (request: NextRequest, { user, orgId }) => {
-  try {
-    await requirePermission(user.id, 'user:view');
-    const id = getIdFromPath(request);
+// GET /api/users/[id] - Get single user (rate limited: 100 req/min per user)
+export const GET = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      await requirePermission(user.id, 'user:view');
+      const id = getIdFromPath(request);
 
-    const [found] = await db()
-      .select({
-        id: schema.users.id,
-        email: schema.users.email,
-        firstName: schema.users.firstName,
-        lastName: schema.users.lastName,
-        name: schema.users.name,
-        displayName: schema.users.displayName,
-        avatarUrl: schema.users.avatarUrl,
-        phone: schema.users.phone,
-        designation: schema.users.designation,
-        employeeId: schema.users.employeeId,
-        employmentStatus: schema.users.employmentStatus,
-        departmentId: schema.users.departmentId,
-        teamId: schema.users.teamId,
-        location: schema.users.location,
-        timezone: schema.users.timezone,
-        organizationId: schema.users.organizationId,
-        isActive: schema.users.isActive,
-        createdAt: schema.users.createdAt,
-      })
-      .from(schema.users)
-      .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
-      .limit(1);
+      const [found] = await db()
+        .select({
+          id: schema.users.id,
+          email: schema.users.email,
+          firstName: schema.users.firstName,
+          lastName: schema.users.lastName,
+          name: schema.users.name,
+          displayName: schema.users.displayName,
+          avatarUrl: schema.users.avatarUrl,
+          phone: schema.users.phone,
+          designation: schema.users.designation,
+          employeeId: schema.users.employeeId,
+          employmentStatus: schema.users.employmentStatus,
+          departmentId: schema.users.departmentId,
+          teamId: schema.users.teamId,
+          location: schema.users.location,
+          timezone: schema.users.timezone,
+          organizationId: schema.users.organizationId,
+          isActive: schema.users.isActive,
+          createdAt: schema.users.createdAt,
+        })
+        .from(schema.users)
+        .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
+        .limit(1);
 
-    if (!found) {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'User not found' } },
-        { status: 404 },
-      );
+      if (!found) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'User not found' } },
+          { status: 404 },
+        );
+      }
+
+      enforceOrgScope(found.organizationId, orgId);
+
+      return NextResponse.json({ user: found });
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      const { error: err, status } = apiError('Failed to fetch user');
+      return NextResponse.json(err, { status });
     }
+  },
+  { windowMs: 60_000, max: 100, namespace: 'users:get' },
+);
 
-    enforceOrgScope(found.organizationId, orgId);
+// PATCH /api/users/[id] - Update user (rate limited: 60 req/min per user)
+export const PATCH = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      await requirePermission(user.id, 'user:edit');
+      const id = getIdFromPath(request);
+      const body = await request.json();
+      const { firstName, lastName, displayName, phone, designation, departmentId, teamId, location, timezone } = body;
 
-    return NextResponse.json({ user: found });
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    const { error: err, status } = apiError('Failed to fetch user');
-    return NextResponse.json(err, { status });
-  }
-});
+      // Fetch existing for org scope check
+      const [existing] = await db()
+        .select()
+        .from(schema.users)
+        .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
+        .limit(1);
 
-// PATCH /api/users/[id] - Update user
-export const PATCH = withAuth(async (request: NextRequest, { user, orgId }) => {
-  try {
-    await requirePermission(user.id, 'user:edit');
-    const id = getIdFromPath(request);
-    const body = await request.json();
-    const { firstName, lastName, displayName, phone, designation, departmentId, teamId, location, timezone } = body;
+      if (!existing) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'User not found' } },
+          { status: 404 },
+        );
+      }
 
-    // Fetch existing for org scope check
-    const [existing] = await db()
-      .select()
-      .from(schema.users)
-      .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
-      .limit(1);
+      enforceOrgScope(existing.organizationId, orgId);
 
-    if (!existing) {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'User not found' } },
-        { status: 404 },
-      );
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (displayName !== undefined) updateData.displayName = displayName;
+      if (phone !== undefined) updateData.phone = phone;
+      if (designation !== undefined) updateData.designation = designation;
+      if (departmentId !== undefined) updateData.departmentId = departmentId;
+      if (teamId !== undefined) updateData.teamId = teamId;
+      if (location !== undefined) updateData.location = location;
+      if (timezone !== undefined) updateData.timezone = timezone;
+
+      const [updated] = await db()
+        .update(schema.users)
+        .set(updateData)
+        .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
+        .returning();
+
+      if (!updated) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'User not found' } },
+          { status: 404 },
+        );
+      }
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'user.updated',
+        entityType: 'user',
+        entityId: id,
+        oldValues: { firstName: existing.firstName, lastName: existing.lastName },
+        newValues: updateData,
+      });
+
+      return NextResponse.json({ user: updated });
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      const { error: err, status } = apiError('Failed to update user');
+      return NextResponse.json(err, { status });
     }
-
-    enforceOrgScope(existing.organizationId, orgId);
-
-    const updateData: Record<string, unknown> = { updatedAt: new Date() };
-    if (firstName !== undefined) updateData.firstName = firstName;
-    if (lastName !== undefined) updateData.lastName = lastName;
-    if (displayName !== undefined) updateData.displayName = displayName;
-    if (phone !== undefined) updateData.phone = phone;
-    if (designation !== undefined) updateData.designation = designation;
-    if (departmentId !== undefined) updateData.departmentId = departmentId;
-    if (teamId !== undefined) updateData.teamId = teamId;
-    if (location !== undefined) updateData.location = location;
-    if (timezone !== undefined) updateData.timezone = timezone;
-
-    const [updated] = await db()
-      .update(schema.users)
-      .set(updateData)
-      .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
-      .returning();
-
-    if (!updated) {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'User not found' } },
-        { status: 404 },
-      );
-    }
-
-    await createAuditEntry({
-      organizationId: orgId,
-      userId: user.id,
-      action: 'user.updated',
-      entityType: 'user',
-      entityId: id,
-      oldValues: { firstName: existing.firstName, lastName: existing.lastName },
-      newValues: updateData,
-    });
-
-    return NextResponse.json({ user: updated });
-  } catch (error) {
-    console.error('Failed to update user:', error);
-    const { error: err, status } = apiError('Failed to update user');
-    return NextResponse.json(err, { status });
-  }
-});
+  },
+  { windowMs: 60_000, max: 60, namespace: 'users:update' },
+);

@@ -166,6 +166,13 @@ export const DepartmentUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 }).strict('Unexpected fields in department update');
 
+// Time Entry schemas
+export const TimeEntryCreateSchema = z.object({
+  entryType: z.enum(['timer', 'manual']).optional().default('manual'),
+  durationMinutes: z.number().int().positive('Duration must be positive').optional().nullable(),
+  description: z.string().max(1000, 'Description too long').optional().nullable(),
+}).strict('Unexpected fields in time entry');
+
 // Role schemas
 export const RoleCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100).transform((s) => s.trim()),

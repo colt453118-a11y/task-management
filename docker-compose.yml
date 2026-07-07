@@ -1,11 +1,12 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.10-alpine
     container_name: wm-postgres
     environment:
       POSTGRES_DB: workmanagement
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: devpassword
+    # Port exposed for local dev tools (psql, Drizzle Studio, etc.)
     ports:
       - "5432:5432"
     volumes:
@@ -15,12 +16,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.9-alpine
     container_name: wm-redis
-    ports:
-      - "6379:6379"
+    # No host port — only accessible via Docker internal network
+    # All app services connect using service name 'redis:6379'
+    ports: []
     volumes:
       - redisdata:/data
     healthcheck:
@@ -28,16 +38,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    mem_limit: 256m
+    cpus: "0.5"
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2025-10-15T17-29-55Z
     container_name: wm-minio
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    # No host port — accessible via Docker internal network as 'minio:9000'
+    ports: []
     command: server /data --console-address ":9001"
     volumes:
       - miniodata:/data
@@ -46,14 +62,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
   meilisearch:
     image: getmeili/meilisearch:v1.12
     container_name: wm-meilisearch
     environment:
       MEILI_MASTER_KEY: dev-master-key
-    ports:
-      - "7700:7700"
+    # No host port — only accessible via Docker internal network
+    ports: []
     volumes:
       - meilidata:/meili_data
     healthcheck:
@@ -61,13 +84,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:v1.30.3
     container_name: wm-mailpit
+    # Expose SMTP for local email testing, web UI for debugging
     ports:
       - "1025:1025"
       - "8025:8025"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    mem_limit: 128m
+    cpus: "0.25"
 
 volumes:
   pgdata:

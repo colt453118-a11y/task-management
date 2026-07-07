@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: wm-web
+    # Only the web service needs host port exposure
     ports:
       - "3000:3000"
     environment:
@@ -36,16 +37,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+    mem_limit: 1g
+    cpus: "2.0"
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.10-alpine
     container_name: wm-postgres
     environment:
       POSTGRES_DB: "${DB_NAME:-workmanagement}"
       POSTGRES_USER: "${DB_USER:-wmuser}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
-    ports:
-      - "5432:5432"
+    # No host port — database is only accessible via Docker internal network
+    ports: []
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -54,12 +62,19 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    mem_limit: 1g
+    cpus: "1.0"
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.9-alpine
     container_name: wm-redis
-    ports:
-      - "6379:6379"
+    # No host port — only accessible via Docker internal network
+    ports: []
     volumes:
       - redisdata:/data
     healthcheck:
@@ -68,16 +83,22 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    mem_limit: 256m
+    cpus: "0.5"
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2025-10-15T17-29-55Z
     container_name: wm-minio
     environment:
       MINIO_ROOT_USER: "${MINIO_ACCESS_KEY:-minioadmin}"
       MINIO_ROOT_PASSWORD: "${MINIO_SECRET_KEY}"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    # No host port — only accessible via Docker internal network
+    ports: []
     command: server /data --console-address ":9001"
     volumes:
       - miniodata:/data
@@ -87,14 +108,21 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
   meilisearch:
     image: getmeili/meilisearch:v1.12
     container_name: wm-meilisearch
     environment:
       MEILI_MASTER_KEY: "${MEILI_MASTER_KEY}"
-    ports:
-      - "7700:7700"
+    # No host port — only accessible via Docker internal network
+    ports: []
     volumes:
       - meilidata:/meili_data
     healthcheck:
@@ -103,9 +131,16 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
   migrate:
-    image: node:20-alpine
+    image: node:20.18.3-alpine
     container_name: wm-migrate
     profiles:
       - migrate
@@ -123,6 +158,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    mem_limit: 512m
+    cpus: "1.0"
 
 volumes:
   pgdata:

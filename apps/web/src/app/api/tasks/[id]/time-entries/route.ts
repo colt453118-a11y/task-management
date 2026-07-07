@@ -1,0 +1,420 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db, schema, apiError } from '@/lib/api/db';
+import { withAuth, requirePermission } from '@/lib/auth/api-auth';
+import { createAuditEntry } from '@/lib/audit';
+import { eq, desc, and, isNull, isNotNull } from 'drizzle-orm';
+import { TimeEntryCreateSchema, validationError } from '@/lib/api/validation';
+
+export const runtime = 'nodejs';
+
+function getIdsFromPath(request: NextRequest): { taskId: string } {
+  const segments = request.nextUrl.pathname.split('/');
+  const idIndex = segments.indexOf('tasks');
+  return { taskId: segments[idIndex + 1]! };
+}
+
+// GET /api/tasks/[id]/time-entries — List time entries for a task
+export const GET = withAuth(
+  async (request: NextRequest, { orgId }) => {
+    try {
+      const { taskId } = getIdsFromPath(request);
+
+      const entries = await db()
+        .select({
+          id: schema.timeEntries.id,
+          taskId: schema.timeEntries.taskId,
+          userId: schema.timeEntries.userId,
+          startTime: schema.timeEntries.startTime,
+          endTime: schema.timeEntries.endTime,
+          durationMinutes: schema.timeEntries.durationMinutes,
+          entryType: schema.timeEntries.entryType,
+          description: schema.timeEntries.description,
+          createdAt: schema.timeEntries.createdAt,
+          user: {
+            id: schema.users.id,
+            name: schema.users.name,
+            avatarUrl: schema.users.avatarUrl,
+          },
+        })
+        .from(schema.timeEntries)
+        .innerJoin(schema.tasks, eq(schema.timeEntries.taskId, schema.tasks.id))
+        .leftJoin(schema.users, eq(schema.timeEntries.userId, schema.users.id))
+        .where(
+          and(
+            eq(schema.timeEntries.taskId, taskId),
+            eq(schema.tasks.organizationId, orgId!),
+          ),
+        )
+        .orderBy(desc(schema.timeEntries.startTime));
+
+      return NextResponse.json({ entries });
+    } catch (error) {
+      console.error('Failed to fetch time entries:', error);
+      const { error: err, status } = apiError('Failed to fetch time entries');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 100, namespace: 'time-entries:list' },
+);
+
+// POST /api/tasks/[id]/time-entries — Start a timer or log manual time
+export const POST = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      const { taskId } = getIdsFromPath(request);
+      await requirePermission(user.id, 'task:edit');
+
+      const body = await request.json();
+      const parsed = TimeEntryCreateSchema.safeParse(body);
+      if (!parsed.success) {
+        const { error: err, status } = validationError(parsed.error);
+        return NextResponse.json(err, { status });
+      }
+
+      const { entryType, durationMinutes, description } = parsed.data;
+
+      // Verify task exists, belongs to org, and is not read-only
+      const [task] = await db()
+        .select({
+          id: schema.tasks.id,
+          organizationId: schema.tasks.organizationId,
+          status: schema.tasks.status,
+        })
+        .from(schema.tasks)
+        .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
+        .limit(1);
+
+      if (!task) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
+          { status: 404 },
+        );
+      }
+
+      if (task.organizationId !== orgId) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
+          { status: 403 },
+        );
+      }
+
+      // Block time entries on archived/closed tasks
+      if (task.status === 'archived' || task.status === 'closed') {
+        return NextResponse.json(
+          { error: { code: 'INVALID_STATE', message: 'Cannot log time on archived or closed tasks' } },
+          { status: 422 },
+        );
+      }
+
+      if (entryType === 'timer') {
+        // Check no other running timer exists for this user
+        const [existing] = await db()
+          .select({ id: schema.timeEntries.id })
+          .from(schema.timeEntries)
+          .where(
+            and(
+              eq(schema.timeEntries.userId, user.id),
+              isNull(schema.timeEntries.endTime),
+            ),
+          )
+          .limit(1);
+
+        if (existing) {
+          return NextResponse.json(
+            { error: { code: 'CONFLICT', message: 'You already have a running timer. Stop it first.' } },
+            { status: 409 },
+          );
+        }
+      }
+
+      const now = new Date();
+      const [entry] = await db()
+        .insert(schema.timeEntries)
+        .values({
+          taskId,
+          userId: user.id,
+          startTime: entryType === 'timer' ? now : (body.startTime ? new Date(body.startTime) : now),
+          endTime: entryType === 'timer' ? null : (body.startTime ? now : null),
+          durationMinutes: entryType === 'timer' ? null : (durationMinutes ?? null),
+          entryType,
+          description: description ?? null,
+        })
+        .returning();
+
+      if (!entry) {
+        return NextResponse.json(
+          { error: { code: 'INTERNAL_ERROR', message: 'Failed to create time entry' } },
+          { status: 500 },
+        );
+      }
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'time_entry.created',
+        entityType: 'task',
+        entityId: taskId,
+        newValues: { entryId: entry.id, entryType },
+      });
+
+      // Update task actual hours
+      await recalcTaskHours(taskId);
+
+      // Fetch with user info
+      const [entryWithUser] = await db()
+        .select({
+          id: schema.timeEntries.id,
+          taskId: schema.timeEntries.taskId,
+          userId: schema.timeEntries.userId,
+          startTime: schema.timeEntries.startTime,
+          endTime: schema.timeEntries.endTime,
+          durationMinutes: schema.timeEntries.durationMinutes,
+          entryType: schema.timeEntries.entryType,
+          description: schema.timeEntries.description,
+          createdAt: schema.timeEntries.createdAt,
+          user: {
+            id: schema.users.id,
+            name: schema.users.name,
+            avatarUrl: schema.users.avatarUrl,
+          },
+        })
+        .from(schema.timeEntries)
+        .leftJoin(schema.users, eq(schema.timeEntries.userId, schema.users.id))
+        .where(eq(schema.timeEntries.id, entry.id))
+        .limit(1);
+
+      return NextResponse.json({ entry: entryWithUser }, { status: 201 });
+    } catch (error) {
+      console.error('Failed to create time entry:', error);
+      const { error: err, status } = apiError('Failed to create time entry');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 30, namespace: 'time-entries:create' },
+);
+
+// PATCH /api/tasks/[id]/time-entries — Stop a running timer
+export const PATCH = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      const { taskId } = getIdsFromPath(request);
+      const entryId = request.nextUrl.searchParams.get('entryId');
+      const body = await request.json().catch(() => ({}));
+
+      if (!entryId) {
+        return NextResponse.json(
+          { error: { code: 'VALIDATION_ERROR', message: 'entryId is required' } },
+          { status: 400 },
+        );
+      }
+
+      // Find the entry and verify ownership + org scope
+      const [existing] = await db()
+        .select({
+          id: schema.timeEntries.id,
+          userId: schema.timeEntries.userId,
+          endTime: schema.timeEntries.endTime,
+          startTime: schema.timeEntries.startTime,
+        })
+        .from(schema.timeEntries)
+        .innerJoin(schema.tasks, eq(schema.timeEntries.taskId, schema.tasks.id))
+        .where(
+          and(
+            eq(schema.timeEntries.id, entryId),
+            eq(schema.timeEntries.taskId, taskId),
+            eq(schema.tasks.organizationId, orgId!),
+          ),
+        )
+        .limit(1);
+
+      if (!existing) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'Time entry not found' } },
+          { status: 404 },
+        );
+      }
+
+      // Only the owner can stop their timer
+      if (existing.userId !== user.id) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'You can only stop your own timer' } },
+          { status: 403 },
+        );
+      }
+
+      if (existing.endTime) {
+        return NextResponse.json(
+          { error: { code: 'INVALID_STATE', message: 'Timer is already stopped' } },
+          { status: 422 },
+        );
+      }
+
+      const now = new Date();
+      const elapsedMs = now.getTime() - new Date(existing.startTime).getTime();
+      const durationMinutes = Math.max(1, Math.round(elapsedMs / 60000));
+
+      // Allow passing a description when stopping
+      const description = body.description ?? null;
+
+      const [updated] = await db()
+        .update(schema.timeEntries)
+        .set({
+          endTime: now,
+          durationMinutes,
+          description,
+          updatedAt: now,
+        })
+        .where(eq(schema.timeEntries.id, entryId))
+        .returning();
+
+      if (!updated) {
+        return NextResponse.json(
+          { error: { code: 'INTERNAL_ERROR', message: 'Failed to stop timer' } },
+          { status: 500 },
+        );
+      }
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'time_entry.stopped',
+        entityType: 'task',
+        entityId: taskId,
+        newValues: { entryId: updated.id, durationMinutes },
+      });
+
+      // Update task actual hours
+      await recalcTaskHours(taskId);
+
+      // Fetch with user info
+      const [entryWithUser] = await db()
+        .select({
+          id: schema.timeEntries.id,
+          taskId: schema.timeEntries.taskId,
+          userId: schema.timeEntries.userId,
+          startTime: schema.timeEntries.startTime,
+          endTime: schema.timeEntries.endTime,
+          durationMinutes: schema.timeEntries.durationMinutes,
+          entryType: schema.timeEntries.entryType,
+          description: schema.timeEntries.description,
+          createdAt: schema.timeEntries.createdAt,
+          user: {
+            id: schema.users.id,
+            name: schema.users.name,
+            avatarUrl: schema.users.avatarUrl,
+          },
+        })
+        .from(schema.timeEntries)
+        .leftJoin(schema.users, eq(schema.timeEntries.userId, schema.users.id))
+        .where(eq(schema.timeEntries.id, updated.id))
+        .limit(1);
+
+      return NextResponse.json({ entry: entryWithUser });
+    } catch (error) {
+      console.error('Failed to stop timer:', error);
+      const { error: err, status } = apiError('Failed to stop timer');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 30, namespace: 'time-entries:stop' },
+);
+
+// DELETE /api/tasks/[id]/time-entries — Delete a time entry
+export const DELETE = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      const { taskId } = getIdsFromPath(request);
+      const entryId = request.nextUrl.searchParams.get('entryId');
+
+      if (!entryId) {
+        return NextResponse.json(
+          { error: { code: 'VALIDATION_ERROR', message: 'entryId is required' } },
+          { status: 400 },
+        );
+      }
+
+      const [existing] = await db()
+        .select({
+          id: schema.timeEntries.id,
+          userId: schema.timeEntries.userId,
+        })
+        .from(schema.timeEntries)
+        .innerJoin(schema.tasks, eq(schema.timeEntries.taskId, schema.tasks.id))
+        .where(
+          and(
+            eq(schema.timeEntries.id, entryId),
+            eq(schema.timeEntries.taskId, taskId),
+            eq(schema.tasks.organizationId, orgId!),
+          ),
+        )
+        .limit(1);
+
+      if (!existing) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'Time entry not found' } },
+          { status: 404 },
+        );
+      }
+
+      // Only owner can delete their entries
+      if (existing.userId !== user.id) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'You can only delete your own time entries' } },
+          { status: 403 },
+        );
+      }
+
+      await db()
+        .delete(schema.timeEntries)
+        .where(eq(schema.timeEntries.id, entryId));
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'time_entry.deleted',
+        entityType: 'task',
+        entityId: taskId,
+        oldValues: { entryId },
+      });
+
+      // Update task actual hours
+      await recalcTaskHours(taskId);
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Failed to delete time entry:', error);
+      const { error: err, status } = apiError('Failed to delete time entry');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 60, namespace: 'time-entries:delete' },
+);
+
+// ─── Helper: Recalculate task actual hours ────────────────────
+
+async function recalcTaskHours(taskId: string) {
+  try {
+    const allEntries = await db()
+      .select({ durationMinutes: schema.timeEntries.durationMinutes })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.taskId, taskId),
+          isNotNull(schema.timeEntries.durationMinutes),
+        ),
+      );
+
+    const totalMinutes = allEntries.reduce(
+      (sum, e) => sum + (e.durationMinutes ?? 0),
+      0,
+    );
+    const totalHours = (totalMinutes / 60).toFixed(2);
+
+    await db()
+      .update(schema.tasks)
+      .set({ actualHours: totalHours, updatedAt: new Date() })
+      .where(eq(schema.tasks.id, taskId));
+  } catch (error) {
+    console.error('Failed to recalculate task hours:', error);
+  }
+}

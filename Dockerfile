@@ -1,5 +1,5 @@
 # ─── Builder Stage ─────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20.18.3-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
@@ -22,24 +22,29 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @workmanagement/web build
 
 # ─── Runner Stage ─────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:20.18.3-alpine AS runner
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+# Create non-root user
+RUN addgroup --system app && adduser --system --ingroup app app
+
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
 
-# Copy built output
-COPY --from=builder /app/apps/web/.next ./.next
-COPY --from=builder /app/apps/web/public ./public
-COPY --from=builder /app/apps/web/package.json ./package.json
-COPY --from=builder /app/apps/web/next.config.ts ./next.config.ts
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
+# Copy standalone output (includes server.js + minimal node_modules)
+COPY --from=builder --chown=app:app /app/apps/web/.next/standalone ./
+# Copy static assets (not included in standalone output)
+COPY --from=builder --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
+# Copy public assets
+COPY --from=builder --chown=app:app /app/apps/web/public ./apps/web/public
+
+# Switch to non-root user
+USER app
 
 # Expose port
 EXPOSE 3000
 
-# Start
-CMD ["pnpm", "--filter", "@workmanagement/web", "start"]
+# Start standalone server
+CMD ["node", "apps/web/server.js"]

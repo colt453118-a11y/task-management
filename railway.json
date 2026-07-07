@@ -1,0 +1,40 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 2,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5,
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 30
+  },
+  "services": [
+    {
+      "id": "web",
+      "name": "Web App",
+      "source": {
+        "image": "{{.ServiceImage}}"
+      },
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "3000"
+      }
+    },
+    {
+      "id": "migrate",
+      "name": "Database Migrations",
+      "source": {
+        "image": "node:20.18.3-alpine"
+      },
+      "variables": {
+        "DATABASE_URL": "{{.Postgres.DATABASE_URL}}"
+      },
+      "command": "npx pnpm db:migrate",
+      "trigger": "DEPLOY"
+    }
+  ]
+}

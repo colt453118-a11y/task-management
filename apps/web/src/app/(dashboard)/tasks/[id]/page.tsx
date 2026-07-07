@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor, RichTextViewer } from '@/components/tasks/rich-text-editor';
 import {
   Loader2,
   ArrowLeft,
@@ -25,6 +26,14 @@ import {
   AlertCircle,
   FileText,
   Upload,
+  Link2,
+  Plus,
+  X,
+  Edit3,
+  Check,
+  Play,
+  StopCircle,
+  Timer,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -75,6 +84,29 @@ type Attachment = {
   mimeType: string | null;
   createdAt: string;
   user: { id: string; name: string | null } | null;
+};
+
+type TimeEntry = {
+  id: string;
+  taskId: string;
+  userId: string;
+  startTime: string;
+  endTime: string | null;
+  durationMinutes: number | null;
+  entryType: string;
+  description: string | null;
+  createdAt: string;
+  user: { id: string; name: string | null; avatarUrl: string | null } | null;
+};
+
+type Dependency = {
+  id: string;
+  taskId: string;
+  dependsOnTaskId: string;
+  dependencyType: string;
+  createdAt: string;
+  dependsOnTask?: { id: string; title: string; taskIdDisplay: string; status: string };
+  blockingTask?: { id: string; title: string; taskIdDisplay: string; status: string };
 };
 
 // ─── Constants ──────────────────────────────────────────────
@@ -139,6 +171,46 @@ export default function TaskDetailPage() {
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
+  // Dependencies
+  const [blockedBy, setBlockedBy] = useState<Dependency[]>([]);
+  const [blocking, setBlocking] = useState<Dependency[]>([]);
+  const [depTaskId, setDepTaskId] = useState('');
+  const [addingDep, setAddingDep] = useState(false);
+  const [depError, setDepError] = useState<string | null>(null);
+
+  // Description editing
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState('');
+  const [savingDescription, setSavingDescription] = useState(false);
+
+  // Time tracking
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualMinutes, setManualMinutes] = useState('');
+  const [manualDescription, setManualDescription] = useState('');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [elapsed, setElapsed] = useState('00:00:00');
+
+  const runningTimer = timeEntries.find((e) => !e.endTime) ?? null;
+
+  const secondsSince = (startTime: string): number => {
+    return Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
+  };
+
+  const formatElapsed = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const formatDuration = (minutes: number): string => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  };
+
   // Status / Priority editing
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -184,10 +256,35 @@ export default function TaskDetailPage() {
     }
   }, [taskId]);
 
+  const fetchDependencies = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/dependencies`);
+      if (res.ok) {
+        const data = await res.json();
+        setBlockedBy(data.blockedBy ?? []);
+        setBlocking(data.blocking ?? []);
+      }
+    } catch {
+      // Dependencies are non-critical
+    }
+  }, [taskId]);
+
+  const fetchTimeEntries = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries`);
+      if (res.ok) {
+        const data = await res.json();
+        setTimeEntries(data.entries ?? []);
+      }
+    } catch {
+      // Time entries are non-critical
+    }
+  }, [taskId]);
+
   useEffect(() => {
-    Promise.all([fetchTask(), fetchComments(), fetchAttachments()])
+    Promise.all([fetchTask(), fetchComments(), fetchAttachments(), fetchDependencies(), fetchTimeEntries()])
       .finally(() => setLoading(false));
-  }, [fetchTask, fetchComments, fetchAttachments]);
+  }, [fetchTask, fetchComments, fetchAttachments, fetchDependencies, fetchTimeEntries]);
 
   // ── Status / Priority update ────────────────────────────
 
@@ -241,21 +338,18 @@ export default function TaskDetailPage() {
 
     setUploadError(null);
 
-    // For now, store file metadata. Actual file storage would use presigned URLs.
-    const storageKey = `tasks/${taskId}/${Date.now()}-${file.name}`;
-
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
       const res = await fetch(`/api/tasks/${taskId}/attachments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          storageKey,
-        }),
+        body: formData,
       });
-      if (!res.ok) throw new Error('Failed to upload attachment');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to upload attachment');
+      }
       const data = await res.json();
       setAttachments((prev) => [data.attachment, ...prev]);
     } catch (err) {
@@ -276,6 +370,165 @@ export default function TaskDetailPage() {
       setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
     } catch (err) {
       console.error('Failed to delete attachment:', err);
+    }
+  };
+
+  // ── Timer interval ───────────────────────────────────
+
+  useEffect(() => {
+    if (!runningTimer) {
+      setElapsed('00:00:00');
+      return;
+    }
+    setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
+    const interval = setInterval(() => {
+      setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [runningTimer]);
+
+  // ── Start timer ───────────────────────────────────────
+
+  const startTimer = async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryType: 'timer' }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to start timer');
+      }
+      fetchTimeEntries();
+    } catch (err) {
+      console.error('Failed to start timer:', err);
+    }
+  };
+
+  // ── Stop timer ────────────────────────────────────────
+
+  const stopTimer = async (entryId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries?entryId=${entryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error('Failed to stop timer');
+      fetchTimeEntries();
+    } catch (err) {
+      console.error('Failed to stop timer:', err);
+    }
+  };
+
+  // ── Delete time entry ─────────────────────────────────
+
+  const deleteTimeEntry = async (entryId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries?entryId=${entryId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete time entry');
+      setTimeEntries((prev) => prev.filter((e) => e.id !== entryId));
+    } catch (err) {
+      console.error('Failed to delete time entry:', err);
+    }
+  };
+
+  // ── Submit manual entry ───────────────────────────────
+
+  const submitManualEntry = async () => {
+    const minutes = parseInt(manualMinutes, 10);
+    if (isNaN(minutes) || minutes < 1) return;
+    setManualSubmitting(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entryType: 'manual',
+          durationMinutes: minutes,
+          description: manualDescription.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to log time');
+      fetchTimeEntries();
+      setShowManualForm(false);
+      setManualMinutes('');
+      setManualDescription('');
+    } catch (err) {
+      console.error('Failed to log time:', err);
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
+
+  // ── Add dependency ────────────────────────────────────
+
+  const addDependency = async () => {
+    const targetId = depTaskId.trim();
+    if (!targetId) return;
+    setAddingDep(true);
+    setDepError(null);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/dependencies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dependsOnTaskId: targetId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to add dependency');
+      }
+      setDepTaskId('');
+      fetchDependencies();
+    } catch (err) {
+      setDepError(err instanceof Error ? err.message : 'Failed to add dependency');
+    } finally {
+      setAddingDep(false);
+    }
+  };
+
+  // ── Remove dependency ──────────────────────────────────
+
+  const removeDependency = async (dependencyId: string) => {
+    try {
+      const res = await fetch(
+        `/api/tasks/${taskId}/dependencies?dependencyId=${dependencyId}`,
+        { method: 'DELETE' },
+      );
+      if (!res.ok) throw new Error('Failed to remove dependency');
+      setBlockedBy((prev) => prev.filter((d) => d.id !== dependencyId));
+      setBlocking((prev) => prev.filter((d) => d.id !== dependencyId));
+    } catch (err) {
+      console.error('Failed to remove dependency:', err);
+    }
+  };
+
+  // ── Save description ──────────────────────────────────
+
+  const saveDescription = async () => {
+    if (!task) return;
+    setSavingDescription(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: descriptionDraft === '<p></p>' || !descriptionDraft.trim()
+            ? null
+            : descriptionDraft,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save description');
+      const data = await res.json();
+      setTask(data.task);
+      setEditingDescription(false);
+    } catch (err) {
+      console.error('Failed to save description:', err);
+    } finally {
+      setSavingDescription(false);
     }
   };
 
@@ -376,19 +629,62 @@ export default function TaskDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4 text-surface-400" />
                 Description
               </CardTitle>
+              {!editingDescription && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setDescriptionDraft(task!.description ?? '');
+                    setEditingDescription(true);
+                  }}
+                  className="text-surface-400 hover:text-surface-600"
+                >
+                  <Edit3 className="h-3.5 w-3.5 mr-1" />
+                  Edit
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
-              {task!.description ? (
-                <p className="text-sm text-surface-700 dark:text-surface-300 whitespace-pre-wrap">
-                  {task!.description}
-                </p>
+              {editingDescription ? (
+                <div className="space-y-3">
+                  <RichTextEditor
+                    content={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    placeholder="Describe the task in detail..."
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingDescription(false);
+                        setDescriptionDraft(task!.description ?? '');
+                      }}
+                      disabled={savingDescription}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={saveDescription}
+                      disabled={savingDescription}
+                    >
+                      {savingDescription ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                      ) : (
+                        <Check className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      Save
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <p className="text-sm text-surface-400 italic">No description provided.</p>
+                <RichTextViewer content={task!.description} />
               )}
             </CardContent>
           </Card>
@@ -650,6 +946,275 @@ export default function TaskDetailPage() {
                     )}
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dependencies */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-surface-400" />
+                Dependencies
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Blocked by */}
+              {blockedBy.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-surface-500 mb-2 flex items-center gap-1">
+                    <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+                    Blocked by
+                  </p>
+                  <div className="space-y-1.5">
+                    {blockedBy.map((dep) => (
+                      <div
+                        key={dep.id}
+                        className="group flex items-center justify-between rounded-md border border-surface-200 bg-amber-50/30 px-2.5 py-1.5 dark:border-surface-700 dark:bg-amber-900/10"
+                      >
+                        <a
+                          href={`/tasks/${dep.dependsOnTaskId}`}
+                          className="min-w-0 text-sm text-surface-900 hover:text-brand-600 truncate dark:text-surface-100"
+                        >
+                          <span className="font-mono text-xs text-surface-400">
+                            {dep.dependsOnTask?.taskIdDisplay ?? ''}
+                          </span>{' '}
+                          {dep.dependsOnTask?.title ?? dep.dependsOnTaskId.substring(0, 8)}
+                        </a>
+                        <button
+                          onClick={() => removeDependency(dep.id)}
+                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Blocking */}
+              {blocking.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-surface-500 mb-2 flex items-center gap-1">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
+                    Blocking
+                  </p>
+                  <div className="space-y-1.5">
+                    {blocking.map((dep) => (
+                      <div
+                        key={dep.id}
+                        className="group flex items-center justify-between rounded-md border border-surface-200 bg-red-50/30 px-2.5 py-1.5 dark:border-surface-700 dark:bg-red-900/10"
+                      >
+                        <a
+                          href={`/tasks/${dep.taskId}`}
+                          className="min-w-0 text-sm text-surface-900 hover:text-brand-600 truncate dark:text-surface-100"
+                        >
+                          <span className="font-mono text-xs text-surface-400">
+                            {dep.blockingTask?.taskIdDisplay ?? ''}
+                          </span>{' '}
+                          {dep.blockingTask?.title ?? dep.taskId.substring(0, 8)}
+                        </a>
+                        <button
+                          onClick={() => removeDependency(dep.id)}
+                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {blockedBy.length === 0 && blocking.length === 0 && (
+                <p className="text-sm text-surface-400 text-center py-2">No dependencies.</p>
+              )}
+
+              {/* Add dependency */}
+              <div className="pt-1 border-t border-surface-100 dark:border-surface-800">
+                {depError && (
+                  <p className="text-xs text-red-500 mb-2">{depError}</p>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Paste task UUID to link..."
+                    value={depTaskId}
+                    onChange={(e) => setDepTaskId(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !addingDep) {
+                        e.preventDefault();
+                        addDependency();
+                      }
+                    }}
+                    className="flex-1 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={addDependency}
+                    disabled={!depTaskId.trim() || addingDep}
+                    className="shrink-0"
+                  >
+                    {addingDep ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Time Tracking */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Timer className="h-4 w-4 text-surface-400" />
+                Time Tracking
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Current timer */}
+              {runningTimer ? (
+                <div className="rounded-lg border border-brand-200 bg-brand-50/50 p-4 text-center dark:border-brand-800 dark:bg-brand-900/20">
+                  <p className="text-2xl font-mono font-bold text-brand-700 dark:text-brand-300 tabular-nums">
+                    {elapsed}
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1">
+                    Started {new Date(runningTimer.startTime).toLocaleTimeString()}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                    onClick={() => stopTimer(runningTimer.id)}
+                  >
+                    <StopCircle className="h-4 w-4 mr-1" />
+                    Stop Timer
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-900/20"
+                  onClick={startTimer}
+                >
+                  <Play className="h-4 w-4 mr-1.5" />
+                  Start Timer
+                </Button>
+              )}
+
+              {/* Manual log toggle */}
+              {!showManualForm && !runningTimer && (
+                <button
+                  onClick={() => setShowManualForm(true)}
+                  className="w-full text-xs text-surface-500 hover:text-surface-700 py-1 transition-colors"
+                >
+                  + Log time manually
+                </button>
+              )}
+
+              {/* Manual log form */}
+              {showManualForm && (
+                <div className="space-y-2 pt-1 border-t border-surface-100 dark:border-surface-800">
+                  <p className="text-xs font-medium text-surface-500">Log time manually</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Minutes"
+                      value={manualMinutes}
+                      onChange={(e) => setManualMinutes(e.target.value)}
+                      className="w-24 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description (optional)"
+                      value={manualDescription}
+                      onChange={(e) => setManualDescription(e.target.value)}
+                      className="flex-1 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={submitManualEntry}
+                      disabled={!manualMinutes || manualSubmitting}
+                    >
+                      {manualSubmitting ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : (
+                        <Check className="h-3 w-3 mr-1" />
+                      )}
+                      Log
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setShowManualForm(false);
+                        setManualMinutes('');
+                        setManualDescription('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Recent entries */}
+              {timeEntries.length > 0 && (
+                <div className="pt-1 border-t border-surface-100 dark:border-surface-800">
+                  <p className="text-xs font-medium text-surface-500 mb-2">
+                    Recent entries
+                    <span className="font-normal ml-1">({timeEntries.length})</span>
+                  </p>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {timeEntries.slice(0, 10).map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="group flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm border border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            {entry.endTime ? (
+                              <span className="font-mono text-xs font-medium text-surface-900 dark:text-surface-100">
+                                {entry.durationMinutes ? formatDuration(entry.durationMinutes) : '—'}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+                                Running
+                              </span>
+                            )}
+                            <span className="text-xs text-surface-400">
+                              {new Date(entry.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                          {entry.description && (
+                            <p className="text-xs text-surface-500 truncate mt-0.5">{entry.description}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => deleteTimeEntry(entry.id)}
+                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {timeEntries.length === 0 && (
+                <p className="text-xs text-surface-400 text-center py-2">
+                  No time logged yet.
+                </p>
               )}
             </CardContent>
           </Card>

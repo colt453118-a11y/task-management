@@ -5,8 +5,9 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
-// GET /api/organization - Get the current user's organization
-export const GET = withAuth(async (_request: Request, { orgId }) => {
+// GET /api/organization - Get the current user's organization (rate limited: 100 req/min per user)
+export const GET = withAuth(
+  async (_request: Request, { orgId }) => {
   try {
     if (!orgId) {
       return NextResponse.json(
@@ -45,4 +46,6 @@ export const GET = withAuth(async (_request: Request, { orgId }) => {
     const { error: err, status } = apiError('Failed to fetch organization');
     return NextResponse.json(err, { status });
   }
-});
+},
+{ windowMs: 60_000, max: 100, namespace: 'organization:get' },
+);

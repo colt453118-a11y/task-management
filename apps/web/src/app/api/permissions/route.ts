@@ -5,8 +5,9 @@ import { asc } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
-// GET /api/permissions - List all available permissions
-export const GET = withAuth(async () => {
+// GET /api/permissions - List all available permissions (rate limited: 100 req/min per user)
+export const GET = withAuth(
+  async () => {
   try {
     const permissions = await db()
       .select()
@@ -19,4 +20,6 @@ export const GET = withAuth(async () => {
     const { error: err, status } = apiError('Failed to fetch permissions');
     return NextResponse.json(err, { status });
   }
-});
+},
+{ windowMs: 60_000, max: 100, namespace: 'permissions:list' },
+);

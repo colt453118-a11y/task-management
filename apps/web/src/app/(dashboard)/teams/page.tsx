@@ -1,121 +1,159 @@
 'use client';
 
-import { Plus, Users, Building2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/state-display';
+import { Users, Building2, Loader2, Plus, GitBranch } from 'lucide-react';
 
-const teams = [
-  {
-    name: 'Core Platform',
-    department: 'Engineering',
-    members: 8,
-    lead: 'You',
-    description: 'Core platform infrastructure and services',
-  },
-  {
-    name: 'Frontend',
-    department: 'Engineering',
-    members: 6,
-    lead: 'Sarah',
-    description: 'Web application and UI development',
-  },
-  {
-    name: 'Backend',
-    department: 'Engineering',
-    members: 5,
-    lead: 'Mike',
-    description: 'API and service development',
-  },
-  {
-    name: 'Design',
-    department: 'Design',
-    members: 4,
-    lead: 'Emma',
-    description: 'Product design and user experience',
-  },
-];
+type Team = {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  leadUserId: string | null;
+  departmentId: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
 
-const departments = [
-  { name: 'Engineering', count: 19, head: 'You' },
-  { name: 'Design', count: 4, head: 'Emma' },
-  { name: 'Product', count: 3, head: 'Alex' },
-];
+type Department = {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  headUserId: string | null;
+  isActive: boolean;
+};
 
 export default function TeamsPage() {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/teams');
+        if (!res.ok) throw new Error('Failed to fetch teams');
+        const data = await res.json();
+        setTeams(data.teams ?? []);
+        setDepartments(data.departments ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load teams');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Card><CardContent className="p-6 text-center text-sm text-red-500">{error}</CardContent></Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-surface-900 dark:text-surface-50">Teams</h1>
-          <p className="mt-1 text-sm text-surface-500">Manage departments, teams, and members</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Building2 className="mr-2 h-4 w-4" />
-            Department
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Team
-          </Button>
-        </div>
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-semibold text-surface-900 dark:text-surface-50">Teams</h1>
+        <p className="text-sm text-surface-500 mt-1">{teams.length} team{teams.length !== 1 ? 's' : ''} · {departments.length} department{departments.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Departments */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-surface-500 uppercase tracking-wider">Departments</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {departments.map((dept) => (
-            <div
-              key={dept.name}
-              className="rounded-lg border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-900 dark:text-brand-300">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-surface-900 dark:text-surface-50">{dept.name}</h3>
-                  <p className="text-xs text-surface-500">{dept.count} members</p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-surface-500">
-                Head: <span className="font-medium text-surface-700 dark:text-surface-300">{dept.head}</span>
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {departments.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="h-4 w-4 text-surface-400" />
+            <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300">Departments</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {departments.map((dept) => (
+              <Link key={dept.id} href={`/teams/departments/${dept.id}`}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer hover:border-brand-300">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">{dept.name}</CardTitle>
+                        {dept.code && <p className="text-xs text-surface-400 font-mono mt-0.5">{dept.code}</p>}
+                      </div>
+                      <Badge variant={dept.isActive ? 'success' : 'default'}>{dept.isActive ? 'Active' : 'Inactive'}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {dept.description && <p className="text-sm text-surface-500 mb-2">{dept.description}</p>}
+                    {dept.headUserId && (
+                      <p className="text-xs text-surface-400">Head: {dept.headUserId.substring(0, 8)}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Teams */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-surface-500 uppercase tracking-wider">Teams</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {teams.map((team) => (
-            <div
-              key={team.name}
-              className="rounded-lg border border-surface-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-surface-700 dark:bg-surface-900"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400">
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-surface-900 dark:text-surface-50">{team.name}</h3>
-                    <p className="text-xs text-surface-500">{team.department}</p>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-3 text-sm text-surface-600 dark:text-surface-400">{team.description}</p>
-              <div className="mt-3 flex items-center justify-between text-xs text-surface-500">
-                <span>{team.members} members</span>
-                <span>Lead: <span className="font-medium text-surface-700 dark:text-surface-300">{team.lead}</span></span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {teams.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-4 w-4 text-surface-400" />
+            <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300">Teams</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {teams.map((team) => (
+              <Link key={team.id} href={`/teams/${team.id}`}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer hover:border-brand-300">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">{team.name}</CardTitle>
+                        {team.code && <p className="text-xs text-surface-400 font-mono mt-0.5">{team.code}</p>}
+                      </div>
+                      <Badge variant={team.isActive ? 'success' : 'default'}>{team.isActive ? 'Active' : 'Inactive'}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {team.description && <p className="text-sm text-surface-500">{team.description}</p>}
+                    <div className="flex items-center gap-3 text-xs text-surface-400">
+                      {team.leadUserId && <span>Lead: {team.leadUserId.substring(0, 8)}</span>}
+                      {team.departmentId && <span>Dept: {team.departmentId.substring(0, 8)}</span>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {teams.length === 0 && departments.length === 0 && (
+        <EmptyState
+          icon={<GitBranch className="h-12 w-12 text-surface-300" />}
+          title="No teams or departments"
+          message="Create teams and departments to organize your workforce."
+          action={
+            <Button disabled title="Coming soon">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Team
+            </Button>
+          }
+        />
+      )}
     </div>
   );
 }

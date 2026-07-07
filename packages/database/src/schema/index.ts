@@ -235,6 +235,7 @@ export * from './projects';
 export * from './tasks';
 export * from './auth';
 export * from './audit';
+export * from './reports';
 
 // ─── Import domain tables for relations ──────────────────────
 

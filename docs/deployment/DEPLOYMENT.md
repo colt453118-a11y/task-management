@@ -1,408 +1,193 @@
-# Deployment Architecture — Enterprise Work Management Platform
+# Deployment — WorkManager
 
-## Deployment Philosophy
+## Quick Deploy (Railway)
 
-- **Container-first** — Docker for reproducible environments everywhere
-- **Environment parity** — Dev, staging, and production as similar as possible
-- **Immutable deployments** — No SSH into servers. Build → Tag → Deploy
-- **Automated CI/CD** — Every commit goes through quality gates before reaching production
+The fastest path to production is **Railway**, which supports Docker Compose deployments with managed Postgres and Redis.
+
+### 1. Prerequisites
+
+- [Railway account](https://railway.app)
+- A registered domain (optional — Railway provides a `.railway.app` subdomain)
+
+### 2. Setup
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Log in
+railway login
+
+# Link your project
+railway link
+```
+
+### 3. Environment Variables
+
+Set these in the Railway dashboard:
+
+| Variable | Source |
+|----------|--------|
+| `DATABASE_URL` | Railway managed Postgres |
+| `REDIS_URL` | Railway managed Redis |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `NEXT_PUBLIC_APP_URL` | `https://yourdomain.com` |
+| `AUTH_URL` | `https://yourdomain.com` |
+| `S3_ACCESS_KEY_ID` | Your S3-compatible provider |
+| `S3_SECRET_ACCESS_KEY` | Your S3-compatible provider |
+| `S3_BUCKET` | `workmanagement-files` |
+| `MEILISEARCH_API_KEY` | Your Meilisearch API key |
+
+### 4. Deploy
+
+```bash
+railway up
+```
+
+Or connect your GitHub repo for auto-deploy on push.
+
+### 5. Run Migrations
+
+```bash
+railway run pnpm db:migrate
+```
+
+### 6. Seed Database
+
+```bash
+railway run pnpm db:seed
+```
 
 ---
 
-## Local Development Environment
+## CI/CD Pipeline
 
-```yaml
-# docker-compose.yml
-version: '3.8'
+The project uses GitHub Actions for CI/CD:
 
-services:
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: workmanagement
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: devpassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+### CI (`.github/workflows/ci.yml`)
+Runs on every push/PR:
+- TypeScript type check
+- Lint
+- Build
+- Tests (170+ passing)
+- Docker security scan (Trivy)
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+### Deploy (`.github/workflows/deploy.yml`)
+Runs on push to `main`:
+1. Builds Docker image
+2. Pushes to GitHub Container Registry (ghcr.io)
+3. Deploys to Railway via CLI
 
-  minio:
-    image: minio/minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: server /data --console-address ":9001"
-    volumes:
-      - miniodata:/data
+**Required secrets:**
+- `RAILWAY_TOKEN` — Railway deployment token
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.12
-    environment:
-      MEILI_MASTER_KEY: dev-master-key
-    ports:
-      - "7700:7700"
+---
 
-  mailpit:                          # Email testing (catches all outgoing emails)
-    image: axllent/mailpit
-    ports:
-      - "1025:1025"
-      - "8025:8025"                 # Web UI
+## Manual Docker Deployment
 
-volumes:
-  pgdata:
-  miniodata:
-```
-
-### Development Workflow
 ```bash
-# Start infrastructure
-docker compose up -d
+# Build
+docker build -t workmanager:latest .
 
-# Install dependencies
-pnpm install
+# Run with docker-compose
+docker compose -f docker-compose.prod.yml up -d
 
 # Run migrations
-pnpm db:migrate
-
-# Seed development data
-pnpm db:seed
-
-# Start dev server
-pnpm dev              # → http://localhost:3000
-
-# Start queue workers (separate terminal)
-pnpm dev:workers      # → BullMQ workers
-
-# View queues
-pnpm dev:queues       # → http://localhost:3000/queues (Bull Board)
+docker compose -f docker-compose.prod.yml --profile migrate run migrate
 ```
 
 ---
 
-## CI/CD Pipeline (GitHub Actions)
+## Infrastructure Design
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-      
-      - run: pnpm install --frozen-lockfile
-      
-      # Quality Gates (parallel)
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm format:check
-      - run: pnpm audit --audit-level=high
-      
-      # Unit & Integration Tests
-      - run: pnpm test -- --coverage
-      
-      # Build
-      - run: pnpm build
-
-  e2e:
-    needs: quality
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_PASSWORD: testpass
-        ports:
-          - 5432:5432
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-    
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-      
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:migrate
-      - run: pnpm db:seed
-      - run: pnpm test:e2e
-      
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: apps/web/playwright-report/
-
-  deploy:
-    needs: e2e
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Build & Push Docker Image
-        run: |
-          docker build -t ${{ secrets.REGISTRY }}/workmanagement:${{ github.sha }} .
-          docker push ${{ secrets.REGISTRY }}/workmanagement:${{ github.sha }}
-      
-      - name: Deploy to Production
-        run: |
-          # Trigger deployment via webhook or SSH command
-          curl -X POST ${{ secrets.DEPLOY_WEBHOOK }} \
-            -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
-            -d '{"image": "workmanagement:${{ github.sha }}"}'
-```
-
----
-
-## Production Dockerfile
-
-```dockerfile
-# Dockerfile — Multi-stage build
-FROM node:22-alpine AS dependencies
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/*/package.json ./packages/
-RUN pnpm install --frozen-lockfile --prod
-
-FROM node:22-alpine AS build
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm build
-
-FROM node:22-alpine AS production
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
-
-# Create non-root user
-RUN addgroup --system app && adduser --system --ingroup app app
-
-COPY --from=build /app/apps/web/.next ./apps/web/.next
-COPY --from=build /app/apps/web/public ./apps/web/public
-COPY --from=build /app/apps/web/next.config.ts ./apps/web/
-COPY --from=build /app/apps/web/package.json ./apps/web/
-COPY --from=build /app/packages ./packages
-COPY --from=dependencies /app/node_modules ./node_modules
-
-USER app
-EXPOSE 3000
-
-CMD ["pnpm", "--filter", "web", "start"]
-```
-
----
-
-## Production Infrastructure (AWS)
-
-```hcl
-# Terraform-style infrastructure (conceptual)
-resource "aws_ecs_cluster" "workmanagement" {
-  name = "workmanagement-production"
-}
-
-resource "aws_ecs_service" "app" {
-  name    = "app"
-  cluster = aws_ecs_cluster.workmanagement.id
-  
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 3                    # Minimum 3 for HA
-  launch_type     = "FARGATE"
-  
-  network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.app.id]
-  }
-  
-  load_balancer {
-    target_group_arn = aws_lb_target_group.app.arn
-    container_port   = 3000
-  }
-}
-
-# Auto-scaling based on CPU/memory
-resource "aws_appautoscaling_target" "app" {
-  service_namespace  = "ecs"
-  resource_id        = "service/workmanagement-production/app"
-  scalable_dimension = "ecs:service:DesiredCount"
-  min_capacity       = 3
-  max_capacity       = 20
-}
-
-resource "aws_appautoscaling_policy" "cpu" {
-  name               = "cpu-scaling"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.app.resource_id
-  
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
-    }
-    target_value = 70
-  }
-}
-```
-
----
-
-## Environment Configuration
-
-```bash
-# .env.production
-NODE_ENV=production
-
-# Database
-DATABASE_URL="postgres://user:pass@prod-db.internal:5432/workmanagement?sslmode=require"
-DATABASE_POOL_MIN=2
-DATABASE_POOL_MAX=20
-DATABASE_POOL_IDLE_TIMEOUT=30000
-
-# Redis
-REDIS_URL="redis://:password@prod-redis.internal:6379"
-REDIS_PREFIX="wm:prod:"
-
-# Auth
-AUTH_SECRET="${AUTH_SECRET}"           # Managed in Secrets Manager
-AUTH_URL="https://app.workmanagement.com"
-
-# Storage
-STORAGE_PROVIDER="s3"
-S3_ENDPOINT="https://s3.us-east-1.amazonaws.com"
-S3_REGION="us-east-1"
-S3_BUCKET="workmanagement-prod-files"
-
-# Queue
-QUEUE_CONFIG='{"concurrency": 10, "maxRetries": 3}'
-
-# Search
-MEILISEARCH_HOST="http://meilisearch.internal:7700"
-MEILISEARCH_API_KEY="${MEILISEARCH_API_KEY}"
-
-# Monitoring
-SENTRY_DSN="${SENTRY_DSN}"
-SENTRY_ENVIRONMENT="production"
-OTEL_EXPORTER_OTLP_ENDPOINT="http://otel-collector.internal:4318"
-
-# AI
-OPENAI_API_KEY="${OPENAI_API_KEY}"
-
-# Email
-EMAIL_PROVIDER="resend"
-RESEND_API_KEY="${RESEND_API_KEY}"
-```
-
----
-
-## Monitoring & Observability Stack
-
+### Container Architecture
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Application  │────▶│ OpenTelemetry│────▶│ Grafana     │
-│ (Pino logs)  │     │ Collector    │     │ Dashboards  │
+│  Web App     │────▶│  Postgres   │     │  Redis      │
+│  (Next.js)   │     │  (Primary)  │     │  (Cache/Rate│
+│  Port 3000   │     │  Port 5432  │     │   Limiter)  │
 └─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │ Sentry      │
-                    │ (Errors,    │
-                    │ Performance)│
-                    └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │ PagerDuty   │
-                    │ (Alerts)    │
-                    └─────────────┘
+       │                    │
+       ▼                    ▼
+┌─────────────┐     ┌─────────────┐
+│  MinIO/S3   │     │ Meilisearch │
+│  (File      │     │ (Search)    │
+│   Storage)  │     │ Port 7700   │
+└─────────────┘     └─────────────┘
 ```
 
+### Resource Limits
+
+| Service | CPU | Memory | Replicas |
+|---------|-----|--------|----------|
+| Web App | 2.0 | 1GB | 2 (min) |
+| Postgres | 1.0 | 1GB | 1 |
+| Redis | 0.5 | 256MB | 1 |
+| MinIO | 1.0 | 512MB | 1 |
+| Meilisearch | 1.0 | 512MB | 1 |
+
 ### Health Checks
-```typescript
-// /api/health endpoint
-{
-  "status": "healthy",
-  "version": "1.0.0",
-  "checks": {
-    "database": { "status": "healthy", "latency": "2ms", "pool": "12/20" },
-    "redis": { "status": "healthy", "latency": "1ms" },
-    "queue": { "status": "healthy", "waiting": 15, "active": 3 },
-    "search": { "status": "healthy" },
-    "storage": { "status": "healthy" },
-    "disk": { "status": "healthy", "usedPercent": 45 }
-  },
-  "uptime": "72h15m32s"
-}
-```
+
+`GET /api/health` probes all dependencies:
+- **Database**: `SELECT 1` via Drizzle ORM
+- **Redis**: `PING` via redis client
+
+Returns `200 OK` if all healthy, `503 Service Unavailable` if any dependency is down.
+
+---
+
+## Monitoring
+
+### Sentry (Error Tracking)
+- Set `SENTRY_DSN` env var to enable
+- Set `SENTRY_ENVIRONMENT` to `production`
+
+### Structured Logging
+- Uses **pino** for JSON structured logs
+- Log level: `LOG_LEVEL=info` (default: `info` in production)
+- Development: `pino-pretty` for readable output
+- Request IDs auto-generated for log correlation
+
+### Audit Logging
+- All mutations logged to `audit_logs` table
+- Tracks: who did what, when, old/new values
+
+---
+
+## Security
+
+### Headers
+- Content-Security-Policy
+- HSTS (2 years, preload)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy (no camera, mic, geolocation)
+- Cross-Origin-Opener-Policy: same-origin
+- Cross-Origin-Resource-Policy: same-origin
+
+### CSRF Protection
+- SameSite=Lax session cookies
+- Origin/Referer header validation on mutations
+- Configurable trusted origins via `CSRF_TRUSTED_ORIGINS`
+
+### Rate Limiting
+- Redis-backed sliding window
+- Per-route config (login: 5/min, mutations: 30-60/min)
+- Fail-open if Redis is unavailable
 
 ---
 
 ## Scaling Strategy
 
-| Stage | Users | Tasks | Infrastructure |
-|-------|-------|-------|---------------|
-| **Phase 1** | 1,000 | 100K | Single Fargate task + RDS db.r6g.large + ElastiCache |
-| **Phase 2** | 10,000 | 1M | 3-5 Fargate tasks + RDS db.r6g.xlarge + read replicas + ElastiCache cluster |
-| **Phase 3** | 100,000 | 10M+ | ECS with auto-scaling + RDS Aurora + multiple read replicas + ElastiCache + OpenSearch |
+| Stage | Users | Infrastructure |
+|-------|-------|---------------|
+| **Launch** | 1,000 | 2 web replicas, 1 Postgres, 1 Redis |
+| **Growth** | 10,000 | 3-5 web replicas, read replicas |
+| **Scale** | 100,000+ | Auto-scaling, Aurora, ElastiCache cluster |
 
 ---
 
-## Disaster Recovery
+## Environment Variables
 
-```yaml
-# Recovery Plan
-database:
-  backup_frequency: Every 6 hours
-  retention: 30 days
-  pitr: Point-in-time recovery (up to last 5 minutes)
-  rpo: 5 minutes
-  rto: 1 hour
-
-application:
-  strategy: Blue-green deployment
-  rollback_time: < 5 minutes
-  zero_downtime_deployments: true
-
-files:
-  strategy: S3 cross-region replication
-  rpo: 15 minutes
-  rto: 30 minutes
-
-playbook:
-  - Detect failure (Sentry alert / health check failure)
-  - Assess severity (single instance vs. regional)
-  - If single instance: ECS auto-restart
-  - If database: Promote read replica / restore from backup
-  - If regional: Route traffic to secondary region
-  - Post-mortem within 24 hours
-```
+See `.env.production.example` for the complete list with descriptions.

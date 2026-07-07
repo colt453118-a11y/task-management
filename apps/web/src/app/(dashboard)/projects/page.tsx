@@ -1,115 +1,138 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/state-display';
+import { Plus, Loader2, FolderOpen } from 'lucide-react';
 
-const projects = [
-  {
-    name: 'Platform Redesign',
-    status: 'active',
-    progress: 65,
-    lead: 'You',
-    tasks: { total: 24, completed: 16 },
-    deadline: 'Dec 20, 2025',
-  },
-  {
-    name: 'Mobile App v2',
-    status: 'active',
-    progress: 30,
-    lead: 'Sarah',
-    tasks: { total: 18, completed: 5 },
-    deadline: 'Feb 15, 2026',
-  },
-  {
-    name: 'API Migration',
-    status: 'on_hold',
-    progress: 80,
-    lead: 'Mike',
-    tasks: { total: 12, completed: 10 },
-    deadline: 'Jan 10, 2026',
-  },
-  {
-    name: 'Security Audit',
-    status: 'completed',
-    progress: 100,
-    lead: 'Alex',
-    tasks: { total: 8, completed: 8 },
-    deadline: 'Completed',
-  },
-];
+type Project = {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  status: string;
+  priority: string;
+  progress: number;
+  ownerId: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+};
 
-const statusStyles: Record<string, string> = {
-  active: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  on_hold: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-  completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+const statusBadge: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'info'> = {
+  active: 'success',
+  on_hold: 'warning',
+  completed: 'primary',
+  archived: 'default',
 };
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/projects');
+        if (!res.ok) throw new Error('Failed to fetch projects');
+        const data = await res.json();
+        setProjects(data.projects ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Card><CardContent className="p-6 text-center text-sm text-red-500">{error}</CardContent></Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-surface-900 dark:text-surface-50">Projects</h1>
-          <p className="mt-1 text-sm text-surface-500">Manage your team&apos;s projects and milestones</p>
+          <p className="text-sm text-surface-500 mt-1">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button disabled title="Coming soon">
+          <Plus className="h-4 w-4 mr-2" />
           New Project
         </Button>
       </div>
 
-      {/* Project Cards */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {projects.map((project) => (
-          <div
-            key={project.name}
-            className="rounded-lg border border-surface-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-surface-700 dark:bg-surface-900"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50">{project.name}</h3>
-                <span
-                  className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusStyles[project.status]}`}
-                >
-                  {project.status.replace('_', ' ')}
-                </span>
-              </div>
-            </div>
+      {projects.length === 0 ? (
+        <EmptyState
+          icon={<FolderOpen className="h-12 w-12 text-surface-300" />}
+          title="No projects yet"
+          message="Organize your work into projects to track progress."
+          action={
+            <Button disabled title="Coming soon">
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((project) => (
+            <Card key={project.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base truncate">{project.name}</CardTitle>
+                    {project.code && (
+                      <p className="text-xs text-surface-400 font-mono mt-0.5">{project.code}</p>
+                    )}
+                  </div>
+                  <Badge variant={statusBadge[project.status] ?? 'default'}>{project.status}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {project.description && (
+                  <p className="text-sm text-surface-500 line-clamp-2">{project.description}</p>
+                )}
 
-            {/* Progress bar */}
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-xs text-surface-500">
-                <span>Progress</span>
-                <span>{project.progress}%</span>
-              </div>
-              <div className="mt-1 h-2 rounded-full bg-surface-100 dark:bg-surface-700">
-                <div
-                  className="h-2 rounded-full bg-brand-500 transition-all"
-                  style={{ width: `${project.progress}%` }}
-                />
-              </div>
-            </div>
+                {/* Progress bar */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-surface-500">Progress</span>
+                    <span className="font-medium">{project.progress}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface-100 dark:bg-surface-800">
+                    <div
+                      className="h-full rounded-full bg-brand-500 transition-all"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-4 border-t border-surface-100 pt-4 text-xs dark:border-surface-700">
-              <div>
-                <p className="text-surface-500">Lead</p>
-                <p className="font-medium text-surface-900 dark:text-surface-100">{project.lead}</p>
-              </div>
-              <div>
-                <p className="text-surface-500">Tasks</p>
-                <p className="font-medium text-surface-900 dark:text-surface-100">
-                  {project.tasks.completed}/{project.tasks.total}
-                </p>
-              </div>
-              <div>
-                <p className="text-surface-500">Deadline</p>
-                <p className="font-medium text-surface-900 dark:text-surface-100">{project.deadline}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                <div className="flex items-center gap-4 text-xs text-surface-400">
+                  {project.startDate && <span>Start: {new Date(project.startDate).toLocaleDateString()}</span>}
+                  {project.endDate && <span>End: {new Date(project.endDate).toLocaleDateString()}</span>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
