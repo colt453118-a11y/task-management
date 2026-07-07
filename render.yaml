@@ -1,0 +1,87 @@
+# ─── Render Blueprint ───────────────────────────────────────────
+# Infrastructure-as-code for Render.com
+#
+# Services:
+#   - web:      Next.js Docker app (health-checked, auto-deployed)
+#   - postgres: Managed PostgreSQL (free tier, 1GB, auto-expires 90 days)
+#
+# Note: Render free tier does not include managed Redis.
+# Rate limiting will fail-open (gracefully degrade) without Redis.
+# To add Redis later: define `type: redis` on a paid plan.
+
+services:
+  # ─── Web Service ──────────────────────────────────────────
+  - type: web
+    name: workmanager
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: free
+
+    # Render polls this endpoint to determine service health
+    healthCheckPath: /api/health
+
+    # Run database migrations before deploying the new version
+    preDeployCommand: corepack enable && corepack prepare pnpm@10 --activate && pnpm db:migrate
+
+    # Auto-deploy from main branch
+    branch: main
+    pullRequestPreview:
+      enabled: false
+
+    envVars:
+      # ── Application ──
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          type: web
+          name: workmanager
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AUTH_URL
+        fromService:
+          type: web
+          name: workmanager
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PORT
+        value: 3000
+
+      # ── Database (auto-injected from managed Postgres) ──
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workmanager-db
+          property: connectionString
+
+      # ── Auth ──
+      # Generate with: openssl rand -base64 32
+      - key: AUTH_SECRET
+        sync: false
+
+      # ── Storage (S3-compatible) ──
+      # Set these manually in the Render dashboard if using file uploads
+      - key: S3_ENDPOINT
+        value: ""
+      - key: S3_REGION
+        value: us-east-1
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: workmanagement-files
+
+      # ── Search (Meilisearch) ──
+      # Set if you have a Meilisearch instance
+      - key: MEILISEARCH_HOST
+        value: ""
+      - key: MEILISEARCH_API_KEY
+        sync: false
+
+# ─── Managed PostgreSQL ─────────────────────────────────────
+databases:
+  - name: workmanager-db
+    plan: free
+    databaseName: workmanager
+    databaseUser: wmuser
+    # Free tier: auto-deletes after 90 days. Upgrade to a paid
+    # plan for persistent storage with automated backups.

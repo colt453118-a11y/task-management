@@ -12,7 +12,6 @@ on:
         type: choice
         options:
           - production
-          - staging
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -23,54 +22,59 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  deploy:
-    name: Build & Deploy
+  quality:
+    name: Quality Gates
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
+    services:
+      postgres:
+        image: postgres:17.10-alpine
+        env:
+          POSTGRES_DB: workmanagement
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: devpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready -U dev -d workmanagement
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: pnpm/action-setup@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: 10
 
-      - name: Extract metadata for Docker image
-        id: meta
-        uses: docker/metadata-action@v5
+      - uses: actions/setup-node@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=,suffix=,format=short
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
+          node-version: 20
+          cache: pnpm
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - run: pnpm install --frozen-lockfile
 
-      - name: Deploy to Railway
-        if: github.ref == 'refs/heads/main'
+      - name: TypeScript check
+        run: pnpm typecheck
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          npx railway up --service web --ci --detach
+          DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
 
-      - name: Run database migrations
-        if: github.ref == 'refs/heads/main'
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+  deploy:
+    name: Deploy to Render
+    needs: quality
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy via webhook
         run: |
-          npx railway run pnpm db:migrate
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"

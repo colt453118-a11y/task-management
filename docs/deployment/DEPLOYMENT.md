@@ -1,62 +1,59 @@
 # Deployment — WorkManager
 
-## Quick Deploy (Railway)
+## Quick Deploy (Render — Free Tier)
 
-The fastest path to production is **Railway**, which supports Docker Compose deployments with managed Postgres and Redis.
+The easiest free deployment uses **Render** with the `render.yaml` blueprint.
 
-### 1. Prerequisites
+### What You Get for Free
+| Resource | Free Tier |
+|----------|-----------|
+| **Web service** | 1 instance, Docker-based, auto-deployed from GitHub |
+| **PostgreSQL** | 1GB managed database (auto-deletes after 90 days) |
+| **Custom domain** | ✅ with managed SSL |
+| **Sleep policy** | Spins down after 15 min of inactivity, wakes on first request (~30s cold start) |
 
-- [Railway account](https://railway.app)
-- A registered domain (optional — Railway provides a `.railway.app` subdomain)
+### Limitations (Free Tier)
+- ❌ **No managed Redis** — rate limiting will fail-open (graceful degradation).
+- ❌ **No S3/MinIO** — file uploads require an external S3-compatible provider.
+- ❌ **No Meilisearch** — search indexing won't run; client-side filtering still works.
+- ⏰ Postgres auto-deletes after 90 days. Upgrade to a paid plan for persistent storage.
 
-### 2. Setup
+### 1. Fork & Connect
 
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
+1. Push your repo to GitHub
+2. Go to [dashboard.render.com](https://dashboard.render.com)
+3. Click **New +** → **Blueprint** → select your repo
+4. Render reads `render.yaml` and creates:
+   - A **Web Service** (Docker) with health checks
+   - A **PostgreSQL** database (free)
 
-# Log in
-railway login
+### 2. Set Secrets in Render Dashboard
 
-# Link your project
-railway link
-```
+After the blueprint deploys, you'll see a "Needs Action" badge. Click into your web service and add these as **Secret Files** or **Environment Variables**:
 
-### 3. Environment Variables
+| Variable | How to Generate |
+|----------|----------------|
+| `AUTH_SECRET` | `openssl rand -base64 32` in your terminal |
+| `S3_ACCESS_KEY_ID` | *(skip unless you need file uploads)* |
+| `S3_SECRET_ACCESS_KEY` | *(skip unless you need file uploads)* |
 
-Set these in the Railway dashboard:
+### 3. Run Database Seed
 
-| Variable | Source |
-|----------|--------|
-| `DATABASE_URL` | Railway managed Postgres |
-| `REDIS_URL` | Railway managed Redis |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
-| `NEXT_PUBLIC_APP_URL` | `https://yourdomain.com` |
-| `AUTH_URL` | `https://yourdomain.com` |
-| `S3_ACCESS_KEY_ID` | Your S3-compatible provider |
-| `S3_SECRET_ACCESS_KEY` | Your S3-compatible provider |
-| `S3_BUCKET` | `workmanagement-files` |
-| `MEILISEARCH_API_KEY` | Your Meilisearch API key |
-
-### 4. Deploy
-
-```bash
-railway up
-```
-
-Or connect your GitHub repo for auto-deploy on push.
-
-### 5. Run Migrations
+Render's Blueprint auto-deploy will run migrations (`pnpm db:migrate`) via the `preDeployCommand`. But you still need to seed the initial data:
 
 ```bash
-railway run pnpm db:migrate
+# Open a Render Shell for your web service
+render shell
+
+# Run the seed script
+pnpm db:seed
 ```
 
-### 6. Seed Database
+Or use the Render Dashboard → your web service → **Shell** tab.
 
-```bash
-railway run pnpm db:seed
-```
+### 4. Open Your App
+
+Your app will be at `https://workmanager.onrender.com` (or whatever name you chose).
 
 ---
 
@@ -74,12 +71,18 @@ Runs on every push/PR:
 
 ### Deploy (`.github/workflows/deploy.yml`)
 Runs on push to `main`:
-1. Builds Docker image
-2. Pushes to GitHub Container Registry (ghcr.io)
-3. Deploys to Railway via CLI
+1. Runs quality gates (typecheck, lint, test, Docker build)
+2. Triggers Render's auto-deploy via webhook
 
 **Required secrets:**
-- `RAILWAY_TOKEN` — Railway deployment token
+- `RENDER_DEPLOY_HOOK` — Found in Render dashboard → your web service → **Settings** → **Deploy Hooks**
+
+### Auto-Deploy Without GitHub Actions
+
+Render also supports direct GitHub integration:
+- Connect repo → pick `main` branch → **Auto-Deploy: Yes**
+- Every push to `main` automatically triggers a new deploy
+- No GitHub Actions or webhooks needed
 
 ---
 
@@ -89,11 +92,14 @@ Runs on push to `main`:
 # Build
 docker build -t workmanager:latest .
 
-# Run with docker-compose
+# Run with docker-compose (all services)
 docker compose -f docker-compose.prod.yml up -d
 
 # Run migrations
 docker compose -f docker-compose.prod.yml --profile migrate run migrate
+
+# Seed database
+docker compose exec web pnpm db:seed
 ```
 
 ---
@@ -102,37 +108,24 @@ docker compose -f docker-compose.prod.yml --profile migrate run migrate
 
 ### Container Architecture
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Web App     │────▶│  Postgres   │     │  Redis      │
-│  (Next.js)   │     │  (Primary)  │     │  (Cache/Rate│
-│  Port 3000   │     │  Port 5432  │     │   Limiter)  │
-└─────────────┘     └─────────────┘     └─────────────┘
-       │                    │
-       ▼                    ▼
 ┌─────────────┐     ┌─────────────┐
-│  MinIO/S3   │     │ Meilisearch │
-│  (File      │     │ (Search)    │
-│   Storage)  │     │ Port 7700   │
+│  Web App     │────▶│  Postgres   │
+│  (Next.js)   │     │  (Managed)  │
+│  Port 3000   │     │             │
 └─────────────┘     └─────────────┘
+       │
+       ├── S3/MinIO (external, optional)
+       ├── Meilisearch (external, optional)
+       └── Redis (external, optional)
 ```
-
-### Resource Limits
-
-| Service | CPU | Memory | Replicas |
-|---------|-----|--------|----------|
-| Web App | 2.0 | 1GB | 2 (min) |
-| Postgres | 1.0 | 1GB | 1 |
-| Redis | 0.5 | 256MB | 1 |
-| MinIO | 1.0 | 512MB | 1 |
-| Meilisearch | 1.0 | 512MB | 1 |
 
 ### Health Checks
 
-`GET /api/health` probes all dependencies:
+`GET /api/health` probes available dependencies:
 - **Database**: `SELECT 1` via Drizzle ORM
-- **Redis**: `PING` via redis client
+- **Redis**: `PING` via redis client (skips if Redis URL not configured)
 
-Returns `200 OK` if all healthy, `503 Service Unavailable` if any dependency is down.
+Returns `200 OK` if database is healthy, `503 Service Unavailable` if database is down.
 
 ---
 
@@ -174,7 +167,7 @@ Returns `200 OK` if all healthy, `503 Service Unavailable` if any dependency is 
 ### Rate Limiting
 - Redis-backed sliding window
 - Per-route config (login: 5/min, mutations: 30-60/min)
-- Fail-open if Redis is unavailable
+- Fail-open if Redis is unavailable (graceful degradation on free tier)
 
 ---
 
@@ -182,9 +175,9 @@ Returns `200 OK` if all healthy, `503 Service Unavailable` if any dependency is 
 
 | Stage | Users | Infrastructure |
 |-------|-------|---------------|
-| **Launch** | 1,000 | 2 web replicas, 1 Postgres, 1 Redis |
-| **Growth** | 10,000 | 3-5 web replicas, read replicas |
-| **Scale** | 100,000+ | Auto-scaling, Aurora, ElastiCache cluster |
+| **Launch** | 1,000 | 1 web instance, 1 Postgres |
+| **Growth** | 10,000 | 2+ web instances, Postgres upgrade, add Redis |
+| **Scale** | 100,000+ | Auto-scaling, read replicas, ElastiCache |
 
 ---
 
