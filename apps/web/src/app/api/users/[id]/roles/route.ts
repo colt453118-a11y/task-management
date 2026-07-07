@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -43,8 +43,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ userRoles });
     } catch (error) {
-      console.error('Failed to fetch user roles:', error);
-      const { error: err, status } = apiError('Failed to fetch user roles');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch user roles');
       return NextResponse.json(err, { status });
     }
   },
@@ -130,8 +129,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ userRole }, { status: 201 });
     } catch (error) {
-      console.error('Failed to assign role:', error);
-      const { error: err, status } = apiError('Failed to assign role');
+      const { error: err, status } = handleApiError(error, 'Failed to assign role');
       return NextResponse.json(err, { status });
     }
   },
@@ -193,8 +191,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to remove role:', error);
-      const { error: err, status } = apiError('Failed to remove role');
+      const { error: err, status } = handleApiError(error, 'Failed to remove role');
       return NextResponse.json(err, { status });
     }
   },

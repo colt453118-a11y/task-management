@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -53,8 +53,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ user: found });
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      const { error: err, status } = apiError('Failed to fetch user');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch user');
       return NextResponse.json(err, { status });
     }
   },
@@ -122,8 +121,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ user: updated });
     } catch (error) {
-      console.error('Failed to update user:', error);
-      const { error: err, status } = apiError('Failed to update user');
+      const { error: err, status } = handleApiError(error, 'Failed to update user');
       return NextResponse.json(err, { status });
     }
   },

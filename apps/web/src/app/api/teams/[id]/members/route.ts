@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -145,8 +145,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ member: memberWithUser }, { status: 201 });
     } catch (error) {
-      console.error('Failed to add member:', error);
-      const { error: err, status } = apiError('Failed to add member');
+      const { error: err, status } = handleApiError(error, 'Failed to add member');
       return NextResponse.json(err, { status });
     }
   },
@@ -231,8 +230,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to remove member:', error);
-      const { error: err, status } = apiError('Failed to remove member');
+      const { error: err, status } = handleApiError(error, 'Failed to remove member');
       return NextResponse.json(err, { status });
     }
   },

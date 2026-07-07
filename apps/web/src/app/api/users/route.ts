@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { eq, like, or, desc, and, isNull, SQL } from 'drizzle-orm';
 
@@ -60,8 +60,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ users });
     } catch (error) {
-      console.error('Failed to fetch users:', error);
-      const { error: err, status } = apiError('Failed to fetch users');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch users');
       return NextResponse.json(err, { status });
     }
   },

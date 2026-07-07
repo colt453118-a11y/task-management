@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull, sql } from 'drizzle-orm';
@@ -121,8 +121,7 @@ export const GET = withAuth(
         },
       });
     } catch (error) {
-      console.error('Failed to fetch team:', error);
-      const { error: err, status } = apiError('Failed to fetch team');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch team');
       return NextResponse.json(err, { status });
     }
   },
@@ -182,8 +181,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to update team:', error);
-      const { error: err, status } = apiError('Failed to update team');
+      const { error: err, status } = handleApiError(error, 'Failed to update team');
       return NextResponse.json(err, { status });
     }
   },
@@ -228,8 +226,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete team:', error);
-      const { error: err, status } = apiError('Failed to delete team');
+      const { error: err, status } = handleApiError(error, 'Failed to delete team');
       return NextResponse.json(err, { status });
     }
   },

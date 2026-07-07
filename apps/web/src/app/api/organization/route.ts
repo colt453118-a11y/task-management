@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth } from '@/lib/auth/api-auth';
 import { and, eq, isNull } from 'drizzle-orm';
 
@@ -42,8 +42,7 @@ export const GET = withAuth(
 
     return NextResponse.json({ organization: org });
   } catch (error) {
-    console.error('Failed to fetch organization:', error);
-    const { error: err, status } = apiError('Failed to fetch organization');
+    const { error: err, status } = handleApiError(error, 'Failed to fetch organization');
     return NextResponse.json(err, { status });
   }
 },

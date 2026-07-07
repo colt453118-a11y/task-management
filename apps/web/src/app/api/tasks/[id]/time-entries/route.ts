@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, isNotNull } from 'drizzle-orm';
@@ -49,8 +49,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ entries });
     } catch (error) {
-      console.error('Failed to fetch time entries:', error);
-      const { error: err, status } = apiError('Failed to fetch time entries');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch time entries');
       return NextResponse.json(err, { status });
     }
   },
@@ -185,8 +184,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ entry: entryWithUser }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create time entry:', error);
-      const { error: err, status } = apiError('Failed to create time entry');
+      const { error: err, status } = handleApiError(error, 'Failed to create time entry');
       return NextResponse.json(err, { status });
     }
   },
@@ -311,8 +309,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ entry: entryWithUser });
     } catch (error) {
-      console.error('Failed to stop timer:', error);
-      const { error: err, status } = apiError('Failed to stop timer');
+      const { error: err, status } = handleApiError(error, 'Failed to stop timer');
       return NextResponse.json(err, { status });
     }
   },
@@ -382,8 +379,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete time entry:', error);
-      const { error: err, status } = apiError('Failed to delete time entry');
+      const { error: err, status } = handleApiError(error, 'Failed to delete time entry');
       return NextResponse.json(err, { status });
     }
   },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -160,8 +160,7 @@ export const PATCH = withAuth(
         },
       });
     } catch (error) {
-      console.error('Failed to update user status:', error);
-      const { error: err, status } = apiError('Failed to update user status');
+      const { error: err, status } = handleApiError(error, 'Failed to update user status');
       return NextResponse.json(err, { status });
     }
   },

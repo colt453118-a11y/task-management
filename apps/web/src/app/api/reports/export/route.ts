@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { buildCsv } from '@/lib/export/csv';
@@ -174,8 +174,7 @@ export const GET = withAuth(
         },
       });
     } catch (error) {
-      console.error('Failed to export report:', error);
-      const { error: err, status } = apiError('Failed to export report');
+      const { error: err, status } = handleApiError(error, 'Failed to export report');
       return NextResponse.json(err, { status });
     }
   },

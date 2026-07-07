@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, or, isNull } from 'drizzle-orm';
@@ -77,8 +77,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ blockedBy, blocking });
     } catch (error) {
-      console.error('Failed to fetch dependencies:', error);
-      const { error: err, status } = apiError('Failed to fetch dependencies');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch dependencies');
       return NextResponse.json(err, { status });
     }
   },
@@ -215,8 +214,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ dependency: depWithTask }, { status: 201 });
     } catch (error) {
-      console.error('Failed to add dependency:', error);
-      const { error: err, status } = apiError('Failed to add dependency');
+      const { error: err, status } = handleApiError(error, 'Failed to add dependency');
       return NextResponse.json(err, { status });
     }
   },
@@ -293,8 +291,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete dependency:', error);
-      const { error: err, status } = apiError('Failed to delete dependency');
+      const { error: err, status } = handleApiError(error, 'Failed to delete dependency');
       return NextResponse.json(err, { status });
     }
   },

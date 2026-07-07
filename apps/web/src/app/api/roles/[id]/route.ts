@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -46,8 +46,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ role, permissionIds });
     } catch (error) {
-      console.error('Failed to fetch role:', error);
-      const { error: err, status } = apiError('Failed to fetch role');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch role');
       return NextResponse.json(err, { status });
     }
   },
@@ -144,8 +143,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ role });
     } catch (error) {
-      console.error('Failed to update role:', error);
-      const { error: err, status } = apiError('Failed to update role');
+      const { error: err, status } = handleApiError(error, 'Failed to update role');
       return NextResponse.json(err, { status });
     }
   },
@@ -197,8 +195,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete role:', error);
-      const { error: err, status } = apiError('Failed to delete role');
+      const { error: err, status } = handleApiError(error, 'Failed to delete role');
       return NextResponse.json(err, { status });
     }
   },

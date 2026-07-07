@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, sql } from 'drizzle-orm';
@@ -48,8 +48,7 @@ export const GET = withAuth(
         offset,
       });
     } catch (error) {
-      console.error('Failed to fetch report snapshots:', error);
-      const { error: err, status } = apiError('Failed to fetch report snapshots');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch report snapshots');
       return NextResponse.json(err, { status });
     }
   },
@@ -307,8 +306,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ snapshot }, { status: 201 });
     } catch (error) {
-      console.error('Failed to generate report snapshot:', error);
-      const { error: err, status } = apiError('Failed to generate report snapshot');
+      const { error: err, status } = handleApiError(error, 'Failed to generate report snapshot');
       return NextResponse.json(err, { status });
     }
   },

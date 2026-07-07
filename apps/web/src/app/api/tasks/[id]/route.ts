@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -34,8 +34,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ task });
     } catch (error) {
-      console.error('Failed to fetch task:', error);
-      const { error: err, status } = apiError('Failed to fetch task');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch task');
       return NextResponse.json(err, { status });
     }
   },
@@ -235,8 +234,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ task });
     } catch (error) {
-      console.error('Failed to update task:', error);
-      const { error: err, status } = apiError('Failed to update task');
+      const { error: err, status } = handleApiError(error, 'Failed to update task');
       return NextResponse.json(err, { status });
     }
   },
@@ -284,8 +282,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete task:', error);
-      const { error: err, status } = apiError('Failed to delete task');
+      const { error: err, status } = handleApiError(error, 'Failed to delete task');
       return NextResponse.json(err, { status });
     }
   },

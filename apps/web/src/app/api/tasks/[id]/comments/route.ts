@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
@@ -50,8 +50,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ comments });
     } catch (error) {
-      console.error('Failed to fetch comments:', error);
-      const { error: err, status } = apiError('Failed to fetch comments');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch comments');
       return NextResponse.json(err, { status });
     }
   },
@@ -158,8 +157,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ comment: commentWithUser }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create comment:', error);
-      const { error: err, status } = apiError('Failed to create comment');
+      const { error: err, status } = handleApiError(error, 'Failed to create comment');
       return NextResponse.json(err, { status });
     }
   },
@@ -214,8 +212,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete comment:', error);
-      const { error: err, status } = apiError('Failed to delete comment');
+      const { error: err, status } = handleApiError(error, 'Failed to delete comment');
       return NextResponse.json(err, { status });
     }
   },

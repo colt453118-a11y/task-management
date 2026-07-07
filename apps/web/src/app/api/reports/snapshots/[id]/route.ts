@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope } from '@/lib/auth/api-auth';
 import { eq } from 'drizzle-orm';
 
@@ -32,8 +32,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ snapshot });
     } catch (error) {
-      console.error('Failed to fetch report snapshot:', error);
-      const { error: err, status } = apiError('Failed to fetch report snapshot');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch report snapshot');
       return NextResponse.json(err, { status });
     }
   },

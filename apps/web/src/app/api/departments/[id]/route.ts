@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, sql } from 'drizzle-orm';
@@ -122,8 +122,7 @@ export const GET = withAuth(
         },
       });
     } catch (error) {
-      console.error('Failed to fetch department:', error);
-      const { error: err, status } = apiError('Failed to fetch department');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch department');
       return NextResponse.json(err, { status });
     }
   },
@@ -182,8 +181,7 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to update department:', error);
-      const { error: err, status } = apiError('Failed to update department');
+      const { error: err, status } = handleApiError(error, 'Failed to update department');
       return NextResponse.json(err, { status });
     }
   },

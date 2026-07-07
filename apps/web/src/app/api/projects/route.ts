@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
@@ -34,8 +34,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ projects });
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
-      const { error: err, status } = apiError('Failed to fetch projects');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch projects');
       return NextResponse.json(err, { status });
     }
   },
@@ -114,8 +113,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ project }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create project:', error);
-      const { error: err, status } = apiError('Failed to create project');
+      const { error: err, status } = handleApiError(error, 'Failed to create project');
       return NextResponse.json(err, { status });
     }
   },

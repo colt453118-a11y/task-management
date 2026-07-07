@@ -27,12 +27,22 @@ export function apiError(message: string, code = 'INTERNAL_ERROR', status = 500,
 }
 
 /**
- * Convenience wrapper that logs the error, captures it to Sentry,
- * and returns the standard API error response.
+ * Convenience wrapper that logs the error AND captures it to Sentry,
+ * then returns the standard API error response.
  *
  * Use in catch blocks instead of console.error + apiError:
+ *
+ *   // Before:
  *   catch (error) {
- *     return handleApiError(error, 'Failed to fetch tasks');
+ *     console.error('Failed to X:', error);
+ *     const { error: err, status } = apiError('Failed to X');
+ *     return NextResponse.json(err, { status });
+ *   }
+ *
+ *   // After:
+ *   catch (error) {
+ *     const { error: err, status } = handleApiError(error, 'Failed to X');
+ *     return NextResponse.json(err, { status });
  *   }
  */
 export function handleApiError(

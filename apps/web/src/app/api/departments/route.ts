@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
@@ -31,8 +31,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ departments });
     } catch (error) {
-      console.error('Failed to fetch departments:', error);
-      const { error: err, status } = apiError('Failed to fetch departments');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch departments');
       return NextResponse.json(err, { status });
     }
   },
@@ -108,8 +107,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ department: dept }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create department:', error);
-      const { error: err, status } = apiError('Failed to create department');
+      const { error: err, status } = handleApiError(error, 'Failed to create department');
       return NextResponse.json(err, { status });
     }
   },

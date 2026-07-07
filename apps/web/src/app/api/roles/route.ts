@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, sql } from 'drizzle-orm';
@@ -44,8 +44,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ roles });
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
-      const { error: err, status } = apiError('Failed to fetch roles');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch roles');
       return NextResponse.json(err, { status });
     }
   },
@@ -126,8 +125,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ role }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create role:', error);
-      const { error: err, status } = apiError('Failed to create role');
+      const { error: err, status } = handleApiError(error, 'Failed to create role');
       return NextResponse.json(err, { status });
     }
   },

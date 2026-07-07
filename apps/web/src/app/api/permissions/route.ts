@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth } from '@/lib/auth/api-auth';
 import { asc } from 'drizzle-orm';
 
@@ -16,8 +16,7 @@ export const GET = withAuth(
 
     return NextResponse.json({ permissions });
   } catch (error) {
-    console.error('Failed to fetch permissions:', error);
-    const { error: err, status } = apiError('Failed to fetch permissions');
+    const { error: err, status } = handleApiError(error, 'Failed to fetch permissions');
     return NextResponse.json(err, { status });
   }
 },

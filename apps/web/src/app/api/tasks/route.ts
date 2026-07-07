@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission, checkPermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, like, or, sql } from 'drizzle-orm';
@@ -69,8 +69,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ tasks });
     } catch (error) {
-      console.error('Failed to fetch tasks:', error);
-      const { error: err, status } = apiError('Failed to fetch tasks');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch tasks');
       return NextResponse.json(err, { status });
     }
   },
@@ -194,8 +193,7 @@ export const POST = withAuth(
 
       return NextResponse.json({ task }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create task:', error);
-      const { error: err, status } = apiError('Failed to create task');
+      const { error: err, status } = handleApiError(error, 'Failed to create task');
       return NextResponse.json(err, { status });
     }
   },

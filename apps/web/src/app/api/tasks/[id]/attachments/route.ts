@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, schema, apiError } from '@/lib/api/db';
+import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
@@ -62,8 +62,7 @@ export const GET = withAuth(
 
       return NextResponse.json({ attachments: attachmentsWithUrls });
     } catch (error) {
-      console.error('Failed to fetch attachments:', error);
-      const { error: err, status } = apiError('Failed to fetch attachments');
+      const { error: err, status } = handleApiError(error, 'Failed to fetch attachments');
       return NextResponse.json(err, { status });
     }
   },
@@ -197,8 +196,7 @@ export const POST = withAuth(
         { status: 201 },
       );
     } catch (error) {
-      console.error('Failed to upload attachment:', error);
-      const { error: err, status } = apiError('Failed to upload attachment');
+      const { error: err, status } = handleApiError(error, 'Failed to upload attachment');
       return NextResponse.json(err, { status });
     }
   },
@@ -262,8 +260,7 @@ export const DELETE = withAuth(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete attachment:', error);
-      const { error: err, status } = apiError('Failed to delete attachment');
+      const { error: err, status } = handleApiError(error, 'Failed to delete attachment');
       return NextResponse.json(err, { status });
     }
   },
