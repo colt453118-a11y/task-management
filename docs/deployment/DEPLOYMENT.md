@@ -39,14 +39,17 @@ After the blueprint deploys, you'll see a "Needs Action" badge. Click into your 
 
 ### 3. Run Database Seed
 
-Render's Blueprint auto-deploy will run migrations (`pnpm db:migrate`) via the `preDeployCommand`. But you still need to seed the initial data:
+Render's Blueprint auto-deploy will run migrations (`npx drizzle-kit migrate`) via the `preDeployCommand`. But you still need to seed the initial data:
 
 ```bash
+# Install the Render CLI
+npm install -g @render/cli
+
 # Open a Render Shell for your web service
 render shell
 
 # Run the seed script
-pnpm db:seed
+corepack enable && corepack prepare pnpm@10 --activate && pnpm db:seed
 ```
 
 Or use the Render Dashboard → your web service → **Shell** tab.

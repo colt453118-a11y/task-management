@@ -22,7 +22,8 @@ services:
     healthCheckPath: /api/health
 
     # Run database migrations before deploying the new version
-    preDeployCommand: corepack enable && corepack prepare pnpm@10 --activate && pnpm db:migrate
+    # Uses npx directly (drizzle-kit may not be in the standalone Docker image)
+    preDeployCommand: corepack enable && corepack prepare pnpm@10 --activate && cd packages/database && npx drizzle-kit migrate
 
     # Auto-deploy from main branch
     branch: main
