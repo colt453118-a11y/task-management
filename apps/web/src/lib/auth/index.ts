@@ -102,8 +102,12 @@ export function getAuth(): ReturnType<typeof betterAuth> {
         },
       },
     },
+    // session.cookie config and hooks.before.signIn are accepted at runtime
+    // by better-auth but are not reflected in its current type definitions.
+    // The cast is scoped to the config object only; the return type is still
+    // properly inferred via ReturnType<typeof betterAuth>.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any) as unknown as ReturnType<typeof betterAuth>;
+  } as any) as ReturnType<typeof betterAuth>;
 
   return _auth;
 }

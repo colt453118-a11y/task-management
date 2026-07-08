@@ -128,6 +128,23 @@ export const ProjectCreateSchema = z.object({
   endDate: z.string().optional().nullable(),
 }).strict('Unexpected fields in project creation');
 
+// Project update schema
+export const ProjectUpdateSchema = z.object({
+  name: z.string().min(1).max(300).transform((s) => s.trim()).optional(),
+  code: z.string().max(20).transform((s) => s.trim()).optional().nullable(),
+  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
+  ownerId: z.string().min(1).optional(),
+  departmentId: z.string().uuid().optional().nullable(),
+  teamId: z.string().uuid().optional().nullable(),
+  status: z.string().max(50).optional(),
+  priority: z.string().max(20).optional(),
+  progress: z.number().int().min(0).max(100).optional(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
+  tags: z.array(z.string().max(100)).optional(),
+}).strict('Unexpected fields in project update');
+
 // Team schemas
 export const TeamCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200).transform((s) => s.trim()),

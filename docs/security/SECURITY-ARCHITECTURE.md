@@ -166,30 +166,44 @@ CREATE POLICY task_access ON tasks
 
 ## 3. Input Validation & Sanitization
 
-```typescript
-// All inputs validated through Zod schemas
-const taskSchema = z.object({
-  title: z.string().min(1).max(500)
-    .transform(sanitizeHtml),           // Strip XSS from rich text
-  description: z.string()
-    .transform(cleanHtml),              // Allow safe HTML only
-  priority: z.enum(['low', 'medium', 'high']),
-  assignedTo: z.string().uuid(),
-  estimatedHours: z.number().positive().max(9999),
-});
+### Validation (Zod)
+Every API route validates input through Zod schemas with `.strict()` mass-assignment protection. Schemas exist for all entity types (tasks, projects, teams, departments, roles, users, comments, attachments, time entries). Update schemas use optional fields so clients can send partial updates.
 
-// XSS Prevention for rich text
-function cleanHtml(html: string): string {
-  return sanitizeHtml(html, {
-    allowedTags: ['p', 'br', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 
-                  'h1', 'h2', 'h3', 'code', 'pre', 'blockquote'],
-    allowedAttributes: {
-      'a': ['href', 'target'],
-    },
-    allowedSchemes: ['http', 'https', 'mailto'],
+### HTML Sanitization (DOMPurify)
+Rich text content (task descriptions) is sanitized using `isomorphic-dompurify` on both server (before storage) and client (before render).
+
+```typescript
+// lib/sanitize.ts — Server-safe HTML sanitization
+import DOMPurify from 'isomorphic-dompurify';
+
+export function sanitizeHtml(html: string | null | undefined): string {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 's',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'a', 'pre', 'code',
+      'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'img', 'figure', 'figcaption', 'hr', 'span', 'div',
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'colspan', 'rowspan'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+    ALLOW_DATA_ATTR: false,
   });
 }
+
+export function sanitizeRichText(content: string | null | undefined): string | null {
+  if (content === null || content === undefined) return null;
+  const sanitized = sanitizeHtml(content);
+  return sanitized || null;
+}
 ```
+
+### Application in API routes
+Task descriptions are sanitized before storage in both `POST /api/tasks` and `PATCH /api/tasks/[id]`. The update route preserves the `undefined` sentinel — only sanitizing when `description` is explicitly provided in the request body, so unrelated field updates don't inadvertently clear the description.
+
+### Client-side defense-in-depth
+The `RichTextViewer` component also sanitizes before rendering with `dangerouslySetInnerHTML`, providing a second layer of protection if content bypasses server-side sanitization.
 
 ---
 
@@ -212,26 +226,29 @@ export async function POST(request: Request) {
 
 ## 5. Rate Limiting
 
-```typescript
-// lib/utils/rate-limit.ts
-import { Redis } from '@upstash/redis';
+### Implementation
+Redis-backed sliding-window rate limiting using `INCR` + `EXPIRE`. The rate limit module is at `lib/api/rate-limit.ts` and is integrated into:
+- **`withAuth` middleware** — accepts optional rate limit config per route (user-based key by default)
+- **`withRateLimit` wrapper** — for unauthenticated endpoints (login, register) — IP-based key
+- **Standalone `checkRateLimit`** — for the public health endpoint (IP-based, 60 req/min)
 
-const rateLimiter = new RateLimiter({
-  redis: Redis.fromEnv(),
-  
-  // Per-endpoint rules
-  rules: [
-    { path: '/api/auth/login', limit: 5, window: '60s' },      // 5 login attempts/min
-    { path: '/api/auth/register', limit: 3, window: '3600s' },  // 3 registrations/hour
-    { path: '/api/*', limit: 100, window: '60s' },              // 100 requests/min
-    { path: '/api/reports/*', limit: 10, window: '60s' },       // 10 report requests/min
-    { path: '/api/search', limit: 30, window: '60s' },           // 30 searches/min
-  ],
-  
-  // Global rate limit per user
-  global: { limit: 1000, window: '60s' },
-});
-```
+### Presets
+
+| Preset | Rate | Window | Key Strategy |
+|--------|------|--------|-------------|
+| `login` | 5 req | 60s | IP |
+| `create` | 30 req | 60s | User |
+| `mutate` | 60 req | 60s | User |
+| `comment` | 20 req | 60s | User |
+| `read` | 100 req | 60s | User |
+| `sensitive` | 20 req | 60s | User |
+| `health` | 60 req | 60s | IP |
+
+### Design decisions
+- **Fail-open**: Requests proceed if Redis is unavailable (availability > strict rate limiting)
+- **Auto-reconnecting Redis client**: Built-in reconnection loop (redis@4) — logged but not nulled
+- **Rate limit headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After` on 429 responses
+- **Fail-safe `Retry-After`**: Ensures minimum 1-second retry delay
 
 ---
 

@@ -3,6 +3,7 @@ import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, sql } from 'drizzle-orm';
+import { DepartmentUpdateSchema, validationError } from '@/lib/api/validation';
 
 export const runtime = 'nodejs';
 
@@ -137,7 +138,13 @@ export const PATCH = withAuth(
       await requirePermission(user.id, 'team:edit');
 
       const body = await request.json();
-      const { name, description, headUserId, isActive } = body;
+      const parsed = DepartmentUpdateSchema.safeParse(body);
+      if (!parsed.success) {
+        const { error: err, status } = validationError(parsed.error);
+        return NextResponse.json(err, { status });
+      }
+
+      const { name, description, headUserId, isActive } = parsed.data;
 
       const [existing] = await db()
         .select()

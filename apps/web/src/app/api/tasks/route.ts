@@ -4,6 +4,7 @@ import { withAuth, requirePermission, checkPermission } from '@/lib/auth/api-aut
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, like, or, sql } from 'drizzle-orm';
 import { TaskCreateSchema, validationError } from '@/lib/api/validation';
+import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask } from '@/lib/search';
 
 export const runtime = 'nodejs';
@@ -89,7 +90,8 @@ export const POST = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { title, description, projectId, milestoneId, priority, assignedTo, dueDate } = parsed.data;
+      const { title, description: rawDescription, projectId, milestoneId, priority, assignedTo, dueDate } = parsed.data;
+      const description = sanitizeRichText(rawDescription);
 
       // Validate project org scope if projectId provided
       if (projectId) {

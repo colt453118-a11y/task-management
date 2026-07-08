@@ -1,6 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@workmanagement/database';
 import { sql } from 'drizzle-orm';
+import {
+  checkRateLimit,
+  rateLimitKey,
+  ipFromRequest,
+  rateLimitResponse,
+} from '@/lib/api/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -33,7 +39,8 @@ async function checkRedis(): Promise<HealthCheckResult> {
     const { createClient } = await import('redis');
     const url = process.env.REDIS_URL;
     if (!url) {
-      return { status: 'degraded', error: 'REDIS_URL not configured' };
+      // Deliberately vague — don't leak which env var or service is missing
+      return { status: 'degraded', error: 'Caching service not configured' };
     }
     const client = createClient({ url });
     await client.connect();
@@ -46,12 +53,25 @@ async function checkRedis(): Promise<HealthCheckResult> {
     return {
       status: 'degraded',
       latency,
-      error: error instanceof Error ? error.message : 'Redis check failed',
+      error: error instanceof Error ? error.message : 'Caching service check failed',
     };
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // ── Rate limit: 60 req/min per IP ──────────────────────
+  // The health endpoint is public and unauthenticated, so we use
+  // IP-based rate limiting to prevent abuse. 60 req/min allows
+  // for load balancer polling (every 10-15s) + monitoring services
+  // + CI/CD probes without false positives.
+  const ip = ipFromRequest(request);
+  const key = rateLimitKey('health', ip);
+  const rateLimitResult = await checkRateLimit(key, { windowMs: 60_000, max: 60 });
+
+  if (!rateLimitResult.ok) {
+    return rateLimitResponse(rateLimitResult, 'Health check rate limit exceeded');
+  }
+
   const [dbResult, redisResult] = await Promise.all([
     checkDatabase(),
     checkRedis(),
@@ -68,7 +88,7 @@ export async function GET() {
 
   const statusCode = overallStatus === 'healthy' ? 200 : 503;
 
-  return NextResponse.json(
+  const response = NextResponse.json(
     {
       status: overallStatus,
       timestamp: new Date().toISOString(),
@@ -80,4 +100,13 @@ export async function GET() {
     },
     { status: statusCode },
   );
+
+  // Attach rate limit headers so callers can track their usage
+  // (rateLimitResult.ok is guaranteed true at this point — we returned
+  //  early above if rate-limited)
+  response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
+  response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+  response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
+
+  return response;
 }

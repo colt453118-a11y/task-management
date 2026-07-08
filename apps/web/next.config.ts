@@ -1,4 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -41,7 +40,7 @@ const nextConfig: NextConfig = {
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' blob: data: https:",
             "font-src 'self'",
-            "connect-src 'self' https://api.openai.com https://*.sentry.io wss:",
+            "connect-src 'self' https://api.openai.com wss:",
             "frame-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
@@ -82,11 +81,4 @@ const nextConfig: NextConfig = {
 
 };
 
-export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG ?? '',
-  project: process.env.SENTRY_PROJECT ?? '',
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-  disableLogger: true,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-});
+export default nextConfig;

@@ -4,6 +4,7 @@ import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-aut
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
 import { TaskUpdateSchema, validationError, isValidTransition, READONLY_STATUSES } from '@/lib/api/validation';
+import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask, removeTaskFromIndex } from '@/lib/search';
 
 export const runtime = 'nodejs';
@@ -55,7 +56,10 @@ export const PATCH = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { title, description, status, priority, assignedTo, dueDate, projectId } = parsed.data;
+      const { title, description: rawDescription, status, priority, assignedTo, dueDate, projectId } = parsed.data;
+      // Preserve `undefined` when description is not in the update body,
+      // so the `if (description !== undefined)` check below skips it correctly.
+      const description = rawDescription !== undefined ? sanitizeRichText(rawDescription) : rawDescription;
 
       const [existing] = await db()
         .select()

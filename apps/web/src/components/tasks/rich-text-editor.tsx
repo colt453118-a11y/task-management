@@ -5,6 +5,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { cn } from '@/lib/utils';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   Bold,
   Italic,
@@ -275,7 +276,7 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
         'prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline',
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
   );
 }

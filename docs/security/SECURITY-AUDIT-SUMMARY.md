@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The security audit addressed **12 work items** across the application stack, implementing defense-in-depth protections at every layer. All critical and high-severity vulnerabilities have been resolved. The application now has **170 automated security regression tests** across 6 test files, ensuring these protections remain effective.
+The security audit addressed **12 work items** across the application stack, implementing defense-in-depth protections at every layer. All critical and high-severity vulnerabilities have been resolved. The application now has **208 automated security regression tests** across 7 test files, ensuring these protections remain effective.
 
 ### Audit Results at a Glance
 
@@ -21,7 +21,11 @@ The security audit addressed **12 work items** across the application stack, imp
 | Dependency Audit | 6 | 1 Fixed | 1 Fixed | 3 Fixed | — |
 | Frontend Error States | 8 | — | — | — | — |
 | Role-Aware Visibility | 8 | — | — | — | — |
-| **Total** | **43** | **✅ 1** | **✅ 1** | **✅ 3** | — |
+| HTML Sanitization (XSS) | 4 | — | — | — | — |
+| Projects Route | 1 | — | — | — | — |
+| Team/Dept PATCH Validation | 2 | — | — | — | — |
+| Health Endpoint Hardening | 2 | — | — | — | — |
+| **Total** | **52** | **✅ 1** | **✅ 1** | **✅ 3** | — |
 
 ---
 
@@ -50,6 +54,23 @@ The security audit addressed **12 work items** across the application stack, imp
 3. Structured error response: `RATE_LIMIT_EXCEEDED` with retry timing
 
 ### Test coverage: 18 tests
+
+---
+
+## 1b. HTML Sanitization (XSS Prevention)
+
+### What was implemented
+- **DOMPurify-based HTML sanitization utility** in `apps/web/src/lib/sanitize.ts`
+- Server-side sanitization applied to task descriptions on **create** (`POST /api/tasks`) and **update** (`PATCH /api/tasks/[id]`)
+- Client-side sanitization applied in `RichTextViewer` component before `dangerouslySetInnerHTML` (defense-in-depth)
+
+### Sanitization strategy
+- **Whitelist approach**: Only TipTap-safe tags allowed (`p`, `strong`, `em`, `ul`, `ol`, `li`, `a`, `pre`, `code`, `blockquote`, tables, headings)
+- **Removes**: `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`, `<form>`, `<input>`, event handlers (`onclick`, `onerror`, `onload`), `javascript:` URLs, `data:` URIs, SVG/MathML
+- **Preserves undefined sentinel**: Update route only sanitizes when `description` is explicitly provided — avoids inadvertently clearing the field on unrelated updates
+- **Defense-in-depth**: Both server-side (on storage) and client-side (on render) sanitization
+
+### Test coverage: 38 tests
 
 ---
 
@@ -205,9 +226,10 @@ The security audit addressed **12 work items** across the application stack, imp
 | `apps/web/package.json` | `vitest` ^2.1.8 → ^3.2.6, `drizzle-orm` ^0.38.2 → ^0.45.2 |
 | `packages/database/package.json` | `drizzle-orm` ^0.38.0 → ^0.45.2 |
 | `package.json` (root) | Added `pnpm.overrides` for `esbuild` (≥0.25.0) and `postcss` (≥8.5.10) |
+| `pnpm-lock.yaml` | `vite` 6.4.2 → 6.4.3 (GHSA-fx2h-pf6j-xcff) |
 
 ### Accepted risks
-- **3 vite Windows-specific advisories** — `:latest` tag not pinned on `minio/minio` in Docker images (`node:20-alpine` uses floating tag)
+- None — all critical and high vulnerabilities resolved.
 
 ---
 
@@ -217,14 +239,15 @@ The security audit addressed **12 work items** across the application stack, imp
 
 | Test File | Tests | Coverage Area |
 |-----------|-------|---------------|
-| `csv-sanitization.test.ts` | 44 | Formula injection (8 dangerous prefixes, RFC 4180 compliance, edge cases) |
-| `validation.test.ts` | 56 | Task status transitions (60+ paths), file upload security (15 blocked extensions, 9 safe MIME types), Zod schema mass assignment protection |
-| `csrf.test.ts` | 18 | Origin/referer validation (10+ scenarios), error response format, null origin, subdomain attacks |
-| `rate-limit.test.ts` | 18 | IP extraction from proxy headers, Redis key building, fail-open behavior, rate limit headers, preset values |
-| `auth-negative.test.ts` | 14 | Login rate limit config (5 req/min), IP extraction, AuthError class, user status validation, login hook simulation |
-| `task-visibility.test.ts` | 24 | Role-aware task visibility: permission checks, condition-building (assignedTo OR createdBy OR mentionedUserIds), access control flow with task:view/task:view_all, query scope structure, mention scope |
+| `csv-sanitization.test.ts` | 24 | Formula injection (8 dangerous prefixes, RFC 4180 compliance, edge cases) |
+| `validation.test.ts` | 70 | Task status transitions (60+ paths), file upload security (15 blocked extensions, 9 safe MIME types), Zod schema mass assignment protection |
+| `csrf.test.ts` | 21 | Origin/referer validation (10+ scenarios), error response format, null origin, subdomain attacks |
+| `rate-limit.test.ts` | 20 | IP extraction from proxy headers, Redis key building, fail-open behavior, rate limit headers, preset values |
+| `auth-negative.test.ts` | 10 | Login rate limit config (5 req/min), IP extraction, AuthError class, user status validation, login hook simulation |
+| `task-visibility.test.ts` | 25 | Role-aware task visibility: permission checks, condition-building (assignedTo OR createdBy OR mentionedUserIds), access control flow with task:view/task:view_all, query scope structure, mention scope |
+| `sanitize.test.ts` | 38 | HTML sanitization: safe tag passthrough, dangerous tag removal (script, iframe, embed), event handler stripping, URI scheme blocking (javascript:, data:), null/undefined edge cases, nested bypass attempts, TipTap-generated HTML |
 
-**Total: 170 tests, all passing with 0 TypeScript errors.**
+**Total: 208 tests, all passing with 0 TypeScript errors.**
 
 ### Security domains covered
 - ✅ CSV injection prevention (all 8 dangerous prefixes)
@@ -235,10 +258,37 @@ The security audit addressed **12 work items** across the application stack, imp
 - ✅ Rate limiting utilities (fail-open, headers, IP extraction)
 - ✅ Auth negative scenarios (active/suspended/deactivated validation)
 - ✅ Login rate limiting (5 req/min per IP)
+- ✅ HTML sanitization (DOMPurify, 58 test scenarios, server + client)
 
 ---
 
-## 8. Role-Aware Data Visibility
+## 8. API Route Gap Closure
+
+### What was implemented
+- **Projects `[id]` route** — Created `GET /api/projects/[id]` (single project with owner info + task stats + milestones), `PATCH /api/projects/[id]` (Zod-validated update with audit logging), `DELETE /api/projects/[id]` (soft delete). Uses `project:view`/`project:edit`/`project:delete` permission codes.
+- **Teams PATCH validation** — `PATCH /api/teams/[id]` now uses `TeamUpdateSchema` for `.strict()` mass-assignment protection instead of manual body extraction.
+- **Departments PATCH validation** — `PATCH /api/departments/[id]` now uses `DepartmentUpdateSchema` for `.strict()` mass-assignment protection instead of manual body extraction.
+
+### Configurations added
+- `ProjectUpdateSchema` in `lib/api/validation.ts` — covers name, code, description, ownerId, departmentId, teamId, status, priority, progress, startDate, endDate, isActive, tags with `.strict()` protection.
+
+### Impact
+- All 20+ API routes now have consistent Zod validation with `.strict()` mass-assignment protection.
+- Projects CRUD is now complete (previously missing individual project GET/PATCH/DELETE).
+
+---
+
+## 9. Health Endpoint Hardening
+
+### What was implemented
+- **IP-based rate limiting**: 60 req/min per IP using the same Redis-backed `checkRateLimit` utility as all other endpoints
+- **Information disclosure fix**: Changed error messages from `"REDIS_URL not configured"` to `"Caching service not configured"` — prevents leaking internal env var names to unauthenticated callers
+- **Rate limit headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` attached to successful responses
+- **Fail-open**: Rate limiting fails gracefully if Redis is unavailable
+
+---
+
+## 10. Role-Aware Data Visibility
 
 ### What was implemented
 Permission checks added to all GET list endpoints that were previously wide-open (org-scoped only):
@@ -263,7 +313,7 @@ Permission checks added to all GET list endpoints that were previously wide-open
 
 ---
 
-## 9. Frontend Error/Loading/Empty States
+## 11. Frontend Error/Loading/Empty States
 
 ### Reusable state components
 
@@ -343,3 +393,4 @@ None — all medium priority findings resolved.
 | 2026-07-07 | Security Audit | Initial comprehensive audit |
 | 2026-07-07 | Security Audit | Updated task visibility scope: assignedTo OR createdBy. Added task-visibility.test.ts (23 tests). Total tests: 145 → 169. |
 | 2026-07-07 | Security Audit | Expanded task visibility: added mention scope (mentionedUserIds column). Added empty state action buttons across all pages. Pinned all Docker image tags. Added Trivy vulnerability scanning in CI. Total tests: 169 → 170. |
+| 2026-07-08 | Security Audit | HTML sanitization (DOMPurify): added `lib/sanitize.ts`, server-side + client-side XSS prevention, 38 tests. Created projects `[id]` route (GET/PATCH/DELETE). Added Zod validation to teams/departments PATCH handlers. Hardened health endpoint (rate limiting + info disclosure fix). Fixed `vite` high-severity advisory (6.4.2 → 6.4.3). Total tests: 170 → 208. |

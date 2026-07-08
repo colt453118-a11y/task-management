@@ -4,6 +4,7 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { CommentCreateSchema, validationError } from '@/lib/api/validation';
+import { sanitizeRichText } from '@/lib/sanitize';
 
 export const runtime = 'nodejs';
 
@@ -71,7 +72,8 @@ export const POST = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { content } = parsed.data;
+      const { content: rawContent } = parsed.data;
+      const content = sanitizeRichText(rawContent) ?? '';
 
       // Verify task exists, belongs to org, and is not read-only
       const [task] = await db()
