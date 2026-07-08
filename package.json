@@ -19,6 +19,11 @@
     "db:seed": "pnpm --filter @workmanagement/database db:seed",
     "db:studio": "pnpm --filter @workmanagement/database db:studio"
   },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "@workmanagement/database": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
   "devDependencies": {
     "prettier": "^3.4.0",
     "prettier-plugin-tailwindcss": "^0.6.0",
