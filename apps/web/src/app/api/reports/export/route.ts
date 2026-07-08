@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
@@ -28,7 +29,7 @@ export const GET = withAuth(
       const searchTerm = searchParams.get('search');
 
       let csvContent = '';
-      let filename = `report-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+      const filename = `report-${type}-${new Date().toISOString().split('T')[0]}.csv`;
 
       if (type === 'tasks') {
         const conditions = [

@@ -1,5 +1,7 @@
-import { createClient, RedisClientType } from 'redis';
-import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // ─── Redis Client (lazy singleton) ──────────────────────────────
 //

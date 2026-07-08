@@ -1,4 +1,5 @@
-import { NextResponse, NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { requireAuth, AuthError } from './session';
 import { hasPermission } from '../permissions';
 import { getDb, schema } from '@workmanagement/database';

@@ -28,6 +28,18 @@ interface DashboardMetrics {
   }>;
 }
 
+// ─── Metric helpers ──────────────────────────────────────────────
+interface MetricTask {
+  status: string;
+  dueDate?: string;
+  updatedAt: string;
+}
+
+
+interface MetricProject {
+  status: string;
+}
+
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,25 +78,25 @@ export default function DashboardPage() {
 
         const metrics: DashboardMetrics = {
           totalTasks: tasks.length,
-          openTasks: tasks.filter((t: any) => t.status === 'open' || t.status === 'draft').length,
-          inProgress: tasks.filter((t: any) => t.status === 'in_progress').length,
-          completedTasks: tasks.filter((t: any) => t.status === 'completed').length,
-          closedTasks: tasks.filter((t: any) => t.status === 'closed').length,
-          overdueTasks: tasks.filter((t: any) => t.dueDate && new Date(t.dueDate) < today && !['completed', 'closed', 'cancelled', 'archived'].includes(t.status)).length,
-          blockedTasks: tasks.filter((t: any) => t.status === 'blocked').length,
-          awaitingReview: tasks.filter((t: any) => t.status === 'under_review').length,
+          openTasks: tasks.filter((t: MetricTask) => t.status === 'open' || t.status === 'draft').length,
+          inProgress: tasks.filter((t: MetricTask) => t.status === 'in_progress').length,
+          completedTasks: tasks.filter((t: MetricTask) => t.status === 'completed').length,
+          closedTasks: tasks.filter((t: MetricTask) => t.status === 'closed').length,
+          overdueTasks: tasks.filter((t: MetricTask) => t.dueDate && new Date(t.dueDate) < today && !['completed', 'closed', 'cancelled', 'archived'].includes(t.status)).length,
+          blockedTasks: tasks.filter((t: MetricTask) => t.status === 'blocked').length,
+          awaitingReview: tasks.filter((t: MetricTask) => t.status === 'under_review').length,
           totalProjects: projects.length,
-          activeProjects: projects.filter((p: any) => p.status === 'active').length,
+          activeProjects: projects.filter((p: MetricProject) => p.status === 'active').length,
           totalUsers: users.length,
           completionRate: tasks.length > 0
-            ? Math.round((tasks.filter((t: any) => t.status === 'completed' || t.status === 'closed').length / tasks.length) * 100)
+            ? Math.round((tasks.filter((t: MetricTask) => t.status === 'completed' || t.status === 'closed').length / tasks.length) * 100)
             : 0,
           upcomingDeadlines: tasks
-            .filter((t: any) => t.dueDate && !['completed', 'closed', 'cancelled', 'archived'].includes(t.status))
-            .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+            .filter((t: MetricTask) => t.dueDate && !['completed', 'closed', 'cancelled', 'archived'].includes(t.status))
+            .sort((a: MetricTask, b: MetricTask) => new Date(a.dueDate ?? 0).getTime() - new Date(b.dueDate ?? 0).getTime())
             .slice(0, 5),
           recentActivity: tasks
-            .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .sort((a: MetricTask, b: MetricTask) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             .slice(0, 10),
         };
 

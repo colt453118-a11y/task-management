@@ -1,4 +1,5 @@
-import { NextResponse, NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission, checkPermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';

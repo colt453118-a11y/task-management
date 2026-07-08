@@ -4,7 +4,7 @@ import { z } from 'zod';
 // Valid transitions between task statuses.
 // Key is current status, value is array of allowed next statuses.
 
-const VALID_STATUSES = [
+const _VALID_STATUSES = [
   'draft',
   'open',
   'assigned',
@@ -19,7 +19,7 @@ const VALID_STATUSES = [
   'archived',
 ] as const;
 
-export type TaskStatus = (typeof VALID_STATUSES)[number];
+export type TaskStatus = (typeof _VALID_STATUSES)[number];
 
 export const TASK_STATUS_TRANSITIONS: Record<string, string[]> = {
   draft: ['open', 'cancelled', 'archived'],

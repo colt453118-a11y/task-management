@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // ─── CSRF Protection Strategy ───────────────────────────────────
 //
@@ -182,13 +183,13 @@ export interface WithCsrfOptions {
  * );
  * ```
  */
-export function withCsrf<T extends (req: NextRequest, ...args: any[]) => Promise<NextResponse>>(
+export function withCsrf<T extends (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>>(
   handler: T,
   options?: WithCsrfOptions,
 ): T {
   if (options?.skip) return handler;
 
-  const wrapped = async (request: NextRequest, ...args: any[]) => {
+  const wrapped = async (request: NextRequest, ...args: unknown[]) => {
     // Only check mutations
     if (MUTATION_METHODS.has(request.method)) {
       const allowedOrigins = getAllowedOrigins();

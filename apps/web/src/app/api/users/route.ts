@@ -1,7 +1,9 @@
-import { NextResponse, NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
-import { eq, like, or, desc, and, isNull, SQL } from 'drizzle-orm';
+import { eq, like, or, desc, and, isNull } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 

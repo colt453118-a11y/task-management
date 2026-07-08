@@ -562,7 +562,7 @@ export default function TaskDetailPage() {
       <div className="flex flex-col items-center justify-center py-20">
         <AlertCircle className="h-12 w-12 text-surface-300 mb-4" />
         <h2 className="text-xl font-semibold text-surface-700">Task not found</h2>
-        <p className="text-sm text-surface-500 mt-1">This task may have been deleted or you don't have access.</p>
+        <p className="text-sm text-surface-500 mt-1">This task may have been deleted or you don&apos;t have access.</p>
         <Button variant="outline" className="mt-4" onClick={() => window.location.href = '/tasks'}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to tasks

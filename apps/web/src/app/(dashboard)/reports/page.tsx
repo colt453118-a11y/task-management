@@ -16,6 +16,17 @@ interface Snapshot {
   createdAt: string;
 }
 
+// ─── Metric helpers ──────────────────────────────────────────────
+interface MetricTask {
+  status: string;
+  dueDate?: string;
+  updatedAt: string;
+}
+
+interface MetricProject {
+  status: string;
+}
+
 export default function ReportsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -49,15 +60,15 @@ export default function ReportsPage() {
 
         setMetrics({
           totalTasks: tasks.length,
-          open: tasks.filter((t: any) => t.status === 'open').length,
-          inProgress: tasks.filter((t: any) => t.status === 'in_progress').length,
-          completed: tasks.filter((t: any) => t.status === 'completed').length,
-          closed: tasks.filter((t: any) => t.status === 'closed').length,
-          blocked: tasks.filter((t: any) => t.status === 'blocked').length,
-          overdue: tasks.filter((t: any) => t.dueDate && new Date(t.dueDate) < today && !['completed', 'closed', 'cancelled'].includes(t.status)).length,
-          completedThisWeek: tasks.filter((t: any) => t.status === 'completed' && new Date(t.updatedAt) >= weekAgo).length,
-          activeProjects: projects.filter((p: any) => p.status === 'active').length,
-          completionRate: tasks.length > 0 ? Math.round((tasks.filter((t: any) => ['completed', 'closed'].includes(t.status)).length / tasks.length) * 100) : 0,
+          open: tasks.filter((t: MetricTask) => t.status === 'open').length,
+          inProgress: tasks.filter((t: MetricTask) => t.status === 'in_progress').length,
+          completed: tasks.filter((t: MetricTask) => t.status === 'completed').length,
+          closed: tasks.filter((t: MetricTask) => t.status === 'closed').length,
+          blocked: tasks.filter((t: MetricTask) => t.status === 'blocked').length,
+          overdue: tasks.filter((t: MetricTask) => t.dueDate && new Date(t.dueDate) < today && !['completed', 'closed', 'cancelled'].includes(t.status)).length,
+          completedThisWeek: tasks.filter((t: MetricTask) => t.status === 'completed' && new Date(t.updatedAt) >= weekAgo).length,
+          activeProjects: projects.filter((p: MetricProject) => p.status === 'active').length,
+          completionRate: tasks.length > 0 ? Math.round((tasks.filter((t: MetricTask) => ['completed', 'closed'].includes(t.status)).length / tasks.length) * 100) : 0,
         });
       } catch {
         // Metrics stay empty

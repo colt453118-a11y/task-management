@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/api-auth';
 import { searchTasks } from '@/lib/search';
 import { handleApiError } from '@/lib/api/db';
