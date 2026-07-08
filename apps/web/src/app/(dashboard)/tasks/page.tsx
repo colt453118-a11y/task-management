@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -85,7 +85,7 @@ export default function TasksPage() {
     }
   }, [statusFilter, priorityFilter, page, search, view]);
 
-  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  useEffect(() => { startTransition(() => { fetchTasks(); }); }, [fetchTasks]);
 
   // Debounce search input
   const [searchInput, setSearchInput] = useState('');

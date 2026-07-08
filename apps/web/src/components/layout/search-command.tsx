@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2, ArrowRight, AlertCircle, FileText } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -58,25 +58,17 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
 
-  // Focus input and reset state when dialog opens
-  useEffect(() => {
-    if (open) {
-      setQuery('');
-      setResults([]);
-      setTotal(0);
-      setSearchUnavailable(false);
-      setSelectedIndex(-1);
-      setError(null);
-    }
-  }, [open]);
+  // State is automatically reset via key prop on SearchCommand in the parent component
 
   // Debounced search
   useEffect(() => {
     if (!query.trim()) {
-      setResults([]);
-      setTotal(0);
-      setSearchUnavailable(false);
-      setLoading(false);
+      startTransition(() => {
+        setResults([]);
+        setTotal(0);
+        setSearchUnavailable(false);
+        setLoading(false);
+      });
       return;
     }
 

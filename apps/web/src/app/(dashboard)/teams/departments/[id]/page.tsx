@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -129,7 +129,7 @@ export default function DepartmentDetailPage() {
     }
   }, [deptId]);
 
-  useEffect(() => { fetchDept(); }, [fetchDept]);
+  useEffect(() => { startTransition(() => { fetchDept(); }); }, [fetchDept]);
 
   // ── Render states ──────────────────────────────────────
 

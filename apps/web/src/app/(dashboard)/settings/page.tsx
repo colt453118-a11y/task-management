@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -199,8 +199,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (tab === 'roles') {
-      fetchRoles();
-      fetchUsers();
+      startTransition(() => {
+        fetchRoles();
+        fetchUsers();
+      });
     }
   }, [tab, fetchRoles, fetchUsers]);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import {
   Card,
@@ -149,21 +149,25 @@ export default function TeamDetailPage() {
       const res = await fetch('/api/users?limit=100');
       if (res.ok) {
         const json = await res.json();
-        const memberIds = new Set(data?.members.map((m) => m.userId) ?? []);
-        setAvailableUsers(
-          (json.users ?? []).filter((u: { id: string }) => !memberIds.has(u.id)),
-        );
+        if (data) {
+          const memberIds = new Set(data.members.map((m) => m.userId));
+          setAvailableUsers(
+            (json.users ?? []).filter((u: { id: string }) => !memberIds.has(u.id)),
+          );
+        }
       }
     } catch {
       // Non-critical
     }
-  }, [data?.members]);
+  }, [data]);
 
-  useEffect(() => { fetchTeam(); }, [fetchTeam]);
+  useEffect(() => { startTransition(() => { fetchTeam(); }); }, [fetchTeam]);
 
   useEffect(() => {
     if (showAddMember && data) {
-      fetchAvailableUsers();
+      startTransition(() => {
+        fetchAvailableUsers();
+      });
     }
   }, [showAddMember, data, fetchAvailableUsers]);
 

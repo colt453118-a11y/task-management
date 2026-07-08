@@ -2,16 +2,17 @@
 
 import { Search, Bell, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore, useState } from 'react';
 import { SearchCommand } from './search-command';
 
 export function Topbar() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [searchOpen, setSearchOpen] = useState(false);
-
-  // Need to mount to access theme without hydration mismatch
-  useEffect(() => setMounted(true), []);
 
   // Listen for ⌘K / Ctrl+K to open search
   useEffect(() => {
@@ -72,7 +73,7 @@ export function Topbar() {
         </div>
       </header>
 
-      <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchCommand key={searchOpen ? 'open' : 'closed'} open={searchOpen} onOpenChange={setSearchOpen} />
     </>
   );
 }

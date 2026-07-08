@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import {
   Card,
@@ -282,8 +282,10 @@ export default function TaskDetailPage() {
   }, [taskId]);
 
   useEffect(() => {
-    Promise.all([fetchTask(), fetchComments(), fetchAttachments(), fetchDependencies(), fetchTimeEntries()])
-      .finally(() => setLoading(false));
+    startTransition(() => {
+      Promise.all([fetchTask(), fetchComments(), fetchAttachments(), fetchDependencies(), fetchTimeEntries()])
+        .finally(() => setLoading(false));
+    });
   }, [fetchTask, fetchComments, fetchAttachments, fetchDependencies, fetchTimeEntries]);
 
   // ── Status / Priority update ────────────────────────────
@@ -376,11 +378,8 @@ export default function TaskDetailPage() {
   // ── Timer interval ───────────────────────────────────
 
   useEffect(() => {
-    if (!runningTimer) {
-      setElapsed('00:00:00');
-      return;
-    }
-    setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
+    if (!runningTimer) return;
+    // Initial tick deferred to interval; elapsed is already initialized to '00:00:00'
     const interval = setInterval(() => {
       setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
     }, 1000);
