@@ -1,0 +1,45 @@
+# CODEOWNERS — automatic PR review assignments
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repositorys-managing-code-owners
+#
+# Each pattern below defines who is automatically requested for review when a PR
+# modifies files matching that pattern.
+#
+# Patterns are evaluated in order (last match wins for a file).
+
+# ── Root configuration ──────────────────────────────────────────
+/package.json                       @colt453118-a11y
+/pnpm-workspace.yaml                @colt453118-a11y
+/turbo.json                         @colt453118-a11y
+/tsconfig.json                      @colt453118-a11y
+/.prettierrc                        @colt453118-a11y
+/renovate.json                      @colt453118-a11y
+
+# ── Docker & deployment ─────────────────────────────────────────
+/Dockerfile                         @colt453118-a11y
+/docker-compose*.yml                @colt453118-a11y
+/render.yaml                        @colt453118-a11y
+/railway.json                       @colt453118-a11y
+
+# ── CI/CD pipeline ──────────────────────────────────────────────
+.github/workflows/                  @colt453118-a11y
+.github/dependabot.yml              @colt453118-a11y
+.github/CODEOWNERS                  @colt453118-a11y
+
+# ── Web application ─────────────────────────────────────────────
+/apps/web/                          @colt453118-a11y
+
+# ── Shared packages ─────────────────────────────────────────────
+/packages/database/                 @colt453118-a11y
+/packages/shared/                   @colt453118-a11y
+
+# ── Scripts ─────────────────────────────────────────────────────
+/scripts/                           @colt453118-a11y
+
+# ── Documentation ───────────────────────────────────────────────
+/docs/                              @colt453118-a11y
+
+# ── Environment & secrets ───────────────────────────────────────
+/.env*                              @colt453118-a11y
+
+# ── Fallback: everything else ───────────────────────────────────
+*                                   @colt453118-a11y

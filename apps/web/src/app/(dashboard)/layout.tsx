@@ -3,7 +3,7 @@ import { Topbar } from '@/components/layout/topbar';
 
 /**
  * Dashboard layout wraps all authenticated pages.
- * Authentication is enforced by middleware (Phase 0 cookie fix).
+ * Authentication is enforced by proxy (Phase 0 cookie fix).
  */
 export default function DashboardLayout({
   children,
