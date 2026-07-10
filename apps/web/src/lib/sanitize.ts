@@ -1,23 +1,21 @@
 // ─── HTML Sanitization (XSS Prevention) ────────────────────────
 //
-// Uses DOMPurify (via isomorphic-dompurify for Node.js compatibility)
-// to strip malicious HTML/JavaScript from rich text content before
-// storage and rendering.
+// Uses sanitize-html to strip malicious HTML/JavaScript from rich
+// text content before storage and rendering.
 //
-// DOMPurify allows safe HTML tags that TipTap generates (bold, italic,
-// headings, lists, links, etc.) while removing dangerous elements
-// like <script>, <iframe>, <object>, event handlers (onclick=...),
-// javascript: URLs, and other XSS vectors.
+// sanitize-html is a pure CJS library that runs server-side without
+// requiring jsdom or browser APIs, avoiding ESM/CJS compatibility
+// issues that isomorphic-dompurify had.
 //
-// Reference: https://github.com/cure53/DOMPurify
+// Reference: https://www.npmjs.com/package/sanitize-html
 
-import DOMPurify from 'isomorphic-dompurify';
+import sanitize from 'sanitize-html';
 
 // ─── Allowed Tags ─────────────────────────────────────────────
 //
 // These are the HTML tags that TipTap's StarterKit generates.
 // All other tags (script, iframe, object, embed, style, etc.)
-// are stripped by DOMPurify by default.
+// are stripped by default.
 
 const ALLOWED_TAGS = [
   // Block elements
@@ -44,20 +42,23 @@ const ALLOWED_TAGS = [
 
 // ─── Allowed Attributes ───────────────────────────────────────
 
-const ALLOWED_ATTR = [
+const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   // Links
-  'href', 'target', 'rel', 'title',
+  a: ['href', 'target', 'rel', 'title'],
   // Images
-  'src', 'alt', 'width', 'height', 'loading',
-  // Code / prose styling
-  'class',
+  img: ['src', 'alt', 'width', 'height', 'loading'],
   // Tables
-  'colspan', 'rowspan', 'scope',
+  td: ['colspan', 'rowspan'],
+  th: ['scope', 'colspan', 'rowspan'],
   // Lists
-  'start', 'reversed', 'type',
-  // IDs for anchor linking
-  'id',
-];
+  ol: ['start', 'reversed', 'type'],
+  // All elements
+  '*': ['class', 'id'],
+};
+
+// ─── Allowed URL Schemes ──────────────────────────────────────
+
+const ALLOWED_SCHEMES = ['http', 'https', 'mailto', 'tel', 'ftp'];
 
 // ─── Sanitize HTML ────────────────────────────────────────────
 
@@ -82,19 +83,16 @@ const ALLOWED_ATTR = [
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return '';
 
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    // Allow only safe URL schemes in href/src attributes
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
-    // Disallow data attributes — they're not needed and can be used for data exfiltration
-    ALLOW_DATA_ATTR: false,
-    // Default is true — keeps content when parent is removed (e.g., remove script but keep text)
-    KEEP_CONTENT: true,
-    // Return sanitized HTML as string
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-    RETURN_TRUSTED_TYPE: false,
+  return sanitize(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: ALLOWED_ATTRIBUTES,
+    allowedSchemes: ALLOWED_SCHEMES,
+    // Disallow all protocols not in the allowed list
+    allowedSchemesByTag: {},
+    // Remove disallowed tags and their content entirely (XSS prevention)
+    disallowedTagsMode: 'discard',
+    // Allow protocol-relative URLs (e.g. //example.com/image.png)
+    allowProtocolRelative: true,
   });
 }
 

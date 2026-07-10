@@ -16,7 +16,7 @@ const publicPaths = [
  */
 const SESSION_COOKIE_NAME = 'better-auth.session_token';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const { pathname } = request.nextUrl;
 

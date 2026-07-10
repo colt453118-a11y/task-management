@@ -4,8 +4,8 @@ import { test, expect } from '@playwright/test';
 
 const SESSION_COOKIE_NAME = 'better-auth.session_token';
 
-// A realistic-looking session token for testing the proxy auth flow.
-// The proxy.ts only checks for the cookie's existence, not its validity.
+// A realistic-looking session token for testing the middleware auth flow.
+// The middleware only checks for the cookie's existence, not its validity.
 // Full auth validation happens server-side in the API routes.
 const MOCK_SESSION_TOKEN = 'mock-session-token-for-testing';
 
@@ -60,7 +60,7 @@ test.describe('unauthenticated access (no session cookie)', () => {
   for (const route of PUBLIC_ROUTES) {
     test(`does not redirect public route ${route}`, async ({ request }) => {
       const response = await request.get(route);
-      // The proxy lets public routes through; status depends on whether
+      // The middleware lets public routes through; status depends on whether
     // backing services (database, etc.) are available. The key assertion
     // is that the request is NOT redirected (status !== 307).
     expect(response.status()).not.toBe(307);
@@ -68,7 +68,7 @@ test.describe('unauthenticated access (no session cookie)', () => {
   }
 
   test('redirects root (/) to /auth/login', async ({ request }) => {
-    // The root page component does redirect('/auth/login') and the proxy also
+    // The root page component does redirect('/auth/login') and the middleware also
     // redirects / to /auth/login?redirect=/. Both result in a redirect to login.
     const response = await request.get('/', {
       maxRedirects: 0,
@@ -100,9 +100,9 @@ test.describe('authenticated access (with session cookie)', () => {
           },
           maxRedirects: 0,
         });
-        // The proxy should let authenticated requests pass through.
+        // The middleware should let authenticated requests pass through.
         // Actual rendering may 404 or error without a real backend,
-        // but the proxy should not redirect.
+        // but the middleware should not redirect.
         expect(response.status()).not.toBe(307);
       });
     }
@@ -132,7 +132,7 @@ test.describe('redirect URL preservation', () => {
   });
 
   test('uses pathname (not query string) in redirect param', async ({ request }) => {
-    // The proxy uses request.nextUrl.pathname which excludes query parameters.
+    // The middleware uses request.nextUrl.pathname which excludes query parameters.
     // The query string is stripped, only the path is preserved in the redirect param.
     const response = await request.get('/tasks?status=open&priority=high', {
       maxRedirects: 0,
@@ -151,9 +151,9 @@ test.describe('redirect URL preservation', () => {
 // ─── Cookie Name ────────────────────────────────────────────────
 
 test.describe('session cookie name', () => {
-  test('proxy uses correct session cookie name via redirect behavior', async ({ request }) => {
+  test('middleware uses correct session cookie name via redirect behavior', async ({ request }) => {
     // Verify that requests WITHOUT the better-auth.session_token cookie
-    // get redirected to login, confirming proxy.ts uses the expected name.
+    // get redirected to login, confirming middleware.ts uses the expected name.
     const response = await request.get('/dashboard', {
       maxRedirects: 0,
     });

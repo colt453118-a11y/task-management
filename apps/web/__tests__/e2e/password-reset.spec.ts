@@ -77,7 +77,7 @@ test.describe('forgot-password page', () => {
     await expect(loginLink).toHaveAttribute('href', '/auth/login');
   });
 
-  test('is a public route (not redirected by proxy)', async ({ request }) => {
+  test('is a public route (not redirected by middleware)', async ({ request }) => {
     const response = await request.get('/auth/forgot-password', {
       maxRedirects: 0,
     });
@@ -98,9 +98,22 @@ test.describe('reset-password page', () => {
   });
 
   test('shows error banner when INVALID_TOKEN error param is present', async ({ page }) => {
+    // Navigate and wait for a known hydrated element (the form heading)
+    // before checking the alert. The heading only renders when token is present,
+    // which requires useSearchParams() to have run — confirming hydration.
     await page.goto('/auth/reset-password?token=abc&error=INVALID_TOKEN');
 
-    await expect(page.getByRole('alert')).toContainText(/invalid or expired reset link/i, { timeout: 15_000 });
+    // Wait for hydration by checking a heading that requires useSearchParams()
+    await expect(
+      page.getByRole('heading', { name: /set new password/i }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    // Now assert the error banner — hydration is complete, so the error state is set.
+    // Use a CSS selector to target the specific error banner div, not the Next.js
+    // route announcer which also has role="alert" and causes a strict mode violation.
+    await expect(
+      page.locator('div[role="alert"]').filter({ hasText: /invalid or expired reset link/i }),
+    ).toBeVisible();
   });
 
   test('renders password form when a token is provided', async ({ page }) => {
@@ -201,7 +214,7 @@ test.describe('reset-password page', () => {
     await expect(signInLink).toHaveAttribute('href', '/auth/login');
   });
 
-  test('is a public route (not redirected by proxy)', async ({ request }) => {
+  test('is a public route (not redirected by middleware)', async ({ request }) => {
     const response = await request.get('/auth/reset-password', {
       maxRedirects: 0,
     });

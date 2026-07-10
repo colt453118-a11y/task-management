@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Mock the sign-in API (better-auth) to return a success response
- * and set the session cookie that proxy.ts checks.
+ * and set the session cookie that middleware checks.
  */
 async function mockSignInSuccess(page: import('@playwright/test').Page) {
   await page.route('**/api/auth/sign-in/email', async (route) => {
@@ -24,7 +24,7 @@ async function mockSignInSuccess(page: import('@playwright/test').Page) {
 
 /**
  * Mock the sign-up API (better-auth) to return a success response
- * and set the session cookie that proxy.ts checks.
+ * and set the session cookie that middleware checks.
  */
 async function mockSignUpSuccess(page: import('@playwright/test').Page) {
   await page.route('**/api/auth/sign-up/email', async (route) => {
@@ -116,7 +116,7 @@ test.describe('login page', () => {
     await expect(microsoftButton).toBeDisabled();
   });
 
-  test('is a public route (not redirected by proxy)', async ({ request }) => {
+  test('is a public route (not redirected by middleware)', async ({ request }) => {
     const response = await request.get('/auth/login', {
       maxRedirects: 0,
     });
@@ -212,7 +212,7 @@ test.describe('register page', () => {
     await expect(signInLink).toHaveAttribute('href', '/auth/login');
   });
 
-  test('is a public route (not redirected by proxy)', async ({ request }) => {
+  test('is a public route (not redirected by middleware)', async ({ request }) => {
     const response = await request.get('/auth/register', {
       maxRedirects: 0,
     });
