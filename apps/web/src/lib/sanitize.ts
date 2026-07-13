@@ -1,23 +1,20 @@
 // ─── HTML Sanitization (XSS Prevention) ────────────────────────
 //
-// Uses DOMPurify (via isomorphic-dompurify for Node.js compatibility)
-// to strip malicious HTML/JavaScript from rich text content before
-// storage and rendering.
+// Uses the xss library (js-xss) to strip malicious HTML/JavaScript
+// from rich text content before storage and rendering.
 //
-// DOMPurify allows safe HTML tags that TipTap generates (bold, italic,
-// headings, lists, links, etc.) while removing dangerous elements
-// like <script>, <iframe>, <object>, event handlers (onclick=...),
-// javascript: URLs, and other XSS vectors.
+// xss is a pure CJS library with no ESM-only dependencies, making it
+// compatible with both the Next.js build pipeline and vitest tests.
 //
-// Reference: https://github.com/cure53/DOMPurify
+// Reference: https://www.npmjs.com/package/xss
 
-import DOMPurify from 'isomorphic-dompurify';
+import xss from 'xss';
 
 // ─── Allowed Tags ─────────────────────────────────────────────
 //
 // These are the HTML tags that TipTap's StarterKit generates.
 // All other tags (script, iframe, object, embed, style, etc.)
-// are stripped by DOMPurify by default.
+// are stripped by default.
 
 const ALLOWED_TAGS = [
   // Block elements
@@ -43,21 +40,54 @@ const ALLOWED_TAGS = [
 ];
 
 // ─── Allowed Attributes ───────────────────────────────────────
+// xss uses a whiteList object where keys are tag names and values
+// are arrays of allowed attributes. The '*' wildcard is applied
+// by merging its attributes into every tag's attribute list.
 
-const ALLOWED_ATTR = [
+const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   // Links
-  'href', 'target', 'rel', 'title',
+  a: ['href', 'target', 'rel', 'title'],
   // Images
-  'src', 'alt', 'width', 'height', 'loading',
-  // Code / prose styling
-  'class',
+  img: ['src', 'alt', 'width', 'height', 'loading'],
   // Tables
-  'colspan', 'rowspan', 'scope',
+  td: ['colspan', 'rowspan'],
+  th: ['scope', 'colspan', 'rowspan'],
   // Lists
-  'start', 'reversed', 'type',
-  // IDs for anchor linking
-  'id',
+  ol: ['start', 'reversed', 'type'],
+  // Wildcard — applied to every tag
+  '*': ['class', 'id'],
+};
+
+// ─── Tags to strip entirely (body + content) ──────────────────
+// These are dangerous tags that should be completely removed,
+// unlike unrecognized tags whose inner text is preserved.
+
+const STRIP_BODY_TAGS = [
+  'script', 'style', 'iframe', 'object', 'embed', 'form', 'input',
+  'button', 'textarea', 'select', 'option', 'video', 'audio',
+  'canvas', 'applet', 'frame', 'frameset', 'noscript', 'noframes',
 ];
+
+// ─── Dangerous URL schemes to block ───────────────────────────
+// xss blocks javascript: and vbscript: by default, but we also
+// need to block data: and other schemes.
+
+const BLOCKED_URL_SCHEMES = ['javascript:', 'vbscript:', 'data:'];
+
+// ─── Build xss whiteList (merge '*' wildcard into every tag) ──
+
+function buildWhiteList(): Record<string, string[]> {
+  const wildcardAttrs = ALLOWED_ATTRIBUTES['*'] ?? [];
+  const whiteList: Record<string, string[]> = {};
+
+  for (const tag of ALLOWED_TAGS) {
+    const tagAttrs = ALLOWED_ATTRIBUTES[tag] ?? [];
+    // Merge wildcard attributes into each tag's attribute list
+    whiteList[tag] = [...new Set([...tagAttrs, ...wildcardAttrs])];
+  }
+
+  return whiteList;
+}
 
 // ─── Sanitize HTML ────────────────────────────────────────────
 
@@ -82,20 +112,62 @@ const ALLOWED_ATTR = [
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return '';
 
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    // Allow only safe URL schemes in href/src attributes
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
-    // Disallow data attributes — they're not needed and can be used for data exfiltration
-    ALLOW_DATA_ATTR: false,
-    // Default is true — keeps content when parent is removed (e.g., remove script but keep text)
-    KEEP_CONTENT: true,
-    // Return sanitized HTML as string
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-    RETURN_TRUSTED_TYPE: false,
-  });
+  return xss(html, {
+    whiteList: buildWhiteList(),
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: STRIP_BODY_TAGS,
+    // Block dangerous URL schemes in href/src attributes
+    onTagAttr: (_tag: string, name: string, value: string) => {
+      if (name === 'href' || name === 'src') {
+        const lower = value.toLowerCase().trim();
+        for (const scheme of BLOCKED_URL_SCHEMES) {
+          if (lower.startsWith(scheme)) {
+            // Return a replacement attribute with src/href emptied
+            return `${name}=""`;
+          }
+        }
+      }
+      // Return void to keep the attribute as-is
+      return;
+    },
+    css: {
+      // Allow CSS properties that are safe
+      whiteList: {
+        color: true,
+        'background-color': true,
+        'font-size': true,
+        'font-weight': true,
+        'font-style': true,
+        'font-family': true,
+        'text-align': true,
+        'text-decoration': true,
+        'line-height': true,
+        'margin': true,
+        'margin-top': true,
+        'margin-right': true,
+        'margin-bottom': true,
+        'margin-left': true,
+        'padding': true,
+        'padding-top': true,
+        'padding-right': true,
+        'padding-bottom': true,
+        'padding-left': true,
+        'border': true,
+        'border-radius': true,
+        'width': true,
+        'height': true,
+        'max-width': true,
+        'max-height': true,
+        'display': true,
+        'overflow': true,
+        'visibility': true,
+        'opacity': true,
+        'transform': true,
+        'transition': true,
+        'box-shadow': true,
+      },
+    },
+  }).replace(/\[removed\]/g, '');
 }
 
 /**

@@ -1,7 +1,8 @@
 # ─── Builder Stage ─────────────────────────────────────────────
-FROM node:20.18.3-alpine AS builder
+FROM node:24-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+# Upgrade corepack to support pnpm@10 signature verification
+RUN npm install -g corepack@latest && corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
 # Install dependencies (separate from source for layer caching)
@@ -22,7 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @workmanagement/web build
 
 # ─── Runner Stage ─────────────────────────────────────────────
-FROM node:20.18.3-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Create non-root user
 RUN addgroup --system app && adduser --system --ingroup app app
@@ -37,8 +38,8 @@ ENV PORT=3000
 COPY --from=builder --chown=app:app /app/apps/web/.next/standalone ./
 # Copy static assets (not included in standalone output)
 COPY --from=builder --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
-# Copy public assets
-COPY --from=builder --chown=app:app /app/apps/web/public ./apps/web/public
+# Copy public assets (if they exist — may be empty/untracked)
+COPY --from=builder --chown=app:app /app/apps/web/public/ ./apps/web/public/
 
 # Switch to non-root user
 USER app

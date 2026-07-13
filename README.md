@@ -2,6 +2,12 @@
 
 > Enterprise work & task management platform — a modern Jira/Linear alternative.
 
+[![CI](https://github.com/colt453118-a11y/task-management/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/colt453118-a11y/task-management/actions/workflows/ci.yml)
+[![Docker build](https://github.com/colt453118-a11y/task-management/actions/workflows/ci.yml/badge.svg?branch=main&label=docker)](https://github.com/colt453118-a11y/task-management/actions/workflows/ci.yml)
+![Node](https://img.shields.io/badge/node-24.18.0-339933?logo=node.js&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-10-F69220?logo=pnpm&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
+
 **Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Drizzle ORM · PostgreSQL · Better Auth · Redis · MinIO · Meilisearch
 
 ---
@@ -113,7 +119,7 @@ All routes are protected by middleware and wired with Drizzle ORM queries:
 
 ### Prerequisites
 
-- **Node.js** >= 20
+- **Node.js** >= 22
 - **pnpm** >= 10
 - **Docker** (for PostgreSQL, Redis, MinIO, Meilisearch)
 
