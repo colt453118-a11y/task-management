@@ -6,6 +6,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./__tests__/setup.ts'],
+    // Inline sanitize-html because it uses require() on htmlparser2 which
+    // is ESM-only. Vite's transformer resolves the ESM/CJS boundary.
+    deps: {
+      inline: ['sanitize-html'],
+    },
     include: ['**/__tests__/**/*.test.ts'],
     exclude: ['**/e2e/**', '**/node_modules/**'],
     coverage: {
