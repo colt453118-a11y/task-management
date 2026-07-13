@@ -119,7 +119,7 @@ All routes are protected by middleware and wired with Drizzle ORM queries:
 
 ### Prerequisites
 
-- **Node.js** >= 20
+- **Node.js** >= 22
 - **pnpm** >= 10
 - **Docker** (for PostgreSQL, Redis, MinIO, Meilisearch)
 
