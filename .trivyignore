@@ -1,0 +1,22 @@
+# ─── Accepted CVEs ─────────────────────────────────────────────
+#
+# This file suppresses false positive or accepted-risk vulnerability
+# findings from Trivy scans.
+#
+# All CVEs listed here must be reviewed and documented before adding.
+
+# CVE-2026-12151 — HIGH — undici (bundled with node:24-alpine)
+#
+# undici Denial of Service due to unbounded memory.
+# Fixed in: 6.27.0, 7.28.0, 8.5.0
+#
+# This vulnerability is in the undici HTTP client bundled with the
+# node:24-alpine base image itself. Our application dependencies
+# all use undici@7.28.0 (patched). The Alpine image's bundled
+# undici@6.26.0 is a Node.js runtime component that cannot be
+# overridden via npm/pnpm. Accepted as a runtime risk; will be
+# resolved when the node:24-alpine image is rebuilt with a newer
+# Node.js patch version.
+#
+# Re-evaluate on next Node.js Docker image update.
+CVE-2026-12151
