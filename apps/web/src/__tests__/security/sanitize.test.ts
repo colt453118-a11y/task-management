@@ -69,6 +69,8 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml(input)).toBe('<p>Safe</p>');
   });
 
+  // ── Style tags ──────────────────────────────────────────────
+
   it('strips style tags', () => {
     const input = '<style>body { background: black; }</style><p>Safe</p>';
     expect(sanitizeHtml(input)).toBe('<p>Safe</p>');
@@ -191,14 +193,12 @@ describe('sanitizeHtml', () => {
 
   it('handles deeply nested script tag bypass attempts', () => {
     // Nested script tags, a common bypass technique
-    // DOMPurify strips the script tags; text content like 'alert(1)' remains
-    // as harmless text since the script execution context is removed
     const input = '<scr<script>ipt>alert(1)</scr</script>ipt>';
     const result = sanitizeHtml(input);
-    // Script tags should be removed — no <script> should remain
+    // Script tags should be completely removed — no executable script remains
     expect(result).not.toContain('<script>');
-    // The text content 'alert(1)' is fine as long as it's not executable
-    expect(result).toContain('alert(1)');
+    // xss escapes the remaining script text as HTML entities
+    expect(result).toBe('&lt;script&gt;');
   });
 
   it('handles svg with onload attribute', () => {
@@ -206,7 +206,7 @@ describe('sanitizeHtml', () => {
     const input = '<svg onload="alert(1)"><p>Safe</p></svg>';
     const result = sanitizeHtml(input);
     expect(result).not.toContain('onload');
-    // The safe paragraph content should remain
+    // The SVG tag is stripped but the inner safe content is preserved
     expect(result).toContain('Safe');
   });
 });

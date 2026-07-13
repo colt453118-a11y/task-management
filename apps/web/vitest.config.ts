@@ -6,16 +6,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./__tests__/setup.ts'],
-    // Pre-bundle sanitize-html + htmlparser2 through Vite's SSR optimizer so
-    // Vite transforms the ESM/CJS boundary. sanitize-html uses require() on
-    // htmlparser2 which is ESM-only — the SSR optimizer resolves this.
-    deps: {
-      optimizer: {
-        ssr: {
-          include: ['sanitize-html', 'htmlparser2'],
-        },
-      },
-    },
     include: ['**/__tests__/**/*.test.ts'],
     exclude: ['**/e2e/**', '**/node_modules/**'],
     coverage: {

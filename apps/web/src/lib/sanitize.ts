@@ -1,15 +1,14 @@
 // ─── HTML Sanitization (XSS Prevention) ────────────────────────
 //
-// Uses sanitize-html to strip malicious HTML/JavaScript from rich
-// text content before storage and rendering.
+// Uses the xss library (js-xss) to strip malicious HTML/JavaScript
+// from rich text content before storage and rendering.
 //
-// sanitize-html is a pure CJS library that runs server-side without
-// requiring jsdom or browser APIs, avoiding ESM/CJS compatibility
-// issues that isomorphic-dompurify had.
+// xss is a pure CJS library with no ESM-only dependencies, making it
+// compatible with both the Next.js build pipeline and vitest tests.
 //
-// Reference: https://www.npmjs.com/package/sanitize-html
+// Reference: https://www.npmjs.com/package/xss
 
-import sanitize from 'sanitize-html';
+import xss from 'xss';
 
 // ─── Allowed Tags ─────────────────────────────────────────────
 //
@@ -41,6 +40,9 @@ const ALLOWED_TAGS = [
 ];
 
 // ─── Allowed Attributes ───────────────────────────────────────
+// xss uses a whiteList object where keys are tag names and values
+// are arrays of allowed attributes. The '*' wildcard is applied
+// by merging its attributes into every tag's attribute list.
 
 const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   // Links
@@ -52,13 +54,40 @@ const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   th: ['scope', 'colspan', 'rowspan'],
   // Lists
   ol: ['start', 'reversed', 'type'],
-  // All elements
+  // Wildcard — applied to every tag
   '*': ['class', 'id'],
 };
 
-// ─── Allowed URL Schemes ──────────────────────────────────────
+// ─── Tags to strip entirely (body + content) ──────────────────
+// These are dangerous tags that should be completely removed,
+// unlike unrecognized tags whose inner text is preserved.
 
-const ALLOWED_SCHEMES = ['http', 'https', 'mailto', 'tel', 'ftp'];
+const STRIP_BODY_TAGS = [
+  'script', 'style', 'iframe', 'object', 'embed', 'form', 'input',
+  'button', 'textarea', 'select', 'option', 'video', 'audio',
+  'canvas', 'applet', 'frame', 'frameset', 'noscript', 'noframes',
+];
+
+// ─── Dangerous URL schemes to block ───────────────────────────
+// xss blocks javascript: and vbscript: by default, but we also
+// need to block data: and other schemes.
+
+const BLOCKED_URL_SCHEMES = ['javascript:', 'vbscript:', 'data:'];
+
+// ─── Build xss whiteList (merge '*' wildcard into every tag) ──
+
+function buildWhiteList(): Record<string, string[]> {
+  const wildcardAttrs = ALLOWED_ATTRIBUTES['*'] ?? [];
+  const whiteList: Record<string, string[]> = {};
+
+  for (const tag of ALLOWED_TAGS) {
+    const tagAttrs = ALLOWED_ATTRIBUTES[tag] ?? [];
+    // Merge wildcard attributes into each tag's attribute list
+    whiteList[tag] = [...new Set([...tagAttrs, ...wildcardAttrs])];
+  }
+
+  return whiteList;
+}
 
 // ─── Sanitize HTML ────────────────────────────────────────────
 
@@ -83,17 +112,62 @@ const ALLOWED_SCHEMES = ['http', 'https', 'mailto', 'tel', 'ftp'];
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return '';
 
-  return sanitize(html, {
-    allowedTags: ALLOWED_TAGS,
-    allowedAttributes: ALLOWED_ATTRIBUTES,
-    allowedSchemes: ALLOWED_SCHEMES,
-    // Disallow all protocols not in the allowed list
-    allowedSchemesByTag: {},
-    // Remove disallowed tags and their content entirely (XSS prevention)
-    disallowedTagsMode: 'discard',
-    // Allow protocol-relative URLs (e.g. //example.com/image.png)
-    allowProtocolRelative: true,
-  });
+  return xss(html, {
+    whiteList: buildWhiteList(),
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: STRIP_BODY_TAGS,
+    // Block dangerous URL schemes in href/src attributes
+    onTagAttr: (_tag: string, name: string, value: string) => {
+      if (name === 'href' || name === 'src') {
+        const lower = value.toLowerCase().trim();
+        for (const scheme of BLOCKED_URL_SCHEMES) {
+          if (lower.startsWith(scheme)) {
+            // Return a replacement attribute with src/href emptied
+            return `${name}=""`;
+          }
+        }
+      }
+      // Return void to keep the attribute as-is
+      return;
+    },
+    css: {
+      // Allow CSS properties that are safe
+      whiteList: {
+        color: true,
+        'background-color': true,
+        'font-size': true,
+        'font-weight': true,
+        'font-style': true,
+        'font-family': true,
+        'text-align': true,
+        'text-decoration': true,
+        'line-height': true,
+        'margin': true,
+        'margin-top': true,
+        'margin-right': true,
+        'margin-bottom': true,
+        'margin-left': true,
+        'padding': true,
+        'padding-top': true,
+        'padding-right': true,
+        'padding-bottom': true,
+        'padding-left': true,
+        'border': true,
+        'border-radius': true,
+        'width': true,
+        'height': true,
+        'max-width': true,
+        'max-height': true,
+        'display': true,
+        'overflow': true,
+        'visibility': true,
+        'opacity': true,
+        'transform': true,
+        'transition': true,
+        'box-shadow': true,
+      },
+    },
+  }).replace(/\[removed\]/g, '');
 }
 
 /**
