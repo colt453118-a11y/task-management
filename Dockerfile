@@ -38,8 +38,8 @@ ENV PORT=3000
 COPY --from=builder --chown=app:app /app/apps/web/.next/standalone ./
 # Copy static assets (not included in standalone output)
 COPY --from=builder --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
-# Copy public assets
-COPY --from=builder --chown=app:app /app/apps/web/public ./apps/web/public
+# Copy public assets (if they exist — may be empty/untracked)
+COPY --from=builder --chown=app:app /app/apps/web/public/ ./apps/web/public/
 
 # Switch to non-root user
 USER app
