@@ -6,20 +6,17 @@ import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { CommentCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
+import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 
 export const runtime = 'nodejs';
 
-function getIdsFromPath(request: NextRequest): { taskId: string } {
-  const segments = request.nextUrl.pathname.split('/');
-  const idIndex = segments.indexOf('tasks');
-  return { taskId: segments[idIndex + 1]! };
-}
-
 // GET /api/tasks/[id]/comments - List comments for a task (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
+
+      await requirePermission(user.id, 'task:view');
 
       const comments = await db()
         .select({
@@ -63,7 +60,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       await requirePermission(user.id, 'task:edit');
 
       const body = await request.json();
@@ -87,22 +84,12 @@ export const POST = withAuth(
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
 
-      if (!task) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
-          { status: 404 },
-        );
-      }
-
-      if (task.organizationId !== orgId) {
-        return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
-          { status: 403 },
-        );
-      }
+      // Shared helper checks task existence + org scope
+      const accessError = checkTaskAccessOrRespond(task, orgId);
+      if (accessError) return accessError;
 
       // Block comments on archived tasks
-      if (task.status === 'archived') {
+      if (task!.status === 'archived') {
         return NextResponse.json(
           { error: { code: 'INVALID_STATE', message: 'Cannot comment on archived tasks' } },
           { status: 422 },
@@ -171,7 +158,7 @@ export const POST = withAuth(
 export const DELETE = withAuth(
   async (request: NextRequest, { user }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       const commentId = request.nextUrl.searchParams.get('commentId');
 
       if (!commentId) {

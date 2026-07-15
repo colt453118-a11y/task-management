@@ -84,14 +84,15 @@ test.describe('login page', () => {
     await page.getByLabel(/password/i).fill('correctpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
-    // After successful login, the page should navigate to /dashboard
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+    // The login page redirects to / (root) after successful sign-in
+    await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
   });
 
   test('provides a link to forgot-password', async ({ page }) => {
     await page.goto('/auth/login');
 
-    const forgotLink = page.getByRole('link', { name: /forgot password/i });
+    // The link text is "Forgot?" not "forgot password"
+    const forgotLink = page.getByRole('link', { name: /forgot/i });
     await expect(forgotLink).toBeVisible();
     await expect(forgotLink).toHaveAttribute('href', '/auth/forgot-password');
   });
@@ -153,7 +154,10 @@ test.describe('register page', () => {
     await page.getByLabel(/password/i).fill('Abc123'); // 7 chars, min is 8
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByText(/at least 8 characters/i)).toBeVisible({ timeout: 10_000 });
+    // The error appears inside a role="alert" inside the form; avoid matching the
+    // Next.js route announcer (also role="alert") and the hint text "Must be at least
+    // 8 characters" that's also on the page. Scope to the form element.
+    await expect(page.locator('form [role="alert"]')).toContainText(/at least 8 characters/i, { timeout: 10_000 });
   });
 
   test('shows error when registration fails', async ({ page }) => {
@@ -201,7 +205,8 @@ test.describe('register page', () => {
     await page.getByLabel(/password/i).fill('SecurePass123');
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+    // The register page redirects to / (root) after successful sign-up
+    await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
   });
 
   test('provides a link to sign in', async ({ page }) => {

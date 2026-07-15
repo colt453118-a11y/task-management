@@ -74,6 +74,11 @@ async function seed() {
     { code: 'task:close', name: 'Close Tasks', module: 'task' },
     { code: 'task:reopen', name: 'Reopen Tasks', module: 'task' },
     { code: 'task:archive', name: 'Archive Tasks', module: 'task' },
+    // Task template permissions
+    { code: 'task_template:view', name: 'View Task Templates', module: 'task' },
+    { code: 'task_template:create', name: 'Create Task Templates', module: 'task' },
+    { code: 'task_template:edit', name: 'Edit Task Templates', module: 'task' },
+    { code: 'task_template:delete', name: 'Delete Task Templates', module: 'task' },
     // Report permissions
     { code: 'report:view', name: 'View Reports', module: 'report' },
     { code: 'report:generate', name: 'Generate Reports', module: 'report' },

@@ -5,15 +5,10 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, or, isNull } from 'drizzle-orm';
 import { READONLY_STATUSES } from '@/lib/api/validation';
+import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
-
-function getTaskIdFromPath(request: NextRequest): string {
-  const segments = request.nextUrl.pathname.split('/');
-  const idIndex = segments.indexOf('tasks');
-  return segments[idIndex + 1]!;
-}
 
 const DependencyCreateSchema = z.object({
   dependsOnTaskId: z.string().uuid('Invalid task ID'),
@@ -22,9 +17,11 @@ const DependencyCreateSchema = z.object({
 
 // GET /api/tasks/[id]/dependencies - List dependencies
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const taskId = getTaskIdFromPath(request);
+
+      await requirePermission(user.id, 'task:view');
 
       // Tasks this task depends on (blocked_by)
       const blockedBy = await db()
@@ -131,24 +128,16 @@ export const POST = withAuth(
           .limit(1),
       ]);
 
-      if (!sourceTask[0] || !targetTask[0]) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
-          { status: 404 },
-        );
-      }
-
-      if (sourceTask[0].organizationId !== orgId || targetTask[0].organizationId !== orgId) {
-        return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Cross-organization dependency denied' } },
-          { status: 403 },
-        );
-      }
+      // Shared helper checks task existence + org scope for both tasks
+      const sourceError = checkTaskAccessOrRespond(sourceTask[0], orgId);
+      if (sourceError) return sourceError;
+      const targetError = checkTaskAccessOrRespond(targetTask[0], orgId);
+      if (targetError) return targetError;
 
       // Block dependency changes on read-only tasks
-      if (READONLY_STATUSES.has(sourceTask[0].status)) {
+      if (READONLY_STATUSES.has(sourceTask[0]!.status)) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${sourceTask[0].status}'` } },
+          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${sourceTask[0]!.status}'` } },
           { status: 422 },
         );
       }
@@ -244,23 +233,13 @@ export const DELETE = withAuth(
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
 
-      if (!task) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
-          { status: 404 },
-        );
-      }
+      // Shared helper checks task existence + org scope
+      const accessError = checkTaskAccessOrRespond(task, orgId);
+      if (accessError) return accessError;
 
-      if (task.organizationId !== orgId) {
+      if (READONLY_STATUSES.has(task!.status)) {
         return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
-          { status: 403 },
-        );
-      }
-
-      if (READONLY_STATUSES.has(task.status)) {
-        return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${task.status}'` } },
+          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${task!.status}'` } },
           { status: 422 },
         );
       }

@@ -5,20 +5,17 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, isNotNull } from 'drizzle-orm';
 import { TimeEntryCreateSchema, validationError } from '@/lib/api/validation';
+import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 
 export const runtime = 'nodejs';
 
-function getIdsFromPath(request: NextRequest): { taskId: string } {
-  const segments = request.nextUrl.pathname.split('/');
-  const idIndex = segments.indexOf('tasks');
-  return { taskId: segments[idIndex + 1]! };
-}
-
 // GET /api/tasks/[id]/time-entries — List time entries for a task
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
+
+      await requirePermission(user.id, 'task:view');
 
       const entries = await db()
         .select({
@@ -61,7 +58,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       await requirePermission(user.id, 'task:edit');
 
       const body = await request.json();
@@ -84,22 +81,12 @@ export const POST = withAuth(
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
 
-      if (!task) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
-          { status: 404 },
-        );
-      }
-
-      if (task.organizationId !== orgId) {
-        return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
-          { status: 403 },
-        );
-      }
+      // Shared helper checks task existence + org scope
+      const accessError = checkTaskAccessOrRespond(task, orgId);
+      if (accessError) return accessError;
 
       // Block time entries on archived/closed tasks
-      if (task.status === 'archived' || task.status === 'closed') {
+      if (task!.status === 'archived' || task!.status === 'closed') {
         return NextResponse.json(
           { error: { code: 'INVALID_STATE', message: 'Cannot log time on archived or closed tasks' } },
           { status: 422 },
@@ -196,7 +183,7 @@ export const POST = withAuth(
 export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       const entryId = request.nextUrl.searchParams.get('entryId');
       const body = await request.json().catch(() => ({}));
 
@@ -321,7 +308,7 @@ export const PATCH = withAuth(
 export const DELETE = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       const entryId = request.nextUrl.searchParams.get('entryId');
 
       if (!entryId) {

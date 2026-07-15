@@ -26,7 +26,7 @@ function getUserIdFromPath(request: NextRequest): string {
 export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      await requirePermission(user.id, 'user:deactivate');
+      await requirePermission(user.id, 'user:manage');
 
       const targetUserId = getUserIdFromPath(request);
       const body = await request.json().catch(() => ({}));

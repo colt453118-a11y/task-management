@@ -1,6 +1,6 @@
 'use client';
 
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { Calendar, User } from 'lucide-react';
 
@@ -28,6 +28,21 @@ const priorityConfig: Record<string, { label: string; color: string; dot: string
 
 const READONLY_STATUSES = new Set(['closed', 'archived', 'completed']);
 
+const statusBorderAccent: Record<string, string> = {
+  draft:        'border-l-status-draft',
+  open:         'border-l-status-open',
+  assigned:     'border-l-status-on-hold',
+  in_progress:  'border-l-status-in-progress',
+  blocked:      'border-l-status-blocked',
+  on_hold:      'border-l-status-on-hold',
+  under_review: 'border-l-status-under-review',
+  completed:    'border-l-status-completed',
+  closed:       'border-l-status-closed',
+  cancelled:    'border-l-status-cancelled',
+  archived:     'border-l-status-archived',
+  reopened:     'border-l-status-approved',
+};
+
 function formatDate(dateStr: string | null): string | null {
   if (!dateStr) return null;
   try {
@@ -43,14 +58,24 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
   const formattedDate = formatDate(task.dueDate);
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isReadonly;
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: task.id,
     data: { task, status: task.status },
     disabled: isReadonly,
   });
 
   const style = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transition,
+      }
     : undefined;
 
   return (
@@ -75,18 +100,8 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
         isDragOverlay && 'shadow-glass rotate-[3deg] border-brand-300 dark:border-brand-700',
         isReadonly && 'opacity-60',
         // Left border accent by status
-        task.status === 'draft' && 'border-l-4 border-l-status-draft',
-        task.status === 'open' && 'border-l-4 border-l-status-open',
-        task.status === 'assigned' && 'border-l-4 border-l-status-on-hold',
-        task.status === 'in_progress' && 'border-l-4 border-l-status-in-progress',
-        task.status === 'blocked' && 'border-l-4 border-l-status-blocked',
-        task.status === 'under_review' && 'border-l-4 border-l-status-under-review',
-        task.status === 'completed' && 'border-l-4 border-l-status-completed',
-        task.status === 'closed' && 'border-l-4 border-l-status-closed',
-        task.status === 'cancelled' && 'border-l-4 border-l-status-cancelled',
-        task.status === 'on_hold' && 'border-l-4 border-l-status-on-hold',
-        task.status === 'reopened' && 'border-l-4 border-l-status-approved',
-        task.status === 'archived' && 'border-l-4 border-l-status-archived',
+        'border-l-4',
+        statusBorderAccent[task.status] ?? 'border-l-surface-300',
       )}
     >
       {/* Task ID + Priority row */}

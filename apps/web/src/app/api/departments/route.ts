@@ -43,7 +43,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      await requirePermission(user.id, 'team:create');
+      await requirePermission(user.id, 'department:create');
 
       const body = await request.json();
       const parsed = DepartmentCreateSchema.safeParse(body);

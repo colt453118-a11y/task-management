@@ -20,18 +20,35 @@ import { isValidTransition } from '@/lib/api/validation';
 interface ColumnDef {
   status: string;
   label: string;
-  color: string;
+  headerBg: string;
 }
 
+const COLUMN_HEADER_BG: Record<string, string> = {
+  draft:        'bg-status-draft/5 dark:bg-status-draft/10',
+  open:         'bg-status-open/5 dark:bg-status-open/10',
+  assigned:     'bg-status-on-hold/5 dark:bg-status-on-hold/10',
+  in_progress:  'bg-status-in-progress/5 dark:bg-status-in-progress/10',
+  blocked:      'bg-status-blocked/5 dark:bg-status-blocked/10',
+  on_hold:      'bg-status-on-hold/5 dark:bg-status-on-hold/10',
+  under_review: 'bg-status-under-review/5 dark:bg-status-under-review/10',
+  approved:     'bg-status-approved/5 dark:bg-status-approved/10',
+  completed:    'bg-status-completed/5 dark:bg-status-completed/10',
+  closed:       'bg-status-closed/5 dark:bg-status-closed/10',
+  reopened:     'bg-status-approved/5 dark:bg-status-approved/10',
+  cancelled:    'bg-status-cancelled/5 dark:bg-status-cancelled/10',
+  archived:     'bg-status-archived/5 dark:bg-status-archived/10',
+  rejected:     'bg-status-rejected/5 dark:bg-status-rejected/10',
+};
+
 const WORKFLOW_COLUMNS: ColumnDef[] = [
-  { status: 'draft',       label: 'Draft',       color: '' },
-  { status: 'open',        label: 'Open',        color: '' },
-  { status: 'assigned',    label: 'Assigned',    color: '' },
-  { status: 'in_progress', label: 'In Progress', color: '' },
-  { status: 'blocked',     label: 'Blocked',     color: '' },
-  { status: 'under_review',label: 'Review',      color: '' },
-  { status: 'completed',   label: 'Done',        color: '' },
-  { status: 'closed',      label: 'Closed',      color: '' },
+  { status: 'draft',       label: 'Draft',       headerBg: COLUMN_HEADER_BG.draft! },
+  { status: 'open',        label: 'Open',        headerBg: COLUMN_HEADER_BG.open! },
+  { status: 'assigned',    label: 'Assigned',    headerBg: COLUMN_HEADER_BG.assigned! },
+  { status: 'in_progress', label: 'In Progress', headerBg: COLUMN_HEADER_BG.in_progress! },
+  { status: 'blocked',     label: 'Blocked',     headerBg: COLUMN_HEADER_BG.blocked! },
+  { status: 'under_review',label: 'Review',      headerBg: COLUMN_HEADER_BG.under_review! },
+  { status: 'completed',   label: 'Done',        headerBg: COLUMN_HEADER_BG.completed! },
+  { status: 'closed',      label: 'Closed',      headerBg: COLUMN_HEADER_BG.closed! },
 ];
 
 const SECONDARY_STATUSES = new Set(['on_hold', 'reopened', 'cancelled', 'archived', 'approved', 'rejected']);
@@ -74,7 +91,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
       if (!grouped[s]) {
         grouped[s] = [];
       }
-      grouped[s].push(task);
+      grouped[s]!.push(task);
     }
     return grouped;
   }, [tasks]);
@@ -85,14 +102,22 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
     const seen = new Set(cols.map((c) => c.status));
     for (const status of Object.keys(groups)) {
       if (!seen.has(status) && !SECONDARY_STATUSES.has(status)) {
-        cols.push({ status, label: status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()), color: '' });
+        cols.push({
+          status,
+          label: status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          headerBg: COLUMN_HEADER_BG[status] ?? '',
+        });
         seen.add(status);
       }
     }
     // Add secondary statuses that have tasks
     for (const status of SECONDARY_STATUSES) {
-      if (groups[status] && groups[status].length > 0 && !seen.has(status)) {
-        cols.push({ status, label: status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()), color: '' });
+      if (groups[status] && groups[status]!.length > 0 && !seen.has(status)) {
+        cols.push({
+          status,
+          label: status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          headerBg: COLUMN_HEADER_BG[status] ?? '',
+        });
         seen.add(status);
       }
     }
@@ -136,9 +161,21 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
         return;
       }
 
-      // Determine target status from the droppable column
-      const overStatus = over.data.current?.status as string | undefined;
-      const targetStatus = overStatus ?? task.status;
+      // Determine target status:
+      // 1. If the drop target is a column (has 'status' in data), use that
+      // 2. If the drop target is a task card (has 'task' in data), extract its status
+      const overIsColumn = over.data.current?.status !== undefined && !over.data.current?.task;
+      const overIsCard = over.data.current?.task !== undefined;
+
+      let targetStatus: string;
+      if (overIsColumn) {
+        targetStatus = over.data.current!.status as string;
+      } else if (overIsCard) {
+        targetStatus = (over.data.current!.task as Task).status;
+      } else {
+        // Fallback: stay in same column
+        targetStatus = task.status;
+      }
 
       setActiveTask(null);
       setActiveSourceStatus(null);
@@ -177,7 +214,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
             status={col.status}
             label={col.label}
             tasks={groups[col.status] ?? []}
-            color={col.color}
+            headerBg={col.headerBg}
             isValidDropTarget={activeTask ? isDropValid(col.status) : undefined}
           />
         ))}

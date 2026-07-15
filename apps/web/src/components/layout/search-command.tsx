@@ -58,8 +58,6 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
 
-  // State is automatically reset via key prop on SearchCommand in the parent component
-
   // Debounced search
   useEffect(() => {
     if (!query.trim()) {
@@ -130,9 +128,9 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-[15%] max-w-xl translate-y-0 p-0 gap-0 overflow-hidden sm:rounded-xl">
+      <DialogContent className="top-[15%] max-w-xl translate-y-0 p-0 gap-0 overflow-hidden sm:rounded-2xl border-surface-300/20 shadow-xl">
         {/* Search input */}
-        <div className="flex items-center border-b border-surface-200 px-4 dark:border-surface-700">
+        <div className="flex items-center border-b border-surface-300/20 px-4 dark:border-surface-700/30">
           <Search className="h-4 w-4 shrink-0 text-surface-400" />
           <input
             type="text"
@@ -140,28 +138,25 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 border-0 bg-transparent px-3 py-4 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none dark:text-surface-50"
+            className="flex-1 border-0 bg-transparent px-3 py-4 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none dark:text-surface-100"
           />
           {loading && <Loader2 className="h-4 w-4 animate-spin text-surface-400" />}
           {!loading && query && (
-            <kbd className="hidden rounded-md border border-surface-200 bg-surface-50 px-1.5 py-0.5 text-xs text-surface-400 sm:inline-block dark:border-surface-700 dark:bg-surface-800">
+            <kbd className="hidden rounded-lg border border-surface-300/20 bg-surface-100/80 px-1.5 py-0.5 text-xs text-surface-400 sm:inline-block dark:border-surface-700/30 dark:bg-surface-800/80">
               ESC
             </kbd>
           )}
         </div>
 
         {/* Results */}
-        <div className="max-h-[320px] overflow-y-auto">
+        <div className="max-h-[320px] overflow-y-auto scrollbar-thin">
           {/* Loading skeleton */}
           {loading && results.length === 0 && (
             <div className="space-y-1 p-2">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 animate-pulse"
-                >
-                  <div className="h-4 w-20 rounded bg-surface-200 dark:bg-surface-700" />
-                  <div className="h-4 flex-1 rounded bg-surface-200 dark:bg-surface-700" />
+                <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5 animate-skeleton-pulse">
+                  <div className="h-4 w-20 rounded-lg bg-surface-300/50 dark:bg-surface-700/50" />
+                  <div className="h-4 flex-1 rounded-lg bg-surface-300/50 dark:bg-surface-700/50" />
                 </div>
               ))}
             </div>
@@ -170,23 +165,19 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           {/* Search unavailable */}
           {searchUnavailable && (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-              <AlertCircle className="h-8 w-8 text-surface-300" />
+              <AlertCircle className="h-8 w-8 text-surface-300 dark:text-surface-600" />
               <p className="text-sm text-surface-500">Search is not configured.</p>
-              <p className="text-xs text-surface-400 max-w-xs">
-                Set up Meilisearch to enable full-text search. Until then, use the task list filters.
-              </p>
+              <p className="text-xs text-surface-400 max-w-xs">Set up Meilisearch to enable full-text search. Until then, use the task list filters.</p>
             </div>
           )}
 
           {/* Error */}
-          {error && (
-            <div className="px-6 py-4 text-center text-sm text-red-500">{error}</div>
-          )}
+          {error && <div className="px-6 py-4 text-center text-sm text-error">{error}</div>}
 
           {/* Empty state */}
           {!loading && !searchUnavailable && !error && query && results.length === 0 && (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-              <FileText className="h-8 w-8 text-surface-300" />
+              <FileText className="h-8 w-8 text-surface-300 dark:text-surface-600" />
               <p className="text-sm text-surface-500">No tasks found for &ldquo;{query}&rdquo;</p>
             </div>
           )}
@@ -194,42 +185,30 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           {/* Result list */}
           {results.length > 0 && (
             <div className="p-2">
-              <p className="px-3 pb-1 text-xs font-medium text-surface-400">
-                Tasks ({total})
-              </p>
+              <p className="px-3 pb-1.5 text-xs font-medium text-surface-400">Tasks ({total})</p>
               {results.map((hit, index) => (
                 <button
                   key={hit.id}
                   onClick={() => navigateToTask(hit.id)}
                   onMouseEnter={() => setSelectedIndex(index)}
-                  className={`w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
                     index === selectedIndex
-                      ? 'bg-brand-50 text-brand-900 dark:bg-brand-900/30 dark:text-brand-100'
-                      : 'text-surface-700 hover:bg-surface-50 dark:text-surface-300 dark:hover:bg-surface-800'
+                      ? 'bg-brand-500/10 text-brand-400 dark:bg-brand-500/15 dark:text-brand-300'
+                      : 'text-surface-700 hover:bg-surface-200/50 dark:text-surface-300 dark:hover:bg-surface-800'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="shrink-0 font-mono text-xs text-surface-400">
-                      {hit.taskIdDisplay}
-                    </span>
+                    <span className="shrink-0 font-mono text-xs text-surface-400">{hit.taskIdDisplay}</span>
                     <span className="truncate">{hit.title}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                        statusColorMap[hit.status] ?? 'bg-surface-100 text-surface-600'
-                      }`}
-                    >
+                    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusColorMap[hit.status] ?? 'bg-surface-100 text-surface-600'}`}>
                       {hit.status.replace(/_/g, ' ')}
                     </span>
                     {hit.priority && hit.priority !== 'none' && (
-                      <span className="text-[10px] text-surface-400 font-medium uppercase">
-                        {priorityLabel[hit.priority] ?? hit.priority}
-                      </span>
+                      <span className="text-[10px] text-surface-400 font-medium uppercase">{priorityLabel[hit.priority] ?? hit.priority}</span>
                     )}
-                    {index === selectedIndex && (
-                      <ArrowRight className="h-3.5 w-3.5 text-brand-500 shrink-0" />
-                    )}
+                    {index === selectedIndex && <ArrowRight className="h-3.5 w-3.5 text-brand-500 shrink-0" />}
                   </div>
                 </button>
               ))}
@@ -240,25 +219,23 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           {!query && !loading && (
             <div className="px-6 py-8 text-center text-sm text-surface-400">
               <p>Type to search tasks</p>
-              <p className="mt-1 text-xs text-surface-300">
-                Search by title, description, or task ID
-              </p>
+              <p className="mt-1 text-xs text-surface-300">Search by title, description, or task ID</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="hidden border-t border-surface-100 px-4 py-2 text-xs text-surface-400 sm:flex items-center gap-4 dark:border-surface-800">
+        <div className="hidden border-t border-surface-300/20 px-4 py-2 text-xs text-surface-400 sm:flex items-center gap-4 dark:border-surface-700/30">
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-surface-200 bg-surface-50 px-1.5 py-0.5 text-[10px] dark:border-surface-700 dark:bg-surface-800">↑↓</kbd>
+            <kbd className="rounded-lg border border-surface-300/20 bg-surface-100/80 px-1.5 py-0.5 text-[10px] dark:border-surface-700/30 dark:bg-surface-800/80">↑↓</kbd>
             <span>Navigate</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-surface-200 bg-surface-50 px-1.5 py-0.5 text-[10px] dark:border-surface-700 dark:bg-surface-800">↵</kbd>
+            <kbd className="rounded-lg border border-surface-300/20 bg-surface-100/80 px-1.5 py-0.5 text-[10px] dark:border-surface-700/30 dark:bg-surface-800/80">↵</kbd>
             <span>Open</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-surface-200 bg-surface-50 px-1.5 py-0.5 text-[10px] dark:border-surface-700 dark:bg-surface-800">Esc</kbd>
+            <kbd className="rounded-lg border border-surface-300/20 bg-surface-100/80 px-1.5 py-0.5 text-[10px] dark:border-surface-700/30 dark:bg-surface-800/80">Esc</kbd>
             <span>Close</span>
           </span>
         </div>

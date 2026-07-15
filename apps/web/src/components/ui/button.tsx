@@ -4,22 +4,30 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 disabled:pointer-events-none disabled:opacity-50 select-none',
   {
     variants: {
       variant: {
-        default: 'bg-brand-600 text-white hover:bg-brand-700',
-        destructive: 'bg-error text-white hover:bg-red-600',
-        outline: 'border border-surface-300 bg-white hover:bg-surface-100 text-surface-700',
-        secondary: 'bg-surface-100 text-surface-900 hover:bg-surface-200',
-        ghost: 'hover:bg-surface-100 text-surface-700',
-        link: 'text-brand-600 underline-offset-4 hover:underline',
+        default:
+          'bg-brand-500 text-white shadow-sm hover:bg-brand-400 active:bg-brand-600 active:scale-[0.97]',
+        destructive:
+          'bg-error text-white shadow-sm hover:bg-red-400 active:bg-red-600 active:scale-[0.97]',
+        outline:
+          'border border-surface-300/40 bg-transparent text-surface-700 hover:bg-surface-200/50 hover:text-surface-900 active:bg-surface-300/30 dark:text-surface-300 dark:hover:bg-surface-300/20 dark:hover:text-surface-100',
+        secondary:
+          'bg-surface-200/70 text-surface-700 hover:bg-surface-300/50 hover:text-surface-900 active:bg-surface-300/70 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-surface-100',
+        ghost:
+          'text-surface-600 hover:bg-surface-200/50 hover:text-surface-900 active:bg-surface-300/30 dark:text-surface-400 dark:hover:bg-surface-300/20 dark:hover:text-surface-100',
+        link:
+          'text-brand-500 underline-offset-4 hover:underline hover:text-brand-400',
       },
       size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
+        default: 'h-9 px-4 py-2 rounded-xl',
+        sm: 'h-8 rounded-lg px-3 text-xs',
+        lg: 'h-10 rounded-xl px-8',
+        xl: 'h-12 rounded-2xl px-10 text-base',
+        icon: 'h-9 w-9 rounded-xl',
+        'icon-sm': 'h-8 w-8 rounded-lg',
       },
     },
     defaultVariants: {

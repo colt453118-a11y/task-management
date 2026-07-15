@@ -1,7 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getDb, schema } from '@workmanagement/database';
-import { eq } from 'drizzle-orm';
 
 let _auth: ReturnType<typeof betterAuth> | null = null;
 
@@ -20,6 +19,7 @@ export function getAuth(): ReturnType<typeof betterAuth> {
   if (_auth) return _auth;
 
   _auth = betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL ?? process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
     database: drizzleAdapter(getDb(), {
       provider: 'pg',
       schema: {
@@ -58,52 +58,10 @@ export function getAuth(): ReturnType<typeof betterAuth> {
       window: 60,
       max: 100,
     },
-    // ── Auth Negative Testing: Reject deactivated users on login ──
-    // Before a user is authenticated, check that their account is
-    // still active and not suspended. This catches deactivation at
-    // login time rather than only at API route time.
-    hooks: {
-      before: {
-        signIn: async ({ user }: { user: { id: string } }) => {
-          if (!user?.id) return;
-          try {
-            const db = getDb();
-            const [found] = await db
-              .select({
-                isActive: schema.users.isActive,
-                isSuspended: schema.users.isSuspended,
-              })
-              .from(schema.users)
-              .where(eq(schema.users.id, user.id))
-              .limit(1);
-
-            if (!found) {
-              throw new Error('Account not found');
-            }
-
-            if (found.isSuspended) {
-              throw new Error('Your account has been suspended. Contact your administrator.');
-            }
-
-            if (!found.isActive) {
-              throw new Error('Your account has been deactivated. Contact your administrator.');
-            }
-          } catch (err) {
-            if (
-              err instanceof Error &&
-              (err.message === 'Account not found' ||
-               err.message === 'Your account has been suspended. Contact your administrator.' ||
-               err.message === 'Your account has been deactivated. Contact your administrator.')
-            ) {
-              throw err;
-            }
-            console.error('[auth] Login status check failed:', err);
-          }
-        },
-      },
-    },
-    // session.cookie config and hooks.before.signIn are accepted at runtime
-    // by better-auth but are not reflected in its current type definitions.
+    // Deactivated/suspended user check is handled in withAuth()
+    // via checkUserActive() at the API route level.
+    // session.cookie.name config is accepted at runtime by better-auth
+    // but is not reflected in its current type definitions.
     // The cast is scoped to the config object only; the return type is still
     // properly inferred via ReturnType<typeof betterAuth>.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -14,9 +14,11 @@ function getIdFromPath(request: NextRequest): string {
 
 // GET /api/teams/[id] - Get team with members, department info, and task stats (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
+
+      await requirePermission(user.id, 'team:view');
 
       const [team] = await db()
         .select({

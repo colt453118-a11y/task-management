@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission, checkPermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
-import { eq, desc, and, isNull, like, or, sql } from 'drizzle-orm';
+import { eq, desc, and, isNull, like, or, sql, inArray } from 'drizzle-orm';
 import { TaskCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask } from '@/lib/search';
@@ -29,13 +29,26 @@ export const GET = withAuth(
       const assignedTo = searchParams.get('assignedTo');
       const priority = searchParams.get('priority');
       const searchParam = searchParams.get('search');
+      const watchedBy = searchParams.get('watchedBy');
+      const showDeleted = searchParams.get('deleted') === 'true';
+      const deletedBy = searchParams.get('deletedBy');
       const limit = Math.min(Math.max(Number(searchParams.get('limit')) || 50, 1), 100);
       const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
+      const fieldsOnly = searchParams.get('fields') === 'id';
 
       const conditions = [
-        isNull(schema.tasks.deletedAt),
         eq(schema.tasks.organizationId, orgId!),
       ];
+
+      if (showDeleted) {
+        // Show only soft-deleted tasks
+        conditions.push(sql`${schema.tasks.deletedAt} IS NOT NULL`);
+      } else {
+        // Normal view: hide deleted tasks
+        conditions.push(isNull(schema.tasks.deletedAt));
+      }
+
+      if (deletedBy) conditions.push(eq(schema.tasks.updatedBy, deletedBy));
 
       // Role-aware data scoping: without task:view_all, only see tasks
       // that are assigned to the user, created by the user, or mention the user
@@ -61,15 +74,72 @@ export const GET = withAuth(
         if (searchClause) conditions.push(searchClause);
       }
 
-      const tasks = await db()
-        .select()
-        .from(schema.tasks)
-        .where(and(...conditions))
-        .orderBy(desc(schema.tasks.createdAt))
-        .limit(limit)
-        .offset(offset);
+      // Filter by watched tasks — find all task IDs watched by this user
+      if (watchedBy === 'me') {
+        const watchedTaskIds = await db()
+          .select({ taskId: schema.taskWatchers.taskId })
+          .from(schema.taskWatchers)
+          .where(eq(schema.taskWatchers.userId, user.id));
 
-      return NextResponse.json({ tasks });
+        const ids = watchedTaskIds.map((w) => w.taskId);
+        if (ids.length > 0) {
+          conditions.push(inArray(schema.tasks.id, ids));
+        } else {
+          return NextResponse.json({ tasks: [] });
+        }
+      }
+
+      // Get total count (ignoring pagination)
+      const [countResult] = await db()
+        .select({ count: sql<number>`count(*)` })
+        .from(schema.tasks)
+        .where(and(...conditions));
+      const total = Number(countResult?.count ?? 0);
+
+      // fields=id mode: return just IDs for cross-page batch selection
+      if (fieldsOnly) {
+        const idRows = await db()
+          .select({ id: schema.tasks.id })
+          .from(schema.tasks)
+          .where(and(...conditions))
+          .orderBy(desc(schema.tasks.createdAt))
+          .limit(limit)
+          .offset(offset);
+
+        return NextResponse.json({ ids: idRows.map((r) => r.id), total });
+      }
+
+      let tasks;
+
+      if (showDeleted) {
+        // Include the name of the user who deleted the task (via updatedBy)
+        const rows = await db()
+          .select({
+            task: schema.tasks,
+            updatedByName: schema.users.name,
+          })
+          .from(schema.tasks)
+          .leftJoin(schema.users, eq(schema.tasks.updatedBy, schema.users.id))
+          .where(and(...conditions))
+          .orderBy(desc(schema.tasks.updatedAt))
+          .limit(limit)
+          .offset(offset);
+
+        tasks = rows.map((r) => ({
+          ...r.task,
+          updatedByName: r.updatedByName,
+        }));
+      } else {
+        tasks = await db()
+          .select()
+          .from(schema.tasks)
+          .where(and(...conditions))
+          .orderBy(desc(schema.tasks.createdAt))
+          .limit(limit)
+          .offset(offset);
+      }
+
+      return NextResponse.json({ tasks, total });
     } catch (error) {
       const { error: err, status } = handleApiError(error, 'Failed to fetch tasks');
       return NextResponse.json(err, { status });

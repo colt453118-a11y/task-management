@@ -15,8 +15,10 @@ function getUserIdFromPath(request: NextRequest): string {
 
 // GET /api/users/[id]/roles - Get roles assigned to a user (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
+      await requirePermission(user.id, 'role:view');
+
       const userId = getUserIdFromPath(request);
 
       const userRoles = await db()
@@ -38,6 +40,7 @@ export const GET = withAuth(
         .where(
           and(
             eq(schema.userRoles.userId, userId),
+            eq(schema.roles.organizationId, orgId!),
             isNull(schema.roles.deletedAt),
           ),
         );
@@ -165,6 +168,7 @@ export const DELETE = withAuth(
           and(
             eq(schema.userRoles.userId, userId),
             eq(schema.userRoles.roleId, roleId),
+            eq(schema.roles.organizationId, orgId!),
             isNull(schema.roles.deletedAt),
           ),
         )

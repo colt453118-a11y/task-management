@@ -136,7 +136,7 @@ export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
-      await requirePermission(user.id, 'team:edit');
+      await requirePermission(user.id, 'department:edit');
 
       const body = await request.json();
       const parsed = DepartmentUpdateSchema.safeParse(body);

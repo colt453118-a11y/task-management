@@ -108,7 +108,7 @@ test.describe('authenticated access (with session cookie)', () => {
     }
   });
 
-  test('redirects /auth/login to /dashboard when already logged in', async ({ request }) => {
+  test('redirects /auth/login to / when already logged in', async ({ request }) => {
     const response = await request.get('/auth/login', {
       headers: {
         Cookie: `${SESSION_COOKIE_NAME}=${MOCK_SESSION_TOKEN}`,
@@ -117,7 +117,9 @@ test.describe('authenticated access (with session cookie)', () => {
     });
     expect(response.status()).toBe(307);
     const location = response.headers()['location'];
-    expect(location).toContain('/dashboard');
+    // The middleware redirects authenticated users to the root path.
+    // Next.js middleware returns a relative Location header.
+    expect(new URL(location!, 'http://localhost:3000').pathname).toBe('/');
   });
 });
 

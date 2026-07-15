@@ -60,7 +60,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      await requirePermission(user.id, 'report:generate');
+      await requirePermission(user.id, 'report:create');
 
       const body = await request.json().catch(() => ({}));
       const { label, snapshotType = 'eod' } = body;

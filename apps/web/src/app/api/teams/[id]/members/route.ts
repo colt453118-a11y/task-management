@@ -19,7 +19,7 @@ export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
       const { teamId } = getIdsFromPath(request);
-      await requirePermission(user.id, 'team:edit');
+      await requirePermission(user.id, 'team:manage');
 
       const body = await request.json();
       const parsed = TeamMemberAddSchema.safeParse(body);
@@ -158,7 +158,7 @@ export const DELETE = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
       const { teamId } = getIdsFromPath(request);
-      await requirePermission(user.id, 'team:edit');
+      await requirePermission(user.id, 'team:manage');
 
       const targetUserId = request.nextUrl.searchParams.get('userId');
 

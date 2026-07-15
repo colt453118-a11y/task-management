@@ -236,6 +236,7 @@ export * from './tasks';
 export * from './auth';
 export * from './audit';
 export * from './reports';
+export * from './task-templates';
 
 // ─── Import domain tables for relations ──────────────────────
 

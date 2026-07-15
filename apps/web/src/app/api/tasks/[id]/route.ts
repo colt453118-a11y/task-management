@@ -16,9 +16,11 @@ function getIdFromPath(request: NextRequest): string {
 
 // GET /api/tasks/[id] - Get single task (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
+      await requirePermission(user.id, 'task:view');
+
       const [task] = await db()
         .select()
         .from(schema.tasks)
