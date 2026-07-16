@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, startTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -31,7 +31,9 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
   }, [taskId]);
 
   useEffect(() => {
-    fetchWatchers();
+    startTransition(() => {
+      fetchWatchers();
+    });
   }, [fetchWatchers]);
 
   const toggleWatch = async () => {

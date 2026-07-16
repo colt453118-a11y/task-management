@@ -278,9 +278,9 @@ export default function SettingsPage() {
   };
 
   const groupedPermissions = permissions.reduce<Record<string, Permission[]>>((acc, perm) => {
-    const module = perm.module;
-    if (!acc[module]) acc[module] = [];
-    acc[module]!.push(perm);
+    const mod = perm.module;
+    if (!acc[mod]) acc[mod] = [];
+    acc[mod]!.push(perm);
     return acc;
   }, {});
 

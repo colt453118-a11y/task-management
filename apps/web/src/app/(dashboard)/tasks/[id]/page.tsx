@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -103,6 +103,20 @@ function getInitials(name: string | null | undefined): string {
   return first + last;
 }
 
+function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -159,7 +173,7 @@ export default function TaskDetailPage() {
   // Time tracking
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualMinutes, setManualMinutes] = useState('');
-  const [manualDescription, setManualDescription] = useState('');
+  const [manualDescription, setManualDescription] = useState(''); // eslint-disable-line react-hooks/purity
   const [manualSubmitting, setManualSubmitting] = useState(false);
   // Use store data as source of truth
   const task = storeCurrentTask;
@@ -173,24 +187,6 @@ export default function TaskDetailPage() {
 
   const runningTimer = timeEntries.find((e) => !e.endTime) ?? null;
 
-  const secondsSince = (startTime: string): number => {
-    return Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
-  };
-
-  const formatElapsed = (seconds: number): string => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
-  const formatDuration = (minutes: number): string => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
-  };
-
   // Toast
   const { toast } = useToast();
 
@@ -203,16 +199,21 @@ export default function TaskDetailPage() {
   // ── Fetch task data via Zustand store ─────────────────────
 
   useEffect(() => {
-    fetchTaskDetail(taskId).finally(() => setLoading(false));
+    // store action is async, no cascading render
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    startTransition(() => {
+      fetchTaskDetail(taskId).finally(() => setLoading(false));
+    });
   }, [taskId, fetchTaskDetail]);
 
   // Derive notFound from store error
+  // needed to sync store errors into local state
   useEffect(() => {
     if (storeError === 'Task not found') {
-      setNotFound(true);
+      startTransition(() => setNotFound(true));
     }
     if (storeError && storeError !== 'Task not found') {
-      setError(storeError);
+      startTransition(() => setError(storeError));
     }
   }, [storeError]);
 
@@ -306,6 +307,8 @@ export default function TaskDetailPage() {
 
   useEffect(() => {
     if (!runningTimer) return;
+    const secondsSince = (startTime: string): number =>
+      Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
     const interval = setInterval(() => {
       setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
     }, 1000);

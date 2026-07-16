@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, startTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { History, AlertCircle } from 'lucide-react';
@@ -83,7 +83,9 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
   }, [taskId]);
 
   useEffect(() => {
-    fetchHistory();
+    startTransition(() => {
+      fetchHistory();
+    });
   }, [fetchHistory]);
 
   const displayEntries = expanded ? history : history.slice(0, 10);
@@ -190,7 +192,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
               onClick={() => setExpanded(!expanded)}
               className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 w-full py-2 text-center text-xs transition-colors"
             >
-              {expanded ? `Show less` : `Show ${history.length - 10} more entries`}
+              {expanded ? 'Show less' : `Show ${history.length - 10} more entries`}
             </button>
           )}
         </>

@@ -133,7 +133,6 @@ export const DELETE = withAuth(
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- task can be undefined from DB
       const accessError = checkTaskAccessOrRespond(task ?? undefined, orgId);
       if (accessError) return accessError;
 

@@ -12,7 +12,7 @@ import {
   Moon,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, startTransition } from 'react';
 import { SearchCommand } from './search-command';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/ui/keyboard-shortcuts';
@@ -37,26 +37,26 @@ export function Topbar() {
   useKeyboardShortcuts(shortcutsOpen, setShortcutsOpen);
 
   useEffect(() => {
-    setMounted(true);
+    startTransition(() => setMounted(true));
   }, []);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(true);
+        startTransition(() => setSearchOpen(true));
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 't') {
         e.preventDefault();
-        setQuickCreateOpen(true);
+        startTransition(() => setQuickCreateOpen(true));
       }
     }
 
     function handleCustomSearch() {
-      setSearchOpen(true);
+      startTransition(() => setSearchOpen(true));
     }
     function handleCustomQuickCreate() {
-      setQuickCreateOpen(true);
+      startTransition(() => setQuickCreateOpen(true));
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -72,8 +72,9 @@ export function Topbar() {
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
-        setUserMenuOpen(false);
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+        startTransition(() => setUserMenuOpen(false));
+      if (notifRef.current && !notifRef.current.contains(e.target as Node))
+        startTransition(() => setNotifOpen(false));
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);

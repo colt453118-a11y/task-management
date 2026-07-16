@@ -260,6 +260,11 @@ export function TaskHoverCard({ taskRef, children, className }: TaskHoverCardPro
 
 const TASK_REF_PATTERN = /#?([A-Z]+-\d+|[0-9a-fA-F-]{36})/g;
 
+/** Creates a fresh copy of the regex for each invocation to avoid mutating the module-level lastIndex. */
+function createTaskRefRegex(): RegExp {
+  return new RegExp(TASK_REF_PATTERN.source, 'g');
+}
+
 interface TaskMentionTextProps {
   text: string;
   className?: string;
@@ -272,11 +277,10 @@ interface TaskMentionTextProps {
 export function TaskMentionText({ text, className }: TaskMentionTextProps) {
   const parts: ReactNode[] = [];
   let lastIndex = 0;
+  const re = createTaskRefRegex();
   let match: RegExpExecArray | null;
 
-  TASK_REF_PATTERN.lastIndex = 0;
-
-  while ((match = TASK_REF_PATTERN.exec(text)) !== null) {
+  while ((match = re.exec(text)) !== null) {
     // Push text before match
     if (match.index > lastIndex) {
       parts.push(<span key={lastIndex}>{text.slice(lastIndex, match.index)}</span>);

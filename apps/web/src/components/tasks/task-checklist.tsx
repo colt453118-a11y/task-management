@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, startTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -253,7 +253,9 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
   }, [taskId]);
 
   useEffect(() => {
-    fetchItems();
+    startTransition(() => {
+      fetchItems();
+    });
   }, [fetchItems]);
 
   // ── Add item ──────────────────────────────────────────────

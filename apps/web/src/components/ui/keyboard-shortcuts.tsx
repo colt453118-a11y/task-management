@@ -155,12 +155,11 @@ interface KeyboardShortcutsModalProps {
 export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcutsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Listen for ? key to toggle modal
-  useEffect(() => {
-    if (!open) {
-      setSearchQuery('');
-    }
-  }, [open]);
+  // Reset search when modal closes
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setSearchQuery('');
+    onOpenChange(nextOpen);
+  };
 
   // Filter shortcuts by search
   const filteredGroups = shortcutGroups
@@ -175,7 +174,7 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
     .filter((group) => group.shortcuts.length > 0);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="border-surface-300/20 top-[10%] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:rounded-2xl">
         {/* Search header */}
         <div className="border-surface-300/20 dark:border-surface-700/20 flex items-center gap-3 border-b px-5 py-4">

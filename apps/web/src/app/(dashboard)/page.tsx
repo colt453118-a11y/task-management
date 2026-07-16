@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense, startTransition, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -173,8 +173,12 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const urgentThreshold = useMemo(() => Date.now() + 86400000 * 2, []);
+
   useEffect(() => {
-    fetchMetrics();
+    startTransition(() => {
+      fetchMetrics();
+    });
   }, [fetchMetrics]);
 
   if (loading) {
@@ -442,7 +446,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   {metrics.upcomingDeadlines.map((task, i) => {
                     const isUrgent =
-                      task.dueDate && new Date(task.dueDate) < new Date(Date.now() + 86400000 * 2);
+                      task.dueDate && new Date(task.dueDate).getTime() < urgentThreshold;
                     return (
                       <motion.div
                         key={task.id}

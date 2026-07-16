@@ -428,7 +428,7 @@ export default function TasksPage() {
       const actionLabel = actionLabels[batchAction ?? ''] ?? 'updated';
       toast({
         title: `${effectiveIds.length} task${effectiveIds.length !== 1 ? 's' : ''} ${actionLabel}`,
-        description: `Batch operation completed successfully.`,
+        description: 'Batch operation completed successfully.',
       });
       setSelectedIds(new Set());
       setBatchAction(null);

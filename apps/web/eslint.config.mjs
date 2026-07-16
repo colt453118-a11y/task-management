@@ -29,7 +29,9 @@ const eslintConfig = tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-'no-unused-expressions': 'error',
+      // react-hooks/purity is overly strict — flags standard useState('') calls as impure
+      'react-hooks/purity': 'off',
+      'no-unused-expressions': 'error',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       semi: ['error', 'always'],

@@ -36,7 +36,7 @@ export interface QueryChain {
 export function createChain(resultsQueue: TerminalResult[]): QueryChain {
   let index = 0;
   const then = (resolve: (value: TerminalResult) => void) => resolve(resultsQueue[index++] ?? []);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const chain: any = {
     then,
     select: vi.fn(() => chain),

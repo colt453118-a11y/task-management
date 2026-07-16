@@ -18,7 +18,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
@@ -54,7 +54,7 @@ export function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => startTransition(() => setIsMobile(window.innerWidth < 768));
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -62,7 +62,7 @@ export function Sidebar() {
 
   // Close mobile sidebar on navigation
   useEffect(() => {
-    if (isMobile) setMobileOpen(false);
+    if (isMobile) startTransition(() => setMobileOpen(false));
   }, [pathname, isMobile]);
 
   const sidebarContent = (

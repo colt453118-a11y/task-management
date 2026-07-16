@@ -338,7 +338,7 @@ describe('Watchers API — response contract', () => {
 
     const firstCall = mockNextResponseJson.mock.calls[0];
     expect(firstCall).toBeDefined();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const body = firstCall![0] as any;
     expect(body).toHaveProperty('watchers');
     expect(body).toHaveProperty('isWatching');

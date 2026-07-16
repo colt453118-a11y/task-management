@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, startTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,9 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
   }, []);
 
   useEffect(() => {
-    fetchTemplates();
+    startTransition(() => {
+      fetchTemplates();
+    });
   }, [fetchTemplates]);
 
   // ── Apply template ────────────────────────────────────────
