@@ -47,15 +47,17 @@ vi.mock('@dnd-kit/sortable', () => {
 // Sample task factory
 // ═══════════════════════════════════════════════════════════════════
 
-function sampleTask(overrides: Partial<{
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  taskIdDisplay: string;
-  assignedTo: string | null;
-  dueDate: string | null;
-}> = {}) {
+function sampleTask(
+  overrides: Partial<{
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    taskIdDisplay: string;
+    assignedTo: string | null;
+    dueDate: string | null;
+  }> = {},
+) {
   return {
     id: 'task-1',
     title: 'Test Task',
@@ -108,7 +110,9 @@ describe('KanbanCard (React Testing Library)', () => {
     const pastDate = new Date(Date.now() - 86_400_000); // yesterday
     const formatted = pastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-    render(<KanbanCard task={sampleTask({ dueDate: pastDate.toISOString(), status: 'in_progress' })} />);
+    render(
+      <KanbanCard task={sampleTask({ dueDate: pastDate.toISOString(), status: 'in_progress' })} />,
+    );
 
     // The overdue class is applied to the wrapper <div>, not the <span> containing the date text
     const dateSpan = screen.getByText(formatted);
@@ -121,7 +125,9 @@ describe('KanbanCard (React Testing Library)', () => {
     const pastDate = new Date(Date.now() - 86_400_000);
     const formatted = pastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-    render(<KanbanCard task={sampleTask({ dueDate: pastDate.toISOString(), status: 'completed' })} />);
+    render(
+      <KanbanCard task={sampleTask({ dueDate: pastDate.toISOString(), status: 'completed' })} />,
+    );
 
     const dateSpan = screen.getByText(formatted);
     const dateWrapper = dateSpan.parentElement;
@@ -137,10 +143,13 @@ describe('KanbanCard (React Testing Library)', () => {
 
   // ── Read-only state (opacity) ──────────────────────────────
 
-  it.each(['closed', 'archived', 'completed'])('applies readonly opacity for %s status', (status) => {
-    const { container } = render(<KanbanCard task={sampleTask({ status })} />);
-    expect(container.firstChild).toHaveClass('opacity-60');
-  });
+  it.each(['closed', 'archived', 'completed'])(
+    'applies readonly opacity for %s status',
+    (status) => {
+      const { container } = render(<KanbanCard task={sampleTask({ status })} />);
+      expect(container.firstChild).toHaveClass('opacity-60');
+    },
+  );
 
   it('does not apply readonly opacity for active task statuses', () => {
     const { container } = render(<KanbanCard task={sampleTask({ status: 'in_progress' })} />);
@@ -159,14 +168,8 @@ describe('KanbanCard (React Testing Library)', () => {
   // ── Accessibility ──────────────────────────────────────────
 
   it('has correct aria-label with task ID display and title', () => {
-    render(
-      <KanbanCard
-        task={sampleTask({ taskIdDisplay: 'PROJ-42', title: 'Fix login bug' })}
-      />,
-    );
-    expect(
-      screen.getByRole('button', { name: 'Task PROJ-42: Fix login bug' }),
-    ).toBeInTheDocument();
+    render(<KanbanCard task={sampleTask({ taskIdDisplay: 'PROJ-42', title: 'Fix login bug' })} />);
+    expect(screen.getByRole('button', { name: 'Task PROJ-42: Fix login bug' })).toBeInTheDocument();
   });
 
   // ── Priority badges ────────────────────────────────────────

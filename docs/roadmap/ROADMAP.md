@@ -9,9 +9,11 @@ This roadmap breaks down the build into **5 phases** over an estimated **12-16 w
 ## Phase 0: Foundation (Week 1)
 
 ### Goals
+
 Initialize the project, set up infrastructure, establish conventions.
 
 ### Deliverables
+
 - [x] Architecture documentation complete
 - [ ] Monorepo scaffolded (pnpm workspaces + Turborepo)
 - [ ] Next.js 16 app initialized with App Router
@@ -24,33 +26,36 @@ Initialize the project, set up infrastructure, establish conventions.
 - [ ] README with setup instructions
 
 ### Key Decisions Made
-| Decision | Choice |
-|----------|--------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript (strict mode) |
-| Package Manager | pnpm |
-| ORM | Drizzle |
-| Auth | Better Auth |
-| UI | Tailwind v4 + Shadcn/ui + Radix |
-| Database | PostgreSQL 17 |
-| Cache/Queue | Redis + BullMQ |
-| Rich Text | TipTap |
-| Drag & Drop | dnd-kit |
-| Charts | Tremor + Recharts |
-| Search | Meilisearch |
-| File Storage | MinIO (dev) / S3 (prod) |
-| Testing | Vitest + Playwright |
+
+| Decision        | Choice                          |
+| --------------- | ------------------------------- |
+| Framework       | Next.js 16 (App Router)         |
+| Language        | TypeScript (strict mode)        |
+| Package Manager | pnpm                            |
+| ORM             | Drizzle                         |
+| Auth            | Better Auth                     |
+| UI              | Tailwind v4 + Shadcn/ui + Radix |
+| Database        | PostgreSQL 17                   |
+| Cache/Queue     | Redis + BullMQ                  |
+| Rich Text       | TipTap                          |
+| Drag & Drop     | dnd-kit                         |
+| Charts          | Tremor + Recharts               |
+| Search          | Meilisearch                     |
+| File Storage    | MinIO (dev) / S3 (prod)         |
+| Testing         | Vitest + Playwright             |
 
 ---
 
 ## Phase 1: Core Infrastructure (Weeks 2-4)
 
 ### Goals
+
 Build the authentication system, organization hierarchy, user management, and RBAC.
 
 ### Deliverables
 
 #### Authentication (Week 2)
+
 - [ ] Login page (email/password)
 - [ ] Registration page
 - [ ] Google OAuth login
@@ -61,6 +66,7 @@ Build the authentication system, organization hierarchy, user management, and RB
 - [ ] Login history tracking
 
 #### Organization Hierarchy (Week 3)
+
 - [ ] Organization CRUD
 - [ ] Department CRUD
 - [ ] Team CRUD
@@ -68,6 +74,7 @@ Build the authentication system, organization hierarchy, user management, and RB
 - [ ] Organization settings page
 
 #### User Management (Week 3-4)
+
 - [ ] User list with pagination, filtering, sorting
 - [ ] User create/edit form
 - [ ] User profile page
@@ -78,6 +85,7 @@ Build the authentication system, organization hierarchy, user management, and RB
 - [ ] Reporting manager assignment
 
 #### RBAC (Week 4)
+
 - [ ] Permission seed data
 - [ ] Role CRUD
 - [ ] Role-permission assignment UI (permission grid)
@@ -87,6 +95,7 @@ Build the authentication system, organization hierarchy, user management, and RB
 - [ ] Default roles (Admin, PM, Team Lead, Member, Viewer)
 
 ### Definition of Done (Phase 1)
+
 - [ ] Can register, login, logout
 - [ ] Can create org, departments, teams
 - [ ] Can create users, assign to teams/departments
@@ -100,11 +109,13 @@ Build the authentication system, organization hierarchy, user management, and RB
 ## Phase 2: Core Domain (Weeks 5-8)
 
 ### Goals
+
 Build the task and project management system — the heart of the platform.
 
 ### Deliverables
 
 #### Projects (Week 5)
+
 - [ ] Project CRUD
 - [ ] Project list with filters (status, priority, owner, department)
 - [ ] Project detail page with tabs
@@ -113,6 +124,7 @@ Build the task and project management system — the heart of the platform.
 - [ ] Project progress tracking (% complete)
 
 #### Tasks (Week 6-7)
+
 - [ ] Full task schema migrations
 - [ ] Create task dialog (modal)
 - [ ] Task detail page (two-column: content + sidebar)
@@ -134,6 +146,7 @@ Build the task and project management system — the heart of the platform.
 - [ ] Task dependencies (blocks, blocked_by, relates_to)
 
 #### Workflow Engine (Week 7)
+
 - [ ] Workflow CRUD
 - [ ] Custom workflow states (configure statuses per project/organization)
 - [ ] Workflow transitions (define valid status changes)
@@ -141,6 +154,7 @@ Build the task and project management system — the heart of the platform.
 - [ ] Workflow transition permissions
 
 #### Time Tracking (Week 8)
+
 - [ ] Start/pause/resume timer
 - [ ] Manual time entry
 - [ ] Time entry list (daily, weekly, monthly views)
@@ -151,6 +165,7 @@ Build the task and project management system — the heart of the platform.
 - [ ] Total logged time display on task
 
 ### Definition of Done (Phase 2)
+
 - [ ] Can create, view, edit, delete projects and tasks
 - [ ] Kanban board works with drag-and-drop
 - [ ] Comments, attachments, checklists work
@@ -164,11 +179,13 @@ Build the task and project management system — the heart of the platform.
 ## Phase 3: Productivity & Collaboration (Weeks 9-11)
 
 ### Goals
+
 Add notifications, search, calendar, reporting, and dashboards.
 
 ### Deliverables
 
 #### Notifications (Week 9)
+
 - [ ] In-app notification bell with unread count
 - [ ] Notification dropdown
 - [ ] Notification types (all events from spec)
@@ -178,6 +195,7 @@ Add notifications, search, calendar, reporting, and dashboards.
 - [ ] Notification read/unread, mark all as read
 
 #### Search (Week 9)
+
 - [ ] Meilisearch setup and indexing
 - [ ] Global search bar (⌘K command palette)
 - [ ] Search results: tasks, projects, users, comments
@@ -185,6 +203,7 @@ Add notifications, search, calendar, reporting, and dashboards.
 - [ ] Advanced search (field-specific: status, assignee, date range, etc.)
 
 #### Calendar (Week 10)
+
 - [ ] Calendar view (month, week, day)
 - [ ] Timeline view (Gantt-like)
 - [ ] Task due dates on calendar
@@ -194,6 +213,7 @@ Add notifications, search, calendar, reporting, and dashboards.
 - [ ] Calendar event creation
 
 #### Dashboard (Week 10)
+
 - [ ] Executive dashboard (org-wide KPIs)
 - [ ] Manager dashboard (team metrics)
 - [ ] Employee dashboard (personal metrics)
@@ -206,6 +226,7 @@ Add notifications, search, calendar, reporting, and dashboards.
 - [ ] Configurable widgets
 
 #### Reporting (Week 11)
+
 - [ ] Report definitions (configurable queries)
 - [ ] Report builder UI
 - [ ] Report generation (background job via BullMQ)
@@ -217,6 +238,7 @@ Add notifications, search, calendar, reporting, and dashboards.
 - [ ] SLA compliance report
 
 ### Definition of Done (Phase 3)
+
 - [ ] Notifications work across all channels
 - [ ] Search returns results in < 100ms
 - [ ] Calendar shows all task and project dates
@@ -229,11 +251,13 @@ Add notifications, search, calendar, reporting, and dashboards.
 ## Phase 4: Advanced Features (Weeks 12-14)
 
 ### Goals
+
 Add AI capabilities, automation engine, analytics, and file management.
 
 ### Deliverables
 
 #### Automation Engine (Week 12)
+
 - [ ] Automation rule CRUD
 - [ ] Trigger events (task.created, task.overdue, task.status_changed, etc.)
 - [ ] Actions: notify, change status, assign, add label, escalate
@@ -243,6 +267,7 @@ Add AI capabilities, automation engine, analytics, and file management.
 - [ ] Preset automation templates
 
 #### AI Features (Week 13)
+
 - [ ] OpenAI/Claude integration
 - [ ] AI task summary generation
 - [ ] AI EOD report summary
@@ -255,6 +280,7 @@ Add AI capabilities, automation engine, analytics, and file management.
 - [ ] AI writing assistant (in TipTap editor)
 
 #### Analytics (Week 13)
+
 - [ ] Burndown charts
 - [ ] Task velocity tracking
 - [ ] Completion trends
@@ -264,6 +290,7 @@ Add AI capabilities, automation engine, analytics, and file management.
 - [ ] Custom date range comparisons
 
 #### File Management (Week 14)
+
 - [ ] File upload component (drag-and-drop, multi-file)
 - [ ] File preview (images, PDFs, text)
 - [ ] File versioning
@@ -273,6 +300,7 @@ Add AI capabilities, automation engine, analytics, and file management.
 - [ ] File search
 
 ### Definition of Done (Phase 4)
+
 - [ ] Automation rules execute on triggers
 - [ ] AI summaries and suggestions work
 - [ ] Analytics charts render meaningful data
@@ -284,11 +312,13 @@ Add AI capabilities, automation engine, analytics, and file management.
 ## Phase 5: Enterprise Polish (Weeks 15-16)
 
 ### Goals
+
 Security hardening, performance optimization, integrations, and production readiness.
 
 ### Deliverables
 
 #### Security Hardening
+
 - [ ] Two-factor authentication (TOTP)
 - [ ] Magic link login
 - [ ] SSO readiness (SAML/OIDC stubs)
@@ -300,6 +330,7 @@ Security hardening, performance optimization, integrations, and production readi
 - [ ] OWASP Top 10 verification checklist
 
 #### Performance Optimization
+
 - [ ] Database query optimization (explain analyze on all queries)
 - [ ] N+1 query elimination
 - [ ] Redis caching strategy implementation
@@ -310,6 +341,7 @@ Security hardening, performance optimization, integrations, and production readi
 - [ ] Lighthouse audit (target: 90+ on all metrics)
 
 #### Integrations
+
 - [ ] Webhook system (send events to external services)
 - [ ] Slack integration (notifications, task creation)
 - [ ] Microsoft Teams integration
@@ -318,6 +350,7 @@ Security hardening, performance optimization, integrations, and production readi
 - [ ] API rate limiting headers
 
 #### Production Readiness
+
 - [ ] Production Dockerfile (multi-stage, non-root user)
 - [ ] Terraform scripts for AWS infrastructure
 - [ ] Monitoring (Sentry + OpenTelemetry)
@@ -329,6 +362,7 @@ Security hardening, performance optimization, integrations, and production readi
 - [ ] Production deployment
 
 ### Definition of Done (Phase 5)
+
 - [ ] Security audit passes
 - [ ] Lighthouse 90+ on all pages
 - [ ] Load test passes (10K users, 1M tasks)
@@ -352,14 +386,14 @@ Week 15-16: Phase 5 — Enterprise (Security, Performance, Integrations, Product
 
 ## Risk Factors
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Feature creep | Delays project | Strict scope per phase; deprioritize to "v2" |
-| Performance at scale | Slow under load | Caching strategy from day 1; load test in Phase 5 |
-| AI costs | Unexpected bills | Track token usage; cache AI responses; set monthly limits |
-| Browser compatibility | CSS/JS issues | Playwright cross-browser tests in CI |
-| Security vulnerabilities | Data breach | Security audit in Phase 5; dependency scanning in CI from Phase 0 |
-| Team availability | Timeline slip | 2-4 engineers estimated; adjust scope if smaller team |
+| Risk                     | Impact           | Mitigation                                                        |
+| ------------------------ | ---------------- | ----------------------------------------------------------------- |
+| Feature creep            | Delays project   | Strict scope per phase; deprioritize to "v2"                      |
+| Performance at scale     | Slow under load  | Caching strategy from day 1; load test in Phase 5                 |
+| AI costs                 | Unexpected bills | Track token usage; cache AI responses; set monthly limits         |
+| Browser compatibility    | CSS/JS issues    | Playwright cross-browser tests in CI                              |
+| Security vulnerabilities | Data breach      | Security audit in Phase 5; dependency scanning in CI from Phase 0 |
+| Team availability        | Timeline slip    | 2-4 engineers estimated; adjust scope if smaller team             |
 
 ---
 

@@ -17,7 +17,12 @@ export const DELETE = withAuth(
 
       // Find the deleted task (allow deletedAt IS NOT NULL)
       const [existing] = await db()
-        .select({ id: schema.tasks.id, title: schema.tasks.title, status: schema.tasks.status, organizationId: schema.tasks.organizationId })
+        .select({
+          id: schema.tasks.id,
+          title: schema.tasks.title,
+          status: schema.tasks.status,
+          organizationId: schema.tasks.organizationId,
+        })
         .from(schema.tasks)
         .where(and(eq(schema.tasks.id, id), sql`${schema.tasks.deletedAt} IS NOT NULL`))
         .limit(1);

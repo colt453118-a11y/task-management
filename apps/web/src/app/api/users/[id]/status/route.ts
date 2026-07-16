@@ -34,7 +34,13 @@ export const PATCH = withAuth(
 
       if (!action || !['deactivate', 'suspend', 'activate', 'unsuspend'].includes(action)) {
         return NextResponse.json(
-          { error: { code: 'VALIDATION_ERROR', message: "Status action must be one of: 'deactivate', 'suspend', 'activate', 'unsuspend'" } },
+          {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message:
+                "Status action must be one of: 'deactivate', 'suspend', 'activate', 'unsuspend'",
+            },
+          },
           { status: 400 },
         );
       }
@@ -64,7 +70,12 @@ export const PATCH = withAuth(
       // Cannot deactivate yourself
       if (targetUserId === user.id) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: 'You cannot deactivate or suspend your own account' } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: 'You cannot deactivate or suspend your own account',
+            },
+          },
           { status: 422 },
         );
       }
@@ -135,11 +146,12 @@ export const PATCH = withAuth(
       }
 
       // Audit log
-      const auditAction = action === 'deactivate'
-        ? 'user.deactivated'
-        : action === 'suspend'
-          ? 'user.suspended'
-          : 'user.reactivated';
+      const auditAction =
+        action === 'deactivate'
+          ? 'user.deactivated'
+          : action === 'suspend'
+            ? 'user.suspended'
+            : 'user.reactivated';
 
       await createAuditEntry({
         organizationId: orgId,
@@ -173,7 +185,5 @@ export const PATCH = withAuth(
  * This forces the user to re-authenticate after being deactivated/suspended.
  */
 async function revokeAllUserSessions(userId: string): Promise<void> {
-  await db()
-    .delete(schema.sessions)
-    .where(eq(schema.sessions.userId, userId));
+  await db().delete(schema.sessions).where(eq(schema.sessions.userId, userId));
 }

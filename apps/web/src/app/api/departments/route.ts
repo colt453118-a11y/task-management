@@ -27,7 +27,9 @@ export const GET = withAuth(
           createdAt: schema.departments.createdAt,
         })
         .from(schema.departments)
-        .where(and(isNull(schema.departments.deletedAt), eq(schema.departments.organizationId, orgId!)))
+        .where(
+          and(isNull(schema.departments.deletedAt), eq(schema.departments.organizationId, orgId!)),
+        )
         .orderBy(desc(schema.departments.sortOrder), desc(schema.departments.createdAt));
 
       return NextResponse.json({ departments });

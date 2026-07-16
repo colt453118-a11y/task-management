@@ -181,9 +181,7 @@ export const DELETE = withAuth(
         );
       }
 
-      await db()
-        .delete(schema.userRoles)
-        .where(eq(schema.userRoles.id, existing.id));
+      await db().delete(schema.userRoles).where(eq(schema.userRoles.id, existing.id));
 
       await createAuditEntry({
         organizationId: orgId,

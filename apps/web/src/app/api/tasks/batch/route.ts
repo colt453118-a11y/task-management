@@ -9,11 +9,23 @@ import { VALID_PRIORITIES, READONLY_STATUSES } from '@/lib/api/validation';
 
 export const runtime = 'nodejs';
 
-export const BatchUpdateSchema = z.object({
-  taskIds: z.array(z.string().uuid()).min(1, 'At least one task ID is required').max(100, 'Maximum 100 tasks per batch operation'),
-  action: z.enum(['change_status', 'change_priority', 'assign', 'delete', 'restore', 'permanent_delete']),
-  value: z.string().min(1, 'Value is required'),
-}).strict('Unexpected fields');
+export const BatchUpdateSchema = z
+  .object({
+    taskIds: z
+      .array(z.string().uuid())
+      .min(1, 'At least one task ID is required')
+      .max(100, 'Maximum 100 tasks per batch operation'),
+    action: z.enum([
+      'change_status',
+      'change_priority',
+      'assign',
+      'delete',
+      'restore',
+      'permanent_delete',
+    ]),
+    value: z.string().min(1, 'Value is required'),
+  })
+  .strict('Unexpected fields');
 
 // POST /api/tasks/batch - Perform batch operations on tasks
 export const POST = withAuth(
@@ -37,9 +49,10 @@ export const POST = withAuth(
       const { taskIds, action, value } = parsed.data;
 
       // For restore/permanent_delete, find deleted tasks; for other actions, find active tasks
-      const deletedCondition = action === 'restore' || action === 'permanent_delete'
-        ? sql`${schema.tasks.deletedAt} IS NOT NULL`
-        : isNull(schema.tasks.deletedAt);
+      const deletedCondition =
+        action === 'restore' || action === 'permanent_delete'
+          ? sql`${schema.tasks.deletedAt} IS NOT NULL`
+          : isNull(schema.tasks.deletedAt);
 
       // Verify all tasks exist and belong to the org
       const tasks = await db()
@@ -49,12 +62,7 @@ export const POST = withAuth(
           status: schema.tasks.status,
         })
         .from(schema.tasks)
-        .where(
-          and(
-            inArray(schema.tasks.id, taskIds),
-            deletedCondition,
-          ),
-        );
+        .where(and(inArray(schema.tasks.id, taskIds), deletedCondition));
 
       if (tasks.length !== taskIds.length) {
         return NextResponse.json(
@@ -121,7 +129,7 @@ export const POST = withAuth(
 
         updatedCount = taskIds.length;
       } else if (action === 'change_priority') {
-        if (!VALID_PRIORITIES.includes(value as typeof VALID_PRIORITIES[number])) {
+        if (!VALID_PRIORITIES.includes(value as (typeof VALID_PRIORITIES)[number])) {
           return NextResponse.json(
             { error: { code: 'VALIDATION_ERROR', message: `Invalid priority: '${value}'` } },
             { status: 400 },
@@ -140,9 +148,7 @@ export const POST = withAuth(
         // Batch permanent delete
         await requirePermission(user.id, 'task:delete');
 
-        await db()
-          .delete(schema.tasks)
-          .where(inArray(schema.tasks.id, taskIds));
+        await db().delete(schema.tasks).where(inArray(schema.tasks.id, taskIds));
 
         updatedCount = taskIds.length;
       } else if (action === 'assign') {
@@ -150,7 +156,12 @@ export const POST = withAuth(
 
         // Validate assignee belongs to the org
         const [assignee] = await db()
-          .select({ id: schema.users.id, organizationId: schema.users.organizationId, isActive: schema.users.isActive, isSuspended: schema.users.isSuspended })
+          .select({
+            id: schema.users.id,
+            organizationId: schema.users.organizationId,
+            isActive: schema.users.isActive,
+            isSuspended: schema.users.isSuspended,
+          })
           .from(schema.users)
           .where(eq(schema.users.id, value))
           .limit(1);
@@ -171,14 +182,24 @@ export const POST = withAuth(
 
         if (!assignee.isActive || assignee.isSuspended) {
           return NextResponse.json(
-            { error: { code: 'INVALID_STATE', message: 'Cannot assign tasks to inactive or suspended user' } },
+            {
+              error: {
+                code: 'INVALID_STATE',
+                message: 'Cannot assign tasks to inactive or suspended user',
+              },
+            },
             { status: 422 },
           );
         }
 
         await db()
           .update(schema.tasks)
-          .set({ assignedTo: value, assignedBy: user.id, updatedBy: user.id, updatedAt: new Date() })
+          .set({
+            assignedTo: value,
+            assignedBy: user.id,
+            updatedBy: user.id,
+            updatedAt: new Date(),
+          })
           .where(inArray(schema.tasks.id, taskIds));
 
         updatedCount = taskIds.length;

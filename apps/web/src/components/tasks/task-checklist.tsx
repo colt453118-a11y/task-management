@@ -78,14 +78,7 @@ function SortableChecklistItem({
   onEditContentChange,
   onEditKeyDown,
 }: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { item },
     disabled: isReadonly,
@@ -107,7 +100,7 @@ function SortableChecklistItem({
         item.isChecked
           ? 'bg-green-500/5 dark:bg-green-500/10'
           : 'hover:bg-surface-200/30 dark:hover:bg-surface-800/30',
-        isDragging && 'opacity-30 shadow-none z-50',
+        isDragging && 'z-50 opacity-30 shadow-none',
       )}
     >
       {/* Drag handle */}
@@ -115,7 +108,7 @@ function SortableChecklistItem({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing rounded-lg p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 transition-all duration-150"
+          className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 cursor-grab rounded-lg p-0.5 opacity-0 transition-all duration-150 active:cursor-grabbing group-hover:opacity-100"
           title="Drag to reorder"
           tabIndex={-1}
         >
@@ -136,7 +129,7 @@ function SortableChecklistItem({
 
       {/* Spinner while updating */}
       {updating === item.id ? (
-        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-surface-400" />
+        <Loader2 className="text-surface-400 h-3.5 w-3.5 shrink-0 animate-spin" />
       ) : editingId === item.id ? (
         /* Edit mode */
         <div className="flex flex-1 items-center gap-1.5">
@@ -146,12 +139,12 @@ function SortableChecklistItem({
             onChange={(e) => onEditContentChange(e.target.value)}
             onKeyDown={onEditKeyDown}
             autoFocus
-            className="h-7 flex-1 rounded-lg border-surface-300/30 bg-surface-100/80 px-2 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/80"
+            className="border-surface-300/30 bg-surface-100/80 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-7 flex-1 rounded-lg px-2 text-xs focus:ring-1"
           />
           <button
             onClick={onSaveEdit}
             disabled={!editContent.trim() || updating === item.id}
-            className="rounded-lg p-1 text-green-500 hover:bg-green-500/10 transition-colors disabled:opacity-40"
+            className="rounded-lg p-1 text-green-500 transition-colors hover:bg-green-500/10 disabled:opacity-40"
           >
             {updating === item.id ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -161,7 +154,7 @@ function SortableChecklistItem({
           </button>
           <button
             onClick={onCancelEdit}
-            className="rounded-lg p-1 text-surface-500 hover:bg-surface-200/70 transition-colors"
+            className="text-surface-500 hover:bg-surface-200/70 rounded-lg p-1 transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -173,7 +166,7 @@ function SortableChecklistItem({
             className={cn(
               'flex-1 text-sm leading-snug transition-all duration-200',
               item.isChecked
-                ? 'text-surface-400 line-through dark:text-surface-500'
+                ? 'text-surface-400 dark:text-surface-500 line-through'
                 : 'text-surface-700 dark:text-surface-300',
             )}
           >
@@ -182,10 +175,10 @@ function SortableChecklistItem({
 
           {/* Actions - visible on hover */}
           {!isReadonly && (
-            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
               <button
                 onClick={() => onStartEdit(item)}
-                className="rounded-lg p-1 text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 transition-colors"
+                className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 rounded-lg p-1 transition-colors"
                 title="Edit item"
               >
                 <Edit3 className="h-3.5 w-3.5" />
@@ -193,7 +186,7 @@ function SortableChecklistItem({
               <button
                 onClick={() => onDelete(item.id)}
                 disabled={deleting === item.id}
-                className="rounded-lg p-1 text-surface-400 hover:text-error hover:bg-error/5 transition-colors disabled:opacity-40"
+                className="text-surface-400 hover:text-error hover:bg-error/5 rounded-lg p-1 transition-colors disabled:opacity-40"
                 title="Delete item"
               >
                 {deleting === item.id ? (
@@ -259,7 +252,9 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
     }
   }, [taskId]);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   // ── Add item ──────────────────────────────────────────────
 
@@ -289,9 +284,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
 
   const toggleItem = async (item: ChecklistItem) => {
     const newChecked = !item.isChecked;
-    setItems((prev) =>
-      prev.map((i) => (i.id === item.id ? { ...i, isChecked: newChecked } : i)),
-    );
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, isChecked: newChecked } : i)));
     setUpdating(item.id);
 
     try {
@@ -307,9 +300,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         throw new Error('Failed to toggle item');
       }
       const data = await res.json();
-      setItems((prev) =>
-        prev.map((i) => (i.id === item.id ? data.item : i)),
-      );
+      setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)));
     } catch (err) {
       console.error('Failed to toggle checklist item:', err);
     } finally {
@@ -339,9 +330,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
       });
       if (!res.ok) throw new Error('Failed to update item');
       const data = await res.json();
-      setItems((prev) =>
-        prev.map((i) => (i.id === editingId ? data.item : i)),
-      );
+      setItems((prev) => prev.map((i) => (i.id === editingId ? data.item : i)));
       setEditingId(null);
       setEditContent('');
     } catch (err) {
@@ -398,57 +387,63 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
 
   // ── Drag handlers ─────────────────────────────────────────
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const item = items.find((i) => i.id === event.active.id);
-    if (item) setActiveDragItem(item);
-  }, [items]);
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const item = items.find((i) => i.id === event.active.id);
+      if (item) setActiveDragItem(item);
+    },
+    [items],
+  );
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveDragItem(null);
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveDragItem(null);
 
-    if (!over || active.id === over.id) return;
+      if (!over || active.id === over.id) return;
 
-    const oldIndex = items.findIndex((i) => i.id === active.id);
-    const newIndex = items.findIndex((i) => i.id === over.id);
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over.id);
 
-    if (oldIndex === -1 || newIndex === -1) return;
+      if (oldIndex === -1 || newIndex === -1) return;
 
-    // Optimistic reorder
-    const reordered = arrayMove(items, oldIndex, newIndex);
-    setItems(reordered);
+      // Optimistic reorder
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      setItems(reordered);
 
-    // Persist the new sort orders
-    setIsReordering(true);
-    try {
-      await Promise.all(
-        reordered.map((item, idx) =>
-          fetch(`/api/tasks/${taskId}/checklist?itemId=${item.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sortOrder: idx }),
-          }),
-        ),
-      );
-    } catch (err) {
-      console.error('Failed to persist reorder:', err);
-      // Refetch on failure to restore correct order
-      fetchItems();
-    } finally {
-      setIsReordering(false);
-    }
-  }, [items, taskId, fetchItems]);
+      // Persist the new sort orders
+      setIsReordering(true);
+      try {
+        await Promise.all(
+          reordered.map((item, idx) =>
+            fetch(`/api/tasks/${taskId}/checklist?itemId=${item.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sortOrder: idx }),
+            }),
+          ),
+        );
+      } catch (err) {
+        console.error('Failed to persist reorder:', err);
+        // Refetch on failure to restore correct order
+        fetchItems();
+      } finally {
+        setIsReordering(false);
+      }
+    },
+    [items, taskId, fetchItems],
+  );
 
   // ── Loading state ───────────────────────────────────────
 
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-4 w-24 shimmer rounded-lg" />
-        <div className="h-2 w-full shimmer rounded-full" />
+        <div className="shimmer h-4 w-24 rounded-lg" />
+        <div className="shimmer h-2 w-full rounded-full" />
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-9 shimmer rounded-lg" />
+            <div key={i} className="shimmer h-9 rounded-lg" />
           ))}
         </div>
       </div>
@@ -461,15 +456,11 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
     <div className="space-y-3">
       {/* Header with progress */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-surface-500">
-          {totalCount > 0
-            ? `${checkedCount} of ${totalCount} done`
-            : 'No items'}
+        <span className="text-surface-500 text-xs font-medium">
+          {totalCount > 0 ? `${checkedCount} of ${totalCount} done` : 'No items'}
         </span>
         {totalCount > 0 && (
-          <span className="text-xs font-semibold text-surface-500 tabular-nums">
-            {progress}%
-          </span>
+          <span className="text-surface-500 text-xs font-semibold tabular-nums">{progress}%</span>
         )}
       </div>
 
@@ -478,7 +469,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         <Progress
           value={progress}
           className={cn(
-            'h-1.5 bg-surface-200/60 dark:bg-surface-700/60',
+            'bg-surface-200/60 dark:bg-surface-700/60 h-1.5',
             progress === 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-brand-500',
           )}
         />
@@ -498,7 +489,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-xs text-surface-400 text-center py-3"
+                  className="text-surface-400 py-3 text-center text-xs"
                 >
                   No checklist items yet. Add one below.
                 </motion.p>
@@ -536,18 +527,17 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         {/* Drag overlay */}
         <DragOverlay dropAnimation={null}>
           {activeDragItem ? (
-            <div className="rounded-xl border border-brand-500/30 bg-surface-50/95 backdrop-blur-sm shadow-lg dark:bg-surface-900/95 px-1.5 py-2 flex items-center gap-1">
-              <GripVertical className="h-3.5 w-3.5 text-brand-500" />
-              <Checkbox
-                checked={activeDragItem.isChecked}
-                className="h-4 w-4 shrink-0"
-              />
-              <span className={cn(
-                'flex-1 text-sm leading-snug',
-                activeDragItem.isChecked
-                  ? 'text-surface-400 line-through'
-                  : 'text-surface-700 dark:text-surface-300',
-              )}>
+            <div className="border-brand-500/30 bg-surface-50/95 dark:bg-surface-900/95 flex items-center gap-1 rounded-xl border px-1.5 py-2 shadow-lg backdrop-blur-sm">
+              <GripVertical className="text-brand-500 h-3.5 w-3.5" />
+              <Checkbox checked={activeDragItem.isChecked} className="h-4 w-4 shrink-0" />
+              <span
+                className={cn(
+                  'flex-1 text-sm leading-snug',
+                  activeDragItem.isChecked
+                    ? 'text-surface-400 line-through'
+                    : 'text-surface-700 dark:text-surface-300',
+                )}
+              >
                 {activeDragItem.content}
               </span>
             </div>
@@ -560,7 +550,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center text-[10px] text-surface-400"
+          className="text-surface-400 text-center text-[10px]"
         >
           Saving order...
         </motion.p>
@@ -576,7 +566,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
               value={newItemContent}
               onChange={(e) => setNewItemContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="h-8 w-full rounded-lg border border-dashed border-surface-400/30 bg-transparent px-2.5 pr-8 text-xs placeholder:text-surface-400 transition-all duration-200 hover:border-surface-400/50 focus:border-brand-500 focus:border-solid focus:bg-surface-100/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:focus:bg-surface-800/50"
+              className="border-surface-400/30 placeholder:text-surface-400 hover:border-surface-400/50 focus:border-brand-500 focus:bg-surface-100/50 focus:ring-brand-500/20 dark:focus:bg-surface-800/50 h-8 w-full rounded-lg border border-dashed bg-transparent px-2.5 pr-8 text-xs transition-all duration-200 focus:border-solid focus:outline-none focus:ring-2"
             />
           </div>
           <Button
@@ -584,7 +574,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
             variant="ghost"
             onClick={addItem}
             disabled={!newItemContent.trim() || adding}
-            className="h-8 w-8 rounded-lg p-0 shrink-0"
+            className="h-8 w-8 shrink-0 rounded-lg p-0"
           >
             {adding ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -600,7 +590,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         <motion.p
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-xs font-medium text-green-500 pt-1"
+          className="pt-1 text-center text-xs font-medium text-green-500"
         >
           ✓ All done!
         </motion.p>

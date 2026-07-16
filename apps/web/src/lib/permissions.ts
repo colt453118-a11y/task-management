@@ -40,10 +40,12 @@ export async function getUserPermissions(userId: string): Promise<Permission[]> 
         permissionId: schema.rolePermissions.permissionId,
       })
       .from(schema.rolePermissions)
-      .where(and(
-        inArray(schema.rolePermissions.roleId, roleIds),
-        eq(schema.rolePermissions.allow, true),
-      ));
+      .where(
+        and(
+          inArray(schema.rolePermissions.roleId, roleIds),
+          eq(schema.rolePermissions.allow, true),
+        ),
+      );
 
     if (rolePerms.length === 0) return [];
 
@@ -103,7 +105,10 @@ export async function hasPermission(userId: string, permissionCode: string): Pro
 /**
  * Check if a user has any of the specified permissions.
  */
-export async function hasAnyPermission(userId: string, permissionCodes: string[]): Promise<boolean> {
+export async function hasAnyPermission(
+  userId: string,
+  permissionCodes: string[],
+): Promise<boolean> {
   const permissions = await getUserPermissions(userId);
   return permissions.some((p) => permissionCodes.includes(p.code));
 }
@@ -111,7 +116,10 @@ export async function hasAnyPermission(userId: string, permissionCodes: string[]
 /**
  * Check if a user has all of the specified permissions.
  */
-export async function hasAllPermissions(userId: string, permissionCodes: string[]): Promise<boolean> {
+export async function hasAllPermissions(
+  userId: string,
+  permissionCodes: string[],
+): Promise<boolean> {
   const permissions = await getUserPermissions(userId);
   const userCodes = new Set(permissions.map((p) => p.code));
   return permissionCodes.every((code) => userCodes.has(code));

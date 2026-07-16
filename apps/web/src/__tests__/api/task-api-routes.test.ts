@@ -25,7 +25,14 @@ describe('BatchUpdateSchema', () => {
   });
 
   it('accepts all six valid actions', () => {
-    const actions = ['change_status', 'change_priority', 'assign', 'delete', 'restore', 'permanent_delete'] as const;
+    const actions = [
+      'change_status',
+      'change_priority',
+      'assign',
+      'delete',
+      'restore',
+      'permanent_delete',
+    ] as const;
     for (const action of actions) {
       const result = BatchUpdateSchema.safeParse({
         taskIds: ['00000000-0000-0000-0000-000000000001'],
@@ -49,8 +56,9 @@ describe('BatchUpdateSchema', () => {
   it('rejects more than 100 taskIds', () => {
     const result = BatchUpdateSchema.safeParse({
       ...validPayload,
-      taskIds: Array.from({ length: 101 }, (_, i) =>
-        `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`,
+      taskIds: Array.from(
+        { length: 101 },
+        (_, i) => `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`,
       ),
     });
     expect(result.success).toBe(false);
@@ -59,8 +67,9 @@ describe('BatchUpdateSchema', () => {
   it('accepts exactly 100 taskIds (boundary)', () => {
     const result = BatchUpdateSchema.safeParse({
       ...validPayload,
-      taskIds: Array.from({ length: 100 }, (_, i) =>
-        `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`,
+      taskIds: Array.from(
+        { length: 100 },
+        (_, i) => `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`,
       ),
     });
     expect(result.success).toBe(true);
@@ -151,7 +160,10 @@ describe('TemplateCreateSchema', () => {
   });
 
   it('rejects taskDescription over 10000 characters', () => {
-    const result = TemplateCreateSchema.safeParse({ name: 'Test', taskDescription: 'x'.repeat(10001) });
+    const result = TemplateCreateSchema.safeParse({
+      name: 'Test',
+      taskDescription: 'x'.repeat(10001),
+    });
     expect(result.success).toBe(false);
   });
 
@@ -319,7 +331,6 @@ describe('Priority Consistency', () => {
 // ─── Batch Negative Tests ──────────────────────────────────────
 
 describe('Batch — Negative / Edge Cases', () => {
-
   // ── Priority validation ─────────────────────────────────
 
   describe('invalid priority values', () => {
@@ -444,7 +455,14 @@ describe('Batch — Negative / Edge Cases', () => {
     });
 
     it('READONLY_STATUSES does not include active statuses', () => {
-      const activeStatuses = ['draft', 'open', 'in_progress', 'blocked', 'under_review', 'completed'];
+      const activeStatuses = [
+        'draft',
+        'open',
+        'in_progress',
+        'blocked',
+        'under_review',
+        'completed',
+      ];
       for (const s of activeStatuses) {
         expect(READONLY_STATUSES.has(s)).toBe(false);
       }
@@ -467,8 +485,8 @@ describe('Batch — Negative / Edge Cases', () => {
 
     it('simulates route returning 422 when readonly tasks are found', () => {
       const tasks = [
-        { id: 'id-1', status: 'closed' },   // Readonly
-        { id: 'id-2', status: 'open' },      // Not readonly
+        { id: 'id-1', status: 'closed' }, // Readonly
+        { id: 'id-2', status: 'open' }, // Not readonly
       ];
 
       const readOnlyTasks = tasks.filter((t) => READONLY_STATUSES.has(t.status));
@@ -500,7 +518,14 @@ describe('Batch — Negative / Edge Cases', () => {
     };
 
     it('each action requires a specific permission', () => {
-      const actions = ['change_status', 'change_priority', 'assign', 'delete', 'restore', 'permanent_delete'];
+      const actions = [
+        'change_status',
+        'change_priority',
+        'assign',
+        'delete',
+        'restore',
+        'permanent_delete',
+      ];
       for (const action of actions) {
         expect(actionPermissions[action]).toBeDefined();
         expect(typeof actionPermissions[action]).toBe('string');
@@ -546,10 +571,7 @@ describe('Batch — Negative / Edge Cases', () => {
     it('allows duplicate UUIDs in taskIds (schema validates UUID format, not uniqueness)', () => {
       // Duplicate UUIDs are still valid UUIDs — schema accepts them
       const result = BatchUpdateSchema.safeParse({
-        taskIds: [
-          '00000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000001',
-        ],
+        taskIds: ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001'],
         action: 'delete',
         value: 'delete',
       });
@@ -559,7 +581,14 @@ describe('Batch — Negative / Edge Cases', () => {
     });
 
     it('rejects extra fields for every action type (mass assignment)', () => {
-      const actions = ['change_status', 'change_priority', 'assign', 'delete', 'restore', 'permanent_delete'];
+      const actions = [
+        'change_status',
+        'change_priority',
+        'assign',
+        'delete',
+        'restore',
+        'permanent_delete',
+      ];
       for (const action of actions) {
         const result = BatchUpdateSchema.safeParse({
           taskIds: ['00000000-0000-0000-0000-000000000001'],
@@ -604,7 +633,14 @@ describe('Batch — Negative / Edge Cases', () => {
 
   describe('audit action naming', () => {
     it('each action produces a valid audit action string via tasks.batch_${action}', () => {
-      const actions = ['change_status', 'change_priority', 'assign', 'delete', 'restore', 'permanent_delete'];
+      const actions = [
+        'change_status',
+        'change_priority',
+        'assign',
+        'delete',
+        'restore',
+        'permanent_delete',
+      ];
       for (const action of actions) {
         const auditAction = `tasks.batch_${action}`;
         expect(auditAction).toMatch(/^tasks\.batch_[a-z_]+$/);

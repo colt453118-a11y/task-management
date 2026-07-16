@@ -36,8 +36,6 @@ export const fieldLabels: Record<string, string> = {
   projectId: 'Project',
 };
 
-
-
 export function getInitials(name: string | null | undefined): string {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -84,7 +82,9 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
     }
   }, [taskId]);
 
-  useEffect(() => { fetchHistory(); }, [fetchHistory]);
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const displayEntries = expanded ? history : history.slice(0, 10);
 
@@ -92,9 +92,9 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-error/10 bg-error/5 px-3 py-2">
-        <AlertCircle className="h-4 w-4 text-error shrink-0" />
-        <p className="text-xs text-error">{error}</p>
+      <div className="border-error/10 bg-error/5 flex items-center gap-2 rounded-xl border px-3 py-2">
+        <AlertCircle className="text-error h-4 w-4 shrink-0" />
+        <p className="text-error text-xs">{error}</p>
       </div>
     );
   }
@@ -102,12 +102,12 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-4 w-20 shimmer rounded-lg" />
+        <div className="shimmer h-4 w-20 rounded-lg" />
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="h-6 w-6 shimmer rounded-full" />
-              <div className="h-3 flex-1 shimmer rounded-lg" />
+              <div className="shimmer h-6 w-6 rounded-full" />
+              <div className="shimmer h-3 flex-1 rounded-lg" />
             </div>
           ))}
         </div>
@@ -119,15 +119,15 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
     <div className="space-y-0.5">
       {history.length === 0 ? (
         <div className="flex flex-col items-center py-6 text-center">
-          <History className="h-8 w-8 text-surface-400 mb-2" />
-          <p className="text-sm text-surface-500">No activity yet</p>
-          <p className="text-xs text-surface-500 mt-0.5">Changes to this task will appear here</p>
+          <History className="text-surface-400 mb-2 h-8 w-8" />
+          <p className="text-surface-500 text-sm">No activity yet</p>
+          <p className="text-surface-500 mt-0.5 text-xs">Changes to this task will appear here</p>
         </div>
       ) : (
         <>
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-3 top-2 bottom-2 w-px bg-surface-300/30 dark:bg-surface-700/30" />
+            <div className="bg-surface-300/30 dark:bg-surface-700/30 absolute bottom-2 left-3 top-2 w-px" />
 
             <div className="space-y-0">
               <AnimatePresence initial={false}>
@@ -137,44 +137,44 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="relative flex items-start gap-3 py-1.5 group"
+                    className="group relative flex items-start gap-3 py-1.5"
                   >
                     {/* Timeline dot */}
                     <div className="relative z-10 mt-0.5">
-                      <div className={cn(
-                        'flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white ring-2 ring-surface-50 dark:ring-surface-900',
-                        entry.changeType === 'status_change'
-                          ? 'bg-amber-500'
-                          : entry.changeType === 'assignment'
-                            ? 'bg-blue-500'
-                            : entry.changeType === 'creation'
-                              ? 'bg-green-500'
-                              : 'bg-surface-400',
-                      )}>
+                      <div
+                        className={cn(
+                          'ring-surface-50 dark:ring-surface-900 flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white ring-2',
+                          entry.changeType === 'status_change'
+                            ? 'bg-amber-500'
+                            : entry.changeType === 'assignment'
+                              ? 'bg-blue-500'
+                              : entry.changeType === 'creation'
+                                ? 'bg-green-500'
+                                : 'bg-surface-400',
+                        )}
+                      >
                         {getInitials(entry.user?.name)}
                       </div>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0 pt-0.5">
+                    <div className="min-w-0 flex-1 pt-0.5">
                       <div className="flex items-center gap-1.5 text-xs">
-                        <span className="font-medium text-surface-700 dark:text-surface-300 truncate max-w-[100px]">
+                        <span className="text-surface-700 dark:text-surface-300 max-w-[100px] truncate font-medium">
                           {entry.user?.name ?? 'System'}
                         </span>
                         {entry.description ? (
-                          <span className="text-surface-500 truncate">
-                            {entry.description}
-                          </span>
+                          <span className="text-surface-500 truncate">{entry.description}</span>
                         ) : (
                           <span className="text-surface-500">
                             Updated{' '}
-                            <span className="font-medium text-surface-600 dark:text-surface-400">
+                            <span className="text-surface-600 dark:text-surface-400 font-medium">
                               {fieldLabels[entry.field] ?? entry.field}
                             </span>
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-surface-400 mt-0.5">
+                      <p className="text-surface-400 mt-0.5 text-[10px]">
                         {formatTimeAgo(entry.createdAt)}
                       </p>
                     </div>
@@ -188,12 +188,9 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
           {history.length > 10 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="w-full text-center text-xs text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 py-2 transition-colors"
+              className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 w-full py-2 text-center text-xs transition-colors"
             >
-              {expanded
-                ? `Show less`
-                : `Show ${history.length - 10} more entries`
-              }
+              {expanded ? `Show less` : `Show ${history.length - 10} more entries`}
             </button>
           )}
         </>

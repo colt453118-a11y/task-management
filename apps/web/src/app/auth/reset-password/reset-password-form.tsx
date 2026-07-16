@@ -5,7 +5,15 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Loader2, ArrowRight, ShieldCheck, CheckCircle2, KeyRound } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
+  KeyRound,
+} from 'lucide-react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -76,23 +84,23 @@ export default function ResetPasswordForm() {
   if (success) {
     return (
       <div className="auth-bg flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-sm animate-fade-in-up">
+        <div className="animate-fade-in-up w-full max-w-sm">
           <div className="glass rounded-2xl p-8 text-center shadow-lg">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25">
               <CheckCircle2 className="h-8 w-8 text-white" />
             </div>
-            <h1 className="mt-5 text-xl font-bold text-surface-900">Password reset successful</h1>
-            <p className="mt-2 text-sm text-surface-500 leading-relaxed">
+            <h1 className="text-surface-900 mt-5 text-xl font-bold">Password reset successful</h1>
+            <p className="text-surface-500 mt-2 text-sm leading-relaxed">
               Your password has been reset successfully. You can now sign in with your new password.
             </p>
             <Button asChild className="mt-6">
               <Link href="/auth/login">
                 Sign in
-                <ArrowRight className="h-4 w-4 ml-1.5" />
+                <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>
           </div>
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-500">
+          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Your data is encrypted and secure</span>
           </div>
@@ -110,21 +118,21 @@ export default function ResetPasswordForm() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25">
                 <span className="text-xl font-bold text-white">!</span>
               </div>
-              <h1 className="mt-4 text-xl font-bold tracking-tight text-surface-900">
+              <h1 className="text-surface-900 mt-4 text-xl font-bold tracking-tight">
                 Invalid link
               </h1>
-              <p className="mt-2 text-sm text-surface-500 leading-relaxed">
+              <p className="text-surface-500 mt-2 text-sm leading-relaxed">
                 This password reset link is invalid or missing. Please request a new one.
               </p>
               <Link
                 href="/auth/forgot-password"
-                className="mt-6 inline-flex items-center gap-1.5 font-semibold text-brand-500 transition-colors hover:text-brand-400"
+                className="text-brand-500 hover:text-brand-400 mt-6 inline-flex items-center gap-1.5 font-semibold transition-colors"
               >
                 Request new reset link
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-500">
+            <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>Your data is encrypted and secure</span>
             </div>
@@ -133,23 +141,24 @@ export default function ResetPasswordForm() {
           <div className="animate-fade-in-up">
             <div className="glass rounded-2xl p-8 shadow-lg">
               <div className="mb-8 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25">
+                <div className="from-brand-500 to-brand-700 shadow-brand-500/25 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
                   <KeyRound className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="mt-4 text-2xl font-bold tracking-tight text-surface-900">
+                <h1 className="text-surface-900 mt-4 text-2xl font-bold tracking-tight">
                   Set new password
                 </h1>
-                <p className="mt-1.5 text-sm text-surface-500">
-                  Enter your new password below
-                </p>
+                <p className="text-surface-500 mt-1.5 text-sm">Enter your new password below</p>
               </div>
 
               <form onSubmit={onSubmit} className="space-y-4">
                 {error && (
-                  <div className="animate-slide-up rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error" role="alert">
+                  <div
+                    className="animate-slide-up border-error/20 bg-error/5 text-error rounded-xl border px-4 py-3 text-sm"
+                    role="alert"
+                  >
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-error/10">
-                        <span className="text-xs font-bold text-error">!</span>
+                      <div className="bg-error/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                        <span className="text-error text-xs font-bold">!</span>
                       </div>
                       <span>{error}</span>
                     </div>
@@ -157,7 +166,10 @@ export default function ResetPasswordForm() {
                 )}
 
                 <div className="space-y-1.5">
-                  <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">
+                  <label
+                    htmlFor="password"
+                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  >
                     New password
                   </label>
                   <div className="relative">
@@ -176,7 +188,7 @@ export default function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-500 transition-colors hover:text-surface-600 dark:hover:text-surface-300"
+                      className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -185,7 +197,10 @@ export default function ResetPasswordForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  >
                     Confirm password
                   </label>
                   <div className="relative">
@@ -201,7 +216,7 @@ export default function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-500 transition-colors hover:text-surface-600 dark:hover:text-surface-300"
+                      className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
                       tabIndex={-1}
                     >
                       {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -209,7 +224,11 @@ export default function ResetPasswordForm() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full h-11 text-base shadow-sm" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base shadow-sm"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
@@ -222,7 +241,7 @@ export default function ResetPasswordForm() {
               </form>
             </div>
 
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-500">
+            <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>Your data is encrypted and secure</span>
             </div>

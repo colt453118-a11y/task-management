@@ -14,16 +14,20 @@ function getTaskIdFromPath(request: NextRequest): string {
   return segments[idIndex + 1]!;
 }
 
-const ChecklistItemCreateSchema = z.object({
-  content: z.string().min(1, 'Content is required').max(1000, 'Content too long'),
-  sortOrder: z.number().int().min(0).optional(),
-}).strict('Unexpected fields');
+const ChecklistItemCreateSchema = z
+  .object({
+    content: z.string().min(1, 'Content is required').max(1000, 'Content too long'),
+    sortOrder: z.number().int().min(0).optional(),
+  })
+  .strict('Unexpected fields');
 
-const ChecklistItemUpdateSchema = z.object({
-  content: z.string().min(1).max(1000).optional(),
-  isChecked: z.boolean().optional(),
-  sortOrder: z.number().int().min(0).optional(),
-}).strict('Unexpected fields');
+const ChecklistItemUpdateSchema = z
+  .object({
+    content: z.string().min(1).max(1000).optional(),
+    isChecked: z.boolean().optional(),
+    sortOrder: z.number().int().min(0).optional(),
+  })
+  .strict('Unexpected fields');
 
 // GET /api/tasks/[id]/checklist - List checklist items
 export const GET = withAuth(
@@ -52,7 +56,10 @@ export const GET = withAuth(
             isNull(schema.tasks.deletedAt),
           ),
         )
-        .orderBy(asc(schema.taskChecklistItems.sortOrder), asc(schema.taskChecklistItems.createdAt));
+        .orderBy(
+          asc(schema.taskChecklistItems.sortOrder),
+          asc(schema.taskChecklistItems.createdAt),
+        );
 
       return NextResponse.json({ items });
     } catch (error) {
@@ -195,7 +202,11 @@ export const PATCH = withAuth(
 
       // Verify task exists and belongs to org
       const [task] = await db()
-        .select({ id: schema.tasks.id, organizationId: schema.tasks.organizationId, status: schema.tasks.status })
+        .select({
+          id: schema.tasks.id,
+          organizationId: schema.tasks.organizationId,
+          status: schema.tasks.status,
+        })
         .from(schema.tasks)
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
@@ -218,7 +229,12 @@ export const PATCH = withAuth(
       const [existing] = await db()
         .select()
         .from(schema.taskChecklistItems)
-        .where(and(eq(schema.taskChecklistItems.id, itemId), eq(schema.taskChecklistItems.taskId, taskId)))
+        .where(
+          and(
+            eq(schema.taskChecklistItems.id, itemId),
+            eq(schema.taskChecklistItems.taskId, taskId),
+          ),
+        )
         .limit(1);
 
       if (!existing) {
@@ -255,9 +271,12 @@ export const PATCH = withAuth(
       await createAuditEntry({
         organizationId: orgId,
         userId: user.id,
-        action: isChecked !== undefined
-          ? (isChecked ? 'task.checklist_item_checked' : 'task.checklist_item_unchecked')
-          : 'task.checklist_item_updated',
+        action:
+          isChecked !== undefined
+            ? isChecked
+              ? 'task.checklist_item_checked'
+              : 'task.checklist_item_unchecked'
+            : 'task.checklist_item_updated',
         entityType: 'task',
         entityId: taskId,
         oldValues: { itemId, wasChecked: existing.isChecked },
@@ -291,7 +310,11 @@ export const DELETE = withAuth(
 
       // Verify task exists and belongs to org
       const [task] = await db()
-        .select({ id: schema.tasks.id, organizationId: schema.tasks.organizationId, status: schema.tasks.status })
+        .select({
+          id: schema.tasks.id,
+          organizationId: schema.tasks.organizationId,
+          status: schema.tasks.status,
+        })
         .from(schema.tasks)
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
@@ -313,7 +336,12 @@ export const DELETE = withAuth(
       const [existing] = await db()
         .select()
         .from(schema.taskChecklistItems)
-        .where(and(eq(schema.taskChecklistItems.id, itemId), eq(schema.taskChecklistItems.taskId, taskId)))
+        .where(
+          and(
+            eq(schema.taskChecklistItems.id, itemId),
+            eq(schema.taskChecklistItems.taskId, taskId),
+          ),
+        )
         .limit(1);
 
       if (!existing) {
@@ -323,9 +351,7 @@ export const DELETE = withAuth(
         );
       }
 
-      await db()
-        .delete(schema.taskChecklistItems)
-        .where(eq(schema.taskChecklistItems.id, itemId));
+      await db().delete(schema.taskChecklistItems).where(eq(schema.taskChecklistItems.id, itemId));
 
       await createAuditEntry({
         organizationId: orgId,

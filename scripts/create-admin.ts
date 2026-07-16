@@ -5,7 +5,6 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 
-
 async function createAdmin() {
   const db = getDb();
   console.log('🔧 Creating admin user...');

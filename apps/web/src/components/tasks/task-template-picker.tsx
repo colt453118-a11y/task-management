@@ -4,16 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Loader2,
-  Plus,
-  Trash2,
-  Check,
-  X,
-  Edit3,
-  LayoutTemplate,
-  Sparkles,
-} from 'lucide-react';
+import { Loader2, Plus, Trash2, Check, X, Edit3, LayoutTemplate, Sparkles } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -33,11 +24,7 @@ interface Template {
 }
 
 interface TaskTemplatePickerProps {
-  onApplyTemplate: (template: {
-    title?: string;
-    description?: string;
-    priority?: string;
-  }) => void;
+  onApplyTemplate: (template: { title?: string; description?: string; priority?: string }) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────
@@ -71,7 +58,9 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
     }
   }, []);
 
-  useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   // ── Apply template ────────────────────────────────────────
 
@@ -164,7 +153,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
   if (loading) {
     return (
       <div className="flex items-center gap-2">
-        <div className="h-8 w-24 shimmer rounded-xl" />
+        <div className="shimmer h-8 w-24 rounded-xl" />
       </div>
     );
   }
@@ -172,7 +161,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
   return (
     <div className="relative">
       {/* Toggle manage mode */}
-      <div className="flex items-center gap-1.5 mb-2">
+      <div className="mb-2 flex items-center gap-1.5">
         <button
           onClick={() => setShowManager(!showManager)}
           className={cn(
@@ -185,7 +174,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
           <LayoutTemplate className="h-3.5 w-3.5" />
           Templates
           {templates.length > 0 && (
-            <span className="inline-flex items-center justify-center h-4 min-w-[16px] rounded-full bg-surface-200/70 px-1 text-[10px] font-medium text-surface-500 dark:bg-surface-700/50">
+            <span className="bg-surface-200/70 text-surface-500 dark:bg-surface-700/50 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium">
               {templates.length}
             </span>
           )}
@@ -199,18 +188,21 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
             initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -8, height: 0 }}
-            className="rounded-2xl border border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 overflow-hidden mb-4"
+            className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 mb-4 overflow-hidden rounded-2xl border"
           >
             {manageMode === 'list' ? (
               /* Template list */
-              <div className="p-3 space-y-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-surface-500">
+              <div className="space-y-2 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-surface-500 text-xs font-semibold uppercase tracking-wider">
                     {templates.length} template{templates.length !== 1 ? 's' : ''}
                   </span>
                   <button
-                    onClick={() => { setManageMode('create'); resetForm(); }}
-                    className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-500 hover:bg-brand-500/10 transition-all"
+                    onClick={() => {
+                      setManageMode('create');
+                      resetForm();
+                    }}
+                    className="text-brand-500 hover:bg-brand-500/10 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all"
                   >
                     <Plus className="h-3 w-3" />
                     New
@@ -218,41 +210,46 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                 </div>
 
                 {templates.length === 0 ? (
-                  <p className="text-xs text-surface-400 text-center py-4">
+                  <p className="text-surface-400 py-4 text-center text-xs">
                     No templates yet. Create one to speed up task creation.
                   </p>
                 ) : (
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                  <div className="max-h-48 space-y-1 overflow-y-auto">
                     {templates.map((template) => (
                       <div
                         key={template.id}
-                        className="group flex items-center justify-between rounded-xl px-2.5 py-2 transition-all hover:bg-surface-200/50 dark:hover:bg-surface-800/50"
+                        className="hover:bg-surface-200/50 dark:hover:bg-surface-800/50 group flex items-center justify-between rounded-xl px-2.5 py-2 transition-all"
                       >
                         <button
-                          onClick={() => { applyTemplate(template); setShowManager(false); }}
-                          className="flex items-center gap-2 min-w-0 flex-1 text-left"
+                          onClick={() => {
+                            applyTemplate(template);
+                            setShowManager(false);
+                          }}
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left"
                         >
-                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-surface-400" />
+                          <Sparkles className="text-surface-400 h-3.5 w-3.5 shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">
+                            <p className="text-surface-700 dark:text-surface-300 truncate text-sm font-medium">
                               {template.name}
                             </p>
                             {template.description && (
-                              <p className="text-[11px] text-surface-500 truncate">{template.description}</p>
+                              <p className="text-surface-500 truncate text-[11px]">
+                                {template.description}
+                              </p>
                             )}
                           </div>
                         </button>
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                        <div className="ml-2 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
                             onClick={() => startEdit(template)}
-                            className="rounded-lg p-1 text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 transition-colors"
+                            className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 rounded-lg p-1 transition-colors"
                             title="Edit"
                           >
                             <Edit3 className="h-3 w-3" />
                           </button>
                           <button
                             onClick={() => deleteTemplate(template.id)}
-                            className="rounded-lg p-1 text-surface-400 hover:text-error hover:bg-error/5 transition-colors"
+                            className="text-surface-400 hover:text-error hover:bg-error/5 rounded-lg p-1 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -265,14 +262,17 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
               </div>
             ) : (
               /* Create/Edit form */
-              <div className="p-3 space-y-3">
+              <div className="space-y-3 p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-surface-500">
+                  <span className="text-surface-500 text-xs font-semibold uppercase tracking-wider">
                     {manageMode === 'create' ? 'New Template' : 'Edit Template'}
                   </span>
                   <button
-                    onClick={() => { setManageMode('list'); resetForm(); }}
-                    className="rounded-lg p-1 text-surface-500 hover:bg-surface-200/70 transition-colors"
+                    onClick={() => {
+                      setManageMode('list');
+                      resetForm();
+                    }}
+                    className="text-surface-500 hover:bg-surface-200/70 rounded-lg p-1 transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -284,7 +284,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Template name *"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="h-8 w-full rounded-lg border border-surface-300/20 bg-surface-200/50 px-2.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/50"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -294,7 +294,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Description (optional)"
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
-                    className="h-8 w-full rounded-lg border border-surface-300/20 bg-surface-200/50 px-2.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/50"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -304,7 +304,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Default title for new tasks (optional)"
                     value={formTaskTitle}
                     onChange={(e) => setFormTaskTitle(e.target.value)}
-                    className="h-8 w-full rounded-lg border border-surface-300/20 bg-surface-200/50 px-2.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/50"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -313,16 +313,18 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Default description for new tasks (optional)"
                     value={formTaskDescription}
                     onChange={(e) => setFormTaskDescription(e.target.value)}
-                    className="h-16 w-full rounded-lg border border-surface-300/20 bg-surface-200/50 px-2.5 py-1.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/50 resize-none"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-16 w-full resize-none rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-medium text-surface-500 mb-1">Default Priority</label>
+                  <label className="text-surface-500 mb-1 block text-[10px] font-medium">
+                    Default Priority
+                  </label>
                   <select
                     value={formPriority}
                     onChange={(e) => setFormPriority(e.target.value)}
-                    className="h-8 w-full rounded-lg border border-surface-300/20 bg-surface-200/50 px-2.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20 dark:bg-surface-800/50"
+                    className="border-surface-300/20 bg-surface-200/50 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   >
                     <option value="none">None</option>
                     <option value="low">Low</option>
@@ -337,8 +339,11 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => { setManageMode('list'); resetForm(); }}
-                    className="h-7 text-xs rounded-lg"
+                    onClick={() => {
+                      setManageMode('list');
+                      resetForm();
+                    }}
+                    className="h-7 rounded-lg text-xs"
                   >
                     Cancel
                   </Button>
@@ -346,12 +351,12 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     size="sm"
                     onClick={saveTemplate}
                     disabled={!formName.trim() || formSubmitting}
-                    className="h-7 text-xs rounded-lg"
+                    className="h-7 rounded-lg text-xs"
                   >
                     {formSubmitting ? (
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                     ) : (
-                      <Check className="h-3 w-3 mr-1" />
+                      <Check className="mr-1 h-3 w-3" />
                     )}
                     {manageMode === 'create' ? 'Create' : 'Save'}
                   </Button>
@@ -369,7 +374,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
             <button
               key={template.id}
               onClick={() => applyTemplate(template)}
-              className="inline-flex items-center gap-1 rounded-lg border border-surface-300/20 px-2 py-1 text-[11px] font-medium text-surface-600 transition-all hover:border-brand-500/30 hover:text-brand-500 hover:bg-brand-500/5 dark:text-surface-400"
+              className="border-surface-300/20 text-surface-600 hover:border-brand-500/30 hover:text-brand-500 hover:bg-brand-500/5 dark:text-surface-400 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all"
             >
               <Sparkles className="h-3 w-3" />
               {template.name}

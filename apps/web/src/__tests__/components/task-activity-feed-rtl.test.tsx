@@ -140,9 +140,7 @@ describe('TaskActivityFeed (React Testing Library)', () => {
   // ── Error state ────────────────────────────────────────────
 
   it('shows error state when fetch fails', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('Network error'),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
     render(<TaskActivityFeed taskId="task-error" />);
 

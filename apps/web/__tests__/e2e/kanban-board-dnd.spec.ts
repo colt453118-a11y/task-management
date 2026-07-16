@@ -81,7 +81,12 @@ const MOCK_TASKS_WITH_COMPLETED = {
 
 async function setSessionCookie(page: import('@playwright/test').Page) {
   await page.context().addCookies([
-    { name: 'better-auth.session_token', value: 'mock-session-token', domain: 'localhost', path: '/' },
+    {
+      name: 'better-auth.session_token',
+      value: 'mock-session-token',
+      domain: 'localhost',
+      path: '/',
+    },
   ]);
 }
 
@@ -94,7 +99,11 @@ async function setSessionCookie(page: import('@playwright/test').Page) {
 async function mockPageApis(page: import('@playwright/test').Page) {
   // Users for assign filter
   await page.route('**/api/users?limit=100', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ users: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ users: [] }),
+    });
   });
   // Reports export (best-effort, never called)
   await page.route('**/api/reports/export*', async (route) => {
@@ -102,7 +111,11 @@ async function mockPageApis(page: import('@playwright/test').Page) {
   });
   // Search (best-effort)
   await page.route('**/api/search*', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ results: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ results: [] }),
+    });
   });
 }
 
@@ -177,9 +190,17 @@ test.describe('KanbanBoard Drag and Drop', () => {
       const url = route.request().url();
       // Only match the tasks list endpoint, not task detail or batch
       if (!url.includes('/batch') && route.request().method() === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_TASKS_BOARD) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(MOCK_TASKS_BOARD),
+        });
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: null }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ task: null }),
+        });
       }
     });
 
@@ -200,7 +221,9 @@ test.describe('KanbanBoard Drag and Drop', () => {
     await expect(page.getByText('Urgent')).toBeVisible();
   });
 
-  test('drags a task from Open column to In Progress column and calls status update API', async ({ page }) => {
+  test('drags a task from Open column to In Progress column and calls status update API', async ({
+    page,
+  }) => {
     // Track whether the PATCH call was made
     let patchStatus = '';
 
@@ -210,21 +233,40 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
       // Pure GET for the tasks list
       if (method === 'GET' && !url.includes(`/${TASK_ID_1}`) && !url.includes(`/${TASK_ID_2}`)) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_TASKS_BOARD) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(MOCK_TASKS_BOARD),
+        });
       }
       // PATCH for status update
       else if (method === 'PATCH' && url.includes(`/${TASK_ID_1}`)) {
         const body = JSON.parse(route.request().postData() ?? '{}');
         patchStatus = body.status;
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: { ...MOCK_TASKS_BOARD.tasks[0], status: 'in_progress' } }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ task: { ...MOCK_TASKS_BOARD.tasks[0], status: 'in_progress' } }),
+        });
       }
       // Any per-task GET (fetched after PATCH for refetch)
-      else if (method === 'GET' && (url.includes(`/${TASK_ID_1}`) || url.includes(`/${TASK_ID_2}`))) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: { ...MOCK_TASKS_BOARD.tasks[0], status: 'in_progress' } }) });
+      else if (
+        method === 'GET' &&
+        (url.includes(`/${TASK_ID_1}`) || url.includes(`/${TASK_ID_2}`))
+      ) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ task: { ...MOCK_TASKS_BOARD.tasks[0], status: 'in_progress' } }),
+        });
       }
       // Everything else (batch, etc.)
       else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
       }
     });
 
@@ -250,7 +292,9 @@ test.describe('KanbanBoard Drag and Drop', () => {
     expect(patchStatus).toBe('in_progress');
   });
 
-  test('does not make an API call when card is dropped back on the same column', async ({ page }) => {
+  test('does not make an API call when card is dropped back on the same column', async ({
+    page,
+  }) => {
     let patchCallCount = 0;
 
     await page.route('**/api/tasks*', async (route) => {
@@ -258,12 +302,24 @@ test.describe('KanbanBoard Drag and Drop', () => {
       const method = route.request().method();
 
       if (method === 'GET' && !url.includes(`/${TASK_ID_1}`) && !url.includes(`/${TASK_ID_2}`)) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_TASKS_BOARD) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(MOCK_TASKS_BOARD),
+        });
       } else if (method === 'PATCH') {
         patchCallCount++;
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: MOCK_TASKS_BOARD.tasks[0] }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ task: MOCK_TASKS_BOARD.tasks[0] }),
+        });
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
       }
     });
 
@@ -298,12 +354,24 @@ test.describe('KanbanBoard Drag and Drop', () => {
       const method = route.request().method();
 
       if (method === 'GET' && !url.includes('/task-completed') && !url.includes('/task-active')) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_TASKS_WITH_COMPLETED) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(MOCK_TASKS_WITH_COMPLETED),
+        });
       } else if (method === 'PATCH') {
         patchCallCount++;
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
       }
     });
 
@@ -332,13 +400,27 @@ test.describe('KanbanBoard Drag and Drop', () => {
     expect(patchCallCount).toBe(0);
   });
 
-  test('shows invalid drop indicator when dragging to an invalid status transition', async ({ page }) => {
+  test('shows invalid drop indicator when dragging to an invalid status transition', async ({
+    page,
+  }) => {
     await page.route('**/api/tasks*', async (route) => {
       const url = route.request().url();
-      if (route.request().method() === 'GET' && !url.includes(`/${TASK_ID_1}`) && !url.includes(`/${TASK_ID_2}`)) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_TASKS_BOARD) });
+      if (
+        route.request().method() === 'GET' &&
+        !url.includes(`/${TASK_ID_1}`) &&
+        !url.includes(`/${TASK_ID_2}`)
+      ) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(MOCK_TASKS_BOARD),
+        });
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: null }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ task: null }),
+        });
       }
     });
 
@@ -365,7 +447,9 @@ test.describe('KanbanBoard Drag and Drop', () => {
     await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
     await page.mouse.down();
     await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 15, sourceBox.y, { steps: 5 });
-    await page.mouse.move(draftBox.x + draftBox.width / 2, draftBox.y + draftBox.height / 4, { steps: 10 });
+    await page.mouse.move(draftBox.x + draftBox.width / 2, draftBox.y + draftBox.height / 4, {
+      steps: 10,
+    });
     await page.waitForTimeout(100);
 
     // If the transition is invalid, the column shows the red rejection ring.

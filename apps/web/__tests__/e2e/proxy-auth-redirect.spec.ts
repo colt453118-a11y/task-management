@@ -61,9 +61,9 @@ test.describe('unauthenticated access (no session cookie)', () => {
     test(`does not redirect public route ${route}`, async ({ request }) => {
       const response = await request.get(route);
       // The middleware lets public routes through; status depends on whether
-    // backing services (database, etc.) are available. The key assertion
-    // is that the request is NOT redirected (status !== 307).
-    expect(response.status()).not.toBe(307);
+      // backing services (database, etc.) are available. The key assertion
+      // is that the request is NOT redirected (status !== 307).
+      expect(response.status()).not.toBe(307);
     });
   }
 

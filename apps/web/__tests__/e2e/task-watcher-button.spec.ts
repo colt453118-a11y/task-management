@@ -121,9 +121,7 @@ async function mockWatchersGet(
       status: route.request().method() === 'GET' ? 200 : 201,
       contentType: 'application/json',
       body: JSON.stringify(
-        route.request().method() === 'GET'
-          ? { isWatching, watcherCount }
-          : { success: true },
+        route.request().method() === 'GET' ? { isWatching, watcherCount } : { success: true },
       ),
     });
   });
@@ -171,7 +169,9 @@ test.describe('TaskWatcherButton', () => {
     await expect(watchingButton).toContainText('5');
   });
 
-  test('clicking Watch sends POST and updates to Watching with incremented count', async ({ page }) => {
+  test('clicking Watch sends POST and updates to Watching with incremented count', async ({
+    page,
+  }) => {
     // Track POST calls
     let postCalled = false;
 
@@ -214,7 +214,9 @@ test.describe('TaskWatcherButton', () => {
     expect(postCalled).toBe(true);
   });
 
-  test('clicking Watching sends DELETE and reverts to Watch with decremented count', async ({ page }) => {
+  test('clicking Watching sends DELETE and reverts to Watch with decremented count', async ({
+    page,
+  }) => {
     // Track DELETE calls
     let deleteCalled = false;
 

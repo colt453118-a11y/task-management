@@ -23,7 +23,9 @@ export const GET = withAuth(
       const departments = await db()
         .select()
         .from(schema.departments)
-        .where(and(isNull(schema.departments.deletedAt), eq(schema.departments.organizationId, orgId!)))
+        .where(
+          and(isNull(schema.departments.deletedAt), eq(schema.departments.organizationId, orgId!)),
+        )
         .orderBy(desc(schema.departments.createdAt));
 
       return NextResponse.json({ teams, departments });
@@ -65,7 +67,9 @@ export const POST = withAuth(
         }
         if (dept.organizationId !== orgId) {
           return NextResponse.json(
-            { error: { code: 'FORBIDDEN', message: 'Cross-organization department access denied' } },
+            {
+              error: { code: 'FORBIDDEN', message: 'Cross-organization department access denied' },
+            },
             { status: 403 },
           );
         }

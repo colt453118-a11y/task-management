@@ -30,12 +30,11 @@ vi.mock('next/server', () => ({
 }));
 
 vi.mock('@/lib/auth/api-auth', () => ({
-  withAuth: (handler: Function) =>
-    async (req: unknown) =>
-      handler(req, {
-        user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
-        orgId: 'org-1',
-      }),
+  withAuth: (handler: Function) => async (req: unknown) =>
+    handler(req, {
+      user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
+      orgId: 'org-1',
+    }),
   requirePermission: mockRequirePermission,
   checkPermission: vi.fn(() => Promise.resolve(true)),
   enforceOrgScope: vi.fn(),
@@ -44,8 +43,22 @@ vi.mock('@/lib/auth/api-auth', () => ({
 vi.mock('@/lib/api/db', () => ({
   db: mockDb,
   schema: {
-    tasks: { id: 'tasks.id', organizationId: 'tasks.orgId', deletedAt: 'tasks.deletedAt', status: 'tasks.status' } as Record<string, string>,
-    taskChecklistItems: { id: 'tci.id', taskId: 'tci.taskId', content: 'tci.content', isChecked: 'tci.isChecked', checkedBy: 'tci.checkedBy', checkedAt: 'tci.checkedAt', sortOrder: 'tci.sortOrder', createdAt: 'tci.createdAt' } as Record<string, string>,
+    tasks: {
+      id: 'tasks.id',
+      organizationId: 'tasks.orgId',
+      deletedAt: 'tasks.deletedAt',
+      status: 'tasks.status',
+    } as Record<string, string>,
+    taskChecklistItems: {
+      id: 'tci.id',
+      taskId: 'tci.taskId',
+      content: 'tci.content',
+      isChecked: 'tci.isChecked',
+      checkedBy: 'tci.checkedBy',
+      checkedAt: 'tci.checkedAt',
+      sortOrder: 'tci.sortOrder',
+      createdAt: 'tci.createdAt',
+    } as Record<string, string>,
   },
   handleApiError: vi.fn((_error: unknown, message: string) => ({
     error: { code: 'INTERNAL_ERROR', message },
@@ -76,19 +89,33 @@ beforeEach(() => {
 describe('Checklist API — GET (list items)', () => {
   it('returns items for a task', async () => {
     const items = [
-      { id: 'item-1', taskId: 'task-123', content: 'Set up DB', isChecked: false, checkedBy: null, checkedAt: null, sortOrder: 0, createdAt: new Date().toISOString() },
-      { id: 'item-2', taskId: 'task-123', content: 'Create API', isChecked: true, checkedBy: 'user-1', checkedAt: new Date().toISOString(), sortOrder: 1, createdAt: new Date().toISOString() },
+      {
+        id: 'item-1',
+        taskId: 'task-123',
+        content: 'Set up DB',
+        isChecked: false,
+        checkedBy: null,
+        checkedAt: null,
+        sortOrder: 0,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'item-2',
+        taskId: 'task-123',
+        content: 'Create API',
+        isChecked: true,
+        checkedBy: 'user-1',
+        checkedAt: new Date().toISOString(),
+        sortOrder: 1,
+        createdAt: new Date().toISOString(),
+      },
     ];
 
-    mockDb.mockReturnValue(
-      createChain([items]),
-    );
+    mockDb.mockReturnValue(createChain([items]));
 
     const response = await GET(createRequest('GET', CHECKLIST_PATH));
 
-    expect(mockNextResponseJson).toHaveBeenCalledWith(
-      expect.objectContaining({ items }),
-    );
+    expect(mockNextResponseJson).toHaveBeenCalledWith(expect.objectContaining({ items }));
     expect(response.status).toBe(200);
 
     // Verify the innerJoin was used (org scope check)
@@ -96,22 +123,16 @@ describe('Checklist API — GET (list items)', () => {
   });
 
   it('returns empty array when no items exist', async () => {
-    mockDb.mockReturnValue(
-      createChain([[]]),
-    );
+    mockDb.mockReturnValue(createChain([[]]));
 
     const response = await GET(createRequest('GET', CHECKLIST_PATH));
 
-    expect(mockNextResponseJson).toHaveBeenCalledWith(
-      expect.objectContaining({ items: [] }),
-    );
+    expect(mockNextResponseJson).toHaveBeenCalledWith(expect.objectContaining({ items: [] }));
     expect(response.status).toBe(200);
   });
 
   it('calls requirePermission with task:view', async () => {
-    mockDb.mockReturnValue(
-      createChain([[]]),
-    );
+    mockDb.mockReturnValue(createChain([[]]));
 
     await GET(createRequest('GET', CHECKLIST_PATH));
 
@@ -125,7 +146,16 @@ describe('Checklist API — GET (list items)', () => {
 
 describe('Checklist API — POST (create item)', () => {
   it('creates a checklist item successfully', async () => {
-    const newItem = { id: 'item-new', taskId: 'task-123', content: 'Write tests', isChecked: false, checkedBy: null, checkedAt: null, sortOrder: 0, createdAt: new Date().toISOString() };
+    const newItem = {
+      id: 'item-new',
+      taskId: 'task-123',
+      content: 'Write tests',
+      isChecked: false,
+      checkedBy: null,
+      checkedAt: null,
+      sortOrder: 0,
+      createdAt: new Date().toISOString(),
+    };
 
     const chain = createChain([
       [{ id: 'task-123', organizationId: 'org-1', status: 'open' }], // Task exists
@@ -134,7 +164,9 @@ describe('Checklist API — POST (create item)', () => {
     ]);
     mockDb.mockReturnValue(chain);
 
-    const response = await POST(createRequest('POST', CHECKLIST_PATH, undefined, { content: 'Write tests' }));
+    const response = await POST(
+      createRequest('POST', CHECKLIST_PATH, undefined, { content: 'Write tests' }),
+    );
 
     expect(mockNextResponseJson).toHaveBeenCalledWith(
       expect.objectContaining({ item: newItem }),
@@ -333,9 +365,7 @@ describe('Checklist API — PATCH (update item)', () => {
 
   it('returns 403 when task belongs to different organization', async () => {
     mockDb.mockReturnValue(
-      createChain([
-        [{ id: 'task-123', organizationId: 'other-org', status: 'open' }],
-      ]),
+      createChain([[{ id: 'task-123', organizationId: 'other-org', status: 'open' }]]),
     );
 
     const response = await PATCH(createRequest('PATCH', CHECKLIST_PATH, 'itemId=item-1'));
@@ -353,9 +383,7 @@ describe('Checklist API — PATCH (update item)', () => {
 
     await PATCH(createRequest('PATCH', CHECKLIST_PATH, 'itemId=item-1', { sortOrder: 5 }));
 
-    expect(chain.set).toHaveBeenCalledWith(
-      expect.objectContaining({ sortOrder: 5 }),
-    );
+    expect(chain.set).toHaveBeenCalledWith(expect.objectContaining({ sortOrder: 5 }));
   });
 });
 
@@ -374,9 +402,7 @@ describe('Checklist API — DELETE (remove item)', () => {
 
     const response = await DELETE(createRequest('DELETE', CHECKLIST_PATH, 'itemId=item-1'));
 
-    expect(mockNextResponseJson).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true }),
-    );
+    expect(mockNextResponseJson).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     expect(response.status).toBe(200);
 
     // Verify delete was called
@@ -424,9 +450,7 @@ describe('Checklist API — DELETE (remove item)', () => {
 
   it('returns 403 when task belongs to different organization', async () => {
     mockDb.mockReturnValue(
-      createChain([
-        [{ id: 'task-123', organizationId: 'other-org', status: 'open' }],
-      ]),
+      createChain([[{ id: 'task-123', organizationId: 'other-org', status: 'open' }]]),
     );
 
     const response = await DELETE(createRequest('DELETE', CHECKLIST_PATH, 'itemId=item-1'));
@@ -444,16 +468,18 @@ describe('Checklist API — response contract', () => {
   it('GET returns expected shape with items array', async () => {
     mockDb.mockReturnValue(
       createChain([
-        [{
-          id: 'item-1',
-          taskId: 'task-123',
-          content: 'Test',
-          isChecked: false,
-          checkedBy: null,
-          checkedAt: null,
-          sortOrder: 0,
-          createdAt: new Date().toISOString(),
-        }],
+        [
+          {
+            id: 'item-1',
+            taskId: 'task-123',
+            content: 'Test',
+            isChecked: false,
+            checkedBy: null,
+            checkedAt: null,
+            sortOrder: 0,
+            createdAt: new Date().toISOString(),
+          },
+        ],
       ]),
     );
 
@@ -528,5 +554,3 @@ describe('Checklist API — response contract', () => {
     expect(body).toHaveProperty('success', true);
   });
 });
-
-

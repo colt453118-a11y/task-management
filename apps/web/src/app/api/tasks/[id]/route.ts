@@ -4,7 +4,12 @@ import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull } from 'drizzle-orm';
-import { TaskUpdateSchema, validationError, isValidTransition, READONLY_STATUSES } from '@/lib/api/validation';
+import {
+  TaskUpdateSchema,
+  validationError,
+  isValidTransition,
+  READONLY_STATUSES,
+} from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask, removeTaskFromIndex } from '@/lib/search';
 
@@ -59,10 +64,19 @@ export const PATCH = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { title, description: rawDescription, status, priority, assignedTo, dueDate, projectId } = parsed.data;
+      const {
+        title,
+        description: rawDescription,
+        status,
+        priority,
+        assignedTo,
+        dueDate,
+        projectId,
+      } = parsed.data;
       // Preserve `undefined` when description is not in the update body,
       // so the `if (description !== undefined)` check below skips it correctly.
-      const description = rawDescription !== undefined ? sanitizeRichText(rawDescription) : rawDescription;
+      const description =
+        rawDescription !== undefined ? sanitizeRichText(rawDescription) : rawDescription;
 
       const [existing] = await db()
         .select()
@@ -82,7 +96,12 @@ export const PATCH = withAuth(
       // ── Readonly enforcement: closed/archived tasks cannot be edited ──
       if (READONLY_STATUSES.has(existing.status)) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: `Tasks with status '${existing.status}' cannot be edited` } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: `Tasks with status '${existing.status}' cannot be edited`,
+            },
+          },
           { status: 422 },
         );
       }
@@ -91,7 +110,12 @@ export const PATCH = withAuth(
       if (status !== undefined && status !== existing.status) {
         if (!isValidTransition(existing.status, status)) {
           return NextResponse.json(
-            { error: { code: 'INVALID_STATE', message: `Invalid status transition from '${existing.status}' to '${status}'` } },
+            {
+              error: {
+                code: 'INVALID_STATE',
+                message: `Invalid status transition from '${existing.status}' to '${status}'`,
+              },
+            },
             { status: 422 },
           );
         }
@@ -109,7 +133,12 @@ export const PATCH = withAuth(
       // ── Validate assignedTo belongs to same org (if changing) ──
       if (assignedTo !== undefined && assignedTo !== null) {
         const [assigneeUser] = await db()
-          .select({ id: schema.users.id, organizationId: schema.users.organizationId, isActive: schema.users.isActive, isSuspended: schema.users.isSuspended })
+          .select({
+            id: schema.users.id,
+            organizationId: schema.users.organizationId,
+            isActive: schema.users.isActive,
+            isSuspended: schema.users.isSuspended,
+          })
           .from(schema.users)
           .where(eq(schema.users.id, assignedTo))
           .limit(1);
@@ -127,7 +156,12 @@ export const PATCH = withAuth(
         }
         if (!assigneeUser.isActive || assigneeUser.isSuspended) {
           return NextResponse.json(
-            { error: { code: 'INVALID_STATE', message: 'Cannot assign task to inactive or suspended user' } },
+            {
+              error: {
+                code: 'INVALID_STATE',
+                message: 'Cannot assign task to inactive or suspended user',
+              },
+            },
             { status: 422 },
           );
         }
@@ -157,15 +191,41 @@ export const PATCH = withAuth(
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 
-      if (title !== undefined) { oldValues.title = existing.title; newValues.title = title; }
-      if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
-      if (status !== undefined) { oldValues.status = existing.status; newValues.status = status; }
-      if (priority !== undefined) { oldValues.priority = existing.priority; newValues.priority = priority; }
-      if (assignedTo !== undefined) { oldValues.assignedTo = existing.assignedTo; newValues.assignedTo = assignedTo; newValues.assignedBy = user.id; }
-      if (projectId !== undefined) { oldValues.projectId = existing.projectId; newValues.projectId = projectId; }
-      if (dueDate !== undefined) { oldValues.dueDate = existing.dueDate; newValues.dueDate = dueDate; }
+      if (title !== undefined) {
+        oldValues.title = existing.title;
+        newValues.title = title;
+      }
+      if (description !== undefined) {
+        oldValues.description = existing.description;
+        newValues.description = description;
+      }
+      if (status !== undefined) {
+        oldValues.status = existing.status;
+        newValues.status = status;
+      }
+      if (priority !== undefined) {
+        oldValues.priority = existing.priority;
+        newValues.priority = priority;
+      }
+      if (assignedTo !== undefined) {
+        oldValues.assignedTo = existing.assignedTo;
+        newValues.assignedTo = assignedTo;
+        newValues.assignedBy = user.id;
+      }
+      if (projectId !== undefined) {
+        oldValues.projectId = existing.projectId;
+        newValues.projectId = projectId;
+      }
+      if (dueDate !== undefined) {
+        oldValues.dueDate = existing.dueDate;
+        newValues.dueDate = dueDate;
+      }
 
-      const updateData: Record<string, unknown> = { ...newValues, updatedBy: user.id, updatedAt: new Date() };
+      const updateData: Record<string, unknown> = {
+        ...newValues,
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      };
 
       // Track assigned_by if assignee changed
       if (assignedTo !== undefined && assignedTo !== existing.assignedTo) {
@@ -198,7 +258,8 @@ export const PATCH = withAuth(
       }
 
       if (Object.keys(oldValues).length > 0) {
-        const auditAction = status && status !== existing.status ? 'task.status_changed' : 'task.updated';
+        const auditAction =
+          status && status !== existing.status ? 'task.status_changed' : 'task.updated';
         await createAuditEntry({
           organizationId: orgId,
           userId: user.id,
@@ -210,15 +271,17 @@ export const PATCH = withAuth(
         });
 
         if (status && status !== existing.status) {
-          await db().insert(schema.taskHistory).values({
-            taskId: id,
-            userId: user.id,
-            field: 'status',
-            oldValue: existing.status,
-            newValue: status,
-            changeType: 'status_change',
-            description: `Status changed from ${existing.status} to ${status}`,
-          });
+          await db()
+            .insert(schema.taskHistory)
+            .values({
+              taskId: id,
+              userId: user.id,
+              field: 'status',
+              oldValue: existing.status,
+              newValue: status,
+              changeType: 'status_change',
+              description: `Status changed from ${existing.status} to ${status}`,
+            });
         }
       }
 

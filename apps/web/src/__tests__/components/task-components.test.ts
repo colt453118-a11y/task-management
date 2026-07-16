@@ -26,7 +26,8 @@ describe('TaskWatcherButton', () => {
   });
 
   it('should fetch watchers on mount via GET request', async () => {
-    const mockFetch = vi.spyOn(globalThis, 'fetch')
+    const mockFetch = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValue(mockFetchResponse({ isWatching: false, watcherCount: 0 }));
 
     const taskId = 'test-task-123';
@@ -38,7 +39,8 @@ describe('TaskWatcherButton', () => {
   });
 
   it('should toggle watch via POST when not watching', async () => {
-    const mockFetch = vi.spyOn(globalThis, 'fetch')
+    const mockFetch = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValue(mockFetchResponse({ isWatching: true }));
 
     const taskId = 'test-task-456';
@@ -58,7 +60,8 @@ describe('TaskWatcherButton', () => {
   });
 
   it('should toggle watch via DELETE when currently watching', async () => {
-    const mockFetch = vi.spyOn(globalThis, 'fetch')
+    const mockFetch = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValue(mockFetchResponse({ success: true }));
 
     const taskId = 'test-task-789';
@@ -228,7 +231,8 @@ describe('TaskActivityFeed', () => {
   });
 
   it('should fetch history on mount via GET request', async () => {
-    const mockFetch = vi.spyOn(globalThis, 'fetch')
+    const mockFetch = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValue(mockFetchResponse({ history: [] }));
 
     const taskId = 'test-task-history';
@@ -240,8 +244,7 @@ describe('TaskActivityFeed', () => {
   });
 
   it('should handle fetch error gracefully', async () => {
-    const mockFetch = vi.spyOn(globalThis, 'fetch')
-      .mockRejectedValue(new Error('Network error'));
+    const mockFetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
     await expect(fetch('/api/tasks/fail/history')).rejects.toThrow('Network error');
 
@@ -290,7 +293,11 @@ describe('Shared task component utilities', () => {
 
   it('watcher and history endpoints use the correct URL structure', () => {
     const taskId = '550e8400-e29b-41d4-a716-446655440000';
-    expect(`/api/tasks/${taskId}/watchers`).toBe('/api/tasks/550e8400-e29b-41d4-a716-446655440000/watchers');
-    expect(`/api/tasks/${taskId}/history`).toBe('/api/tasks/550e8400-e29b-41d4-a716-446655440000/history');
+    expect(`/api/tasks/${taskId}/watchers`).toBe(
+      '/api/tasks/550e8400-e29b-41d4-a716-446655440000/watchers',
+    );
+    expect(`/api/tasks/${taskId}/history`).toBe(
+      '/api/tasks/550e8400-e29b-41d4-a716-446655440000/history',
+    );
   });
 });

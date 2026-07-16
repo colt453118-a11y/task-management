@@ -42,7 +42,7 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
         isActive
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300'
           : 'text-surface-500 hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-300',
-        disabled && 'opacity-40 cursor-not-allowed',
+        disabled && 'cursor-not-allowed opacity-40',
       )}
     >
       {children}
@@ -53,9 +53,7 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
 // ─── Divider ─────────────────────────────────────────────────
 
 function ToolbarDivider() {
-  return (
-    <div className="mx-0.5 h-5 w-px bg-surface-200 dark:bg-surface-700" />
-  );
+  return <div className="bg-surface-200 dark:bg-surface-700 mx-0.5 h-5 w-px" />;
 }
 
 // ─── Editor Component ────────────────────────────────────────
@@ -125,12 +123,12 @@ export function RichTextEditor({
     return (
       <div
         className={cn(
-          'rounded-md border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-900',
+          'border-surface-200 dark:border-surface-700 dark:bg-surface-900 rounded-md border bg-white',
           className,
         )}
         style={{ minHeight }}
       >
-        <div className="flex items-center justify-center h-full text-sm text-surface-400">
+        <div className="text-surface-400 flex h-full items-center justify-center text-sm">
           Loading editor...
         </div>
       </div>
@@ -140,12 +138,12 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'rounded-md border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-900 overflow-hidden',
+        'border-surface-200 dark:border-surface-700 dark:bg-surface-900 overflow-hidden rounded-md border bg-white',
         className,
       )}
     >
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-surface-200 bg-surface-50/50 px-2 py-1.5 dark:border-surface-700 dark:bg-surface-800/30">
+      <div className="border-surface-200 bg-surface-50/50 dark:border-surface-700 dark:bg-surface-800/30 flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
@@ -253,9 +251,7 @@ interface RichTextViewerProps {
 export function RichTextViewer({ content, className }: RichTextViewerProps) {
   if (!content || content === '<p></p>') {
     return (
-      <p className={cn('text-sm text-surface-400 italic', className)}>
-        No description provided.
-      </p>
+      <p className={cn('text-surface-400 text-sm italic', className)}>No description provided.</p>
     );
   }
 

@@ -30,12 +30,11 @@ vi.mock('next/server', () => ({
 }));
 
 vi.mock('@/lib/auth/api-auth', () => ({
-  withAuth: (handler: Function) =>
-    async (req: unknown) =>
-      handler(req, {
-        user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
-        orgId: 'org-1',
-      }),
+  withAuth: (handler: Function) => async (req: unknown) =>
+    handler(req, {
+      user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
+      orgId: 'org-1',
+    }),
   requirePermission: mockRequirePermission,
   checkPermission: vi.fn(() => Promise.resolve(true)),
   enforceOrgScope: vi.fn(),
@@ -44,9 +43,26 @@ vi.mock('@/lib/auth/api-auth', () => ({
 vi.mock('@/lib/api/db', () => ({
   db: mockDb,
   schema: {
-    tasks: { id: 'tasks.id', organizationId: 'tasks.orgId', deletedAt: 'tasks.deletedAt' } as Record<string, string>,
-    taskHistory: { id: 'th.id', taskId: 'th.taskId', userId: 'th.userId', field: 'th.field', oldValue: 'th.oldValue', newValue: 'th.newValue', changeType: 'th.changeType', description: 'th.description', createdAt: 'th.createdAt' } as Record<string, string>,
-    users: { id: 'users.id', name: 'users.name', avatarUrl: 'users.avatarUrl' } as Record<string, string>,
+    tasks: {
+      id: 'tasks.id',
+      organizationId: 'tasks.orgId',
+      deletedAt: 'tasks.deletedAt',
+    } as Record<string, string>,
+    taskHistory: {
+      id: 'th.id',
+      taskId: 'th.taskId',
+      userId: 'th.userId',
+      field: 'th.field',
+      oldValue: 'th.oldValue',
+      newValue: 'th.newValue',
+      changeType: 'th.changeType',
+      description: 'th.description',
+      createdAt: 'th.createdAt',
+    } as Record<string, string>,
+    users: { id: 'users.id', name: 'users.name', avatarUrl: 'users.avatarUrl' } as Record<
+      string,
+      string
+    >,
   },
   handleApiError: vi.fn((_error: unknown, message: string) => ({
     error: { code: 'INTERNAL_ERROR', message },
@@ -108,9 +124,7 @@ describe('History API — GET (list history)', () => {
 
     const response = await GET(createRequest('GET', HISTORY_PATH));
 
-    expect(mockNextResponseJson).toHaveBeenCalledWith(
-      expect.objectContaining({ history }),
-    );
+    expect(mockNextResponseJson).toHaveBeenCalledWith(expect.objectContaining({ history }));
     expect(response.status).toBe(200);
 
     // Verify the route used the imported getTaskIdFromPath
@@ -128,9 +142,7 @@ describe('History API — GET (list history)', () => {
 
     const response = await GET(createRequest('GET', HISTORY_PATH));
 
-    expect(mockNextResponseJson).toHaveBeenCalledWith(
-      expect.objectContaining({ history: [] }),
-    );
+    expect(mockNextResponseJson).toHaveBeenCalledWith(expect.objectContaining({ history: [] }));
     expect(response.status).toBe(200);
   });
 

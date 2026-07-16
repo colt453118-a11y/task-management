@@ -29,23 +29,99 @@ const MOCK_TASK = {
 };
 
 const CHECKLIST_ITEMS = [
-  { id: 'cl-1', taskId: TASK_ID, content: 'Set up database schema', isChecked: false, checkedBy: null, checkedAt: null, sortOrder: 0, createdAt: new Date(Date.now() - 3600 * 1000).toISOString() },
-  { id: 'cl-2', taskId: TASK_ID, content: 'Create API endpoints', isChecked: true, checkedBy: 'user-123', checkedAt: new Date().toISOString(), sortOrder: 1, createdAt: new Date(Date.now() - 1800 * 1000).toISOString() },
-  { id: 'cl-3', taskId: TASK_ID, content: 'Write unit tests', isChecked: false, checkedBy: null, checkedAt: null, sortOrder: 2, createdAt: new Date().toISOString() },
+  {
+    id: 'cl-1',
+    taskId: TASK_ID,
+    content: 'Set up database schema',
+    isChecked: false,
+    checkedBy: null,
+    checkedAt: null,
+    sortOrder: 0,
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'cl-2',
+    taskId: TASK_ID,
+    content: 'Create API endpoints',
+    isChecked: true,
+    checkedBy: 'user-123',
+    checkedAt: new Date().toISOString(),
+    sortOrder: 1,
+    createdAt: new Date(Date.now() - 1800 * 1000).toISOString(),
+  },
+  {
+    id: 'cl-3',
+    taskId: TASK_ID,
+    content: 'Write unit tests',
+    isChecked: false,
+    checkedBy: null,
+    checkedAt: null,
+    sortOrder: 2,
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 const HISTORY_ENTRIES = [
-  { id: 'hist-1', taskId: TASK_ID, userId: 'user-123', field: 'status', oldValue: 'open', newValue: 'in_progress', changeType: 'status_change', description: 'Changed status from open to in_progress', createdAt: new Date(Date.now() - 600 * 1000).toISOString(), user: { id: 'user-123', name: 'Alice Johnson', avatarUrl: null } },
-  { id: 'hist-2', taskId: TASK_ID, userId: 'user-456', field: 'assignedTo', oldValue: null, newValue: 'user-123', changeType: 'assignment', description: 'Assigned to Alice Johnson', createdAt: new Date(Date.now() - 1200 * 1000).toISOString(), user: { id: 'user-456', name: 'Bob Smith', avatarUrl: null } },
-  { id: 'hist-3', taskId: TASK_ID, userId: 'user-123', field: 'title', oldValue: null, newValue: 'Implement user authentication', changeType: 'creation', description: 'Created this task', createdAt: new Date(Date.now() - 3600 * 1000).toISOString(), user: { id: 'user-123', name: 'Alice Johnson', avatarUrl: null } },
-  { id: 'hist-4', taskId: TASK_ID, userId: 'system', field: 'priority', oldValue: 'medium', newValue: 'high', changeType: 'update', description: 'Changed priority from medium to high', createdAt: new Date(Date.now() - 2400 * 1000).toISOString(), user: null },
+  {
+    id: 'hist-1',
+    taskId: TASK_ID,
+    userId: 'user-123',
+    field: 'status',
+    oldValue: 'open',
+    newValue: 'in_progress',
+    changeType: 'status_change',
+    description: 'Changed status from open to in_progress',
+    createdAt: new Date(Date.now() - 600 * 1000).toISOString(),
+    user: { id: 'user-123', name: 'Alice Johnson', avatarUrl: null },
+  },
+  {
+    id: 'hist-2',
+    taskId: TASK_ID,
+    userId: 'user-456',
+    field: 'assignedTo',
+    oldValue: null,
+    newValue: 'user-123',
+    changeType: 'assignment',
+    description: 'Assigned to Alice Johnson',
+    createdAt: new Date(Date.now() - 1200 * 1000).toISOString(),
+    user: { id: 'user-456', name: 'Bob Smith', avatarUrl: null },
+  },
+  {
+    id: 'hist-3',
+    taskId: TASK_ID,
+    userId: 'user-123',
+    field: 'title',
+    oldValue: null,
+    newValue: 'Implement user authentication',
+    changeType: 'creation',
+    description: 'Created this task',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+    user: { id: 'user-123', name: 'Alice Johnson', avatarUrl: null },
+  },
+  {
+    id: 'hist-4',
+    taskId: TASK_ID,
+    userId: 'system',
+    field: 'priority',
+    oldValue: 'medium',
+    newValue: 'high',
+    changeType: 'update',
+    description: 'Changed priority from medium to high',
+    createdAt: new Date(Date.now() - 2400 * 1000).toISOString(),
+    user: null,
+  },
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────
 
 async function setSessionCookie(page: import('@playwright/test').Page) {
   await page.context().addCookies([
-    { name: 'better-auth.session_token', value: 'mock-session-token', domain: 'localhost', path: '/' },
+    {
+      name: 'better-auth.session_token',
+      value: 'mock-session-token',
+      domain: 'localhost',
+      path: '/',
+    },
   ]);
 }
 
@@ -59,32 +135,56 @@ async function setSessionCookie(page: import('@playwright/test').Page) {
 async function mockPageApis(page: import('@playwright/test').Page) {
   // Task detail
   await page.route(`**/api/tasks/${TASK_ID}`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: MOCK_TASK }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ task: MOCK_TASK }),
+    });
   });
 
   // Comments — empty
   await page.route(`**/api/tasks/${TASK_ID}/comments`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ comments: [] }),
+    });
   });
 
   // Attachments — empty
   await page.route(`**/api/tasks/${TASK_ID}/attachments`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ attachments: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ attachments: [] }),
+    });
   });
 
   // Dependencies — empty
   await page.route(`**/api/tasks/${TASK_ID}/dependencies`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ blockedBy: [], blocking: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ blockedBy: [], blocking: [] }),
+    });
   });
 
   // Time entries — empty
   await page.route(`**/api/tasks/${TASK_ID}/time-entries`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ entries: [] }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ entries: [] }),
+    });
   });
 
   // Watchers — empty/default (needed because TaskWatcherButton is also on the page)
   await page.route(`**/api/tasks/${TASK_ID}/watchers`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ isWatching: false, watcherCount: 0 }),
+    });
   });
 }
 
@@ -101,7 +201,11 @@ test.describe('TaskChecklist', () => {
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
       if (route.request().method() === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: CHECKLIST_ITEMS }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: CHECKLIST_ITEMS }),
+        });
       } else {
         await route.fulfill({ status: 405, body: 'Method not allowed' });
       }
@@ -127,15 +231,32 @@ test.describe('TaskChecklist', () => {
   });
 
   test('adds a new checklist item', async ({ page }) => {
-    const newItem = { id: 'cl-new', taskId: TASK_ID, content: 'Write Playwright tests', isChecked: false, checkedBy: null, checkedAt: null, sortOrder: 3, createdAt: new Date().toISOString() };
+    const newItem = {
+      id: 'cl-new',
+      taskId: TASK_ID,
+      content: 'Write Playwright tests',
+      isChecked: false,
+      checkedBy: null,
+      checkedAt: null,
+      sortOrder: 3,
+      createdAt: new Date().toISOString(),
+    };
 
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
       const method = route.request().method();
       if (method === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: [] }),
+        });
       } else if (method === 'POST') {
-        await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ item: newItem }) });
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({ item: newItem }),
+        });
       } else {
         await route.fulfill({ status: 405, body: 'Method not allowed' });
       }
@@ -165,10 +286,18 @@ test.describe('TaskChecklist', () => {
       const method = route.request().method();
       const url = route.request().url();
       if (method === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: CHECKLIST_ITEMS }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: CHECKLIST_ITEMS }),
+        });
       } else if (method === 'PATCH' && url.includes('itemId=cl-1')) {
         // Return the toggled item
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ item: { ...CHECKLIST_ITEMS[0]!, isChecked: true } }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ item: { ...CHECKLIST_ITEMS[0]!, isChecked: true } }),
+        });
       } else {
         await route.fulfill({ status: 405, body: 'Method not allowed' });
       }
@@ -198,7 +327,11 @@ test.describe('TaskChecklist', () => {
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
       if (route.request().method() === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: allDoneItems }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: allDoneItems }),
+        });
       } else {
         await route.fulfill({ status: 405, body: 'Method not allowed' });
       }
@@ -228,11 +361,19 @@ test.describe('TaskChecklist', () => {
     await mockPageApis(page);
     // Override the task detail to return a closed task
     await page.route(`**/api/tasks/${TASK_ID}`, async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ task: closedTask }) });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: closedTask }),
+      });
     });
     await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
       if (route.request().method() === 'GET') {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: CHECKLIST_ITEMS }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: CHECKLIST_ITEMS }),
+        });
       } else {
         await route.fulfill({ status: 405, body: 'Method not allowed' });
       }
@@ -256,7 +397,11 @@ test.describe('TaskActivityFeed', () => {
   test('shows empty state when no activity exists', async ({ page }) => {
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ history: [] }),
+      });
     });
 
     await page.goto(`/tasks/${TASK_ID}`);
@@ -275,7 +420,11 @@ test.describe('TaskActivityFeed', () => {
   test('renders history entries with user names and descriptions', async ({ page }) => {
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: HISTORY_ENTRIES }) });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ history: HISTORY_ENTRIES }),
+      });
     });
 
     await page.goto(`/tasks/${TASK_ID}`);
@@ -315,12 +464,27 @@ test.describe('TaskActivityFeed', () => {
   test('renders multiple entries from different users in the timeline', async ({ page }) => {
     const manyEntries = [
       ...HISTORY_ENTRIES,
-      { id: 'hist-5', taskId: TASK_ID, userId: 'user-789', field: 'dueDate', oldValue: null, newValue: '2026-08-01', changeType: 'update', description: 'Set due date to Aug 1, 2026', createdAt: new Date(Date.now() - 100 * 1000).toISOString(), user: { id: 'user-789', name: 'Carol Williams', avatarUrl: null } },
+      {
+        id: 'hist-5',
+        taskId: TASK_ID,
+        userId: 'user-789',
+        field: 'dueDate',
+        oldValue: null,
+        newValue: '2026-08-01',
+        changeType: 'update',
+        description: 'Set due date to Aug 1, 2026',
+        createdAt: new Date(Date.now() - 100 * 1000).toISOString(),
+        user: { id: 'user-789', name: 'Carol Williams', avatarUrl: null },
+      },
     ];
 
     await mockPageApis(page);
     await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: manyEntries }) });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ history: manyEntries }),
+      });
     });
 
     await page.goto(`/tasks/${TASK_ID}`);

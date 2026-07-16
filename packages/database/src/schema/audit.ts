@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  varchar,
-  timestamp,
-  jsonb,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, organizations } from './index';
 
@@ -14,25 +6,29 @@ import { users, organizations } from './index';
 // Immutable audit trail for sensitive operations.
 // This table is WRITE-ONLY from the application — never updated or deleted.
 
-export const auditLogs = pgTable('audit_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  organizationId: uuid('organization_id').references(() => organizations.id),
-  userId: text('user_id').references(() => users.id),
-  action: varchar('action', { length: 100 }).notNull(),
-  entityType: varchar('entity_type', { length: 100 }).notNull(),
-  entityId: text('entity_id'),
-  oldValues: jsonb('old_values'),
-  newValues: jsonb('new_values'),
-  metadata: jsonb('metadata'),
-  ipAddress: varchar('ip_address', { length: 45 }),
-  userAgent: text('user_agent'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  orgIdx: index('idx_audit_org').on(table.organizationId, table.createdAt),
-  userIdx: index('idx_audit_user').on(table.userId, table.createdAt),
-  actionIdx: index('idx_audit_action').on(table.action, table.createdAt),
-  entityIdx: index('idx_audit_entity').on(table.entityType, table.entityId),
-}));
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id').references(() => organizations.id),
+    userId: text('user_id').references(() => users.id),
+    action: varchar('action', { length: 100 }).notNull(),
+    entityType: varchar('entity_type', { length: 100 }).notNull(),
+    entityId: text('entity_id'),
+    oldValues: jsonb('old_values'),
+    newValues: jsonb('new_values'),
+    metadata: jsonb('metadata'),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    orgIdx: index('idx_audit_org').on(table.organizationId, table.createdAt),
+    userIdx: index('idx_audit_user').on(table.userId, table.createdAt),
+    actionIdx: index('idx_audit_action').on(table.action, table.createdAt),
+    entityIdx: index('idx_audit_entity').on(table.entityType, table.entityId),
+  }),
+);
 
 // ─── Relations ───────────────────────────────────────────────
 

@@ -202,9 +202,7 @@ describe('TaskWatcherButton (React Testing Library)', () => {
     expect(watchButton).toBeInTheDocument();
 
     // Intercept the POST call with a deferred promise
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => postPromise,
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => postPromise);
 
     fireEvent.click(watchButton);
 
@@ -242,9 +240,7 @@ describe('TaskWatcherButton (React Testing Library)', () => {
     expect(watchingButton).toBeInTheDocument();
 
     // Intercept the DELETE call with a deferred promise
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => deletePromise,
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => deletePromise);
 
     fireEvent.click(watchingButton);
 

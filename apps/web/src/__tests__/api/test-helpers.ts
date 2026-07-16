@@ -35,8 +35,7 @@ export interface QueryChain {
  */
 export function createChain(resultsQueue: TerminalResult[]): QueryChain {
   let index = 0;
-  const then = (resolve: (value: TerminalResult) => void) =>
-    resolve(resultsQueue[index++] ?? []);
+  const then = (resolve: (value: TerminalResult) => void) => resolve(resultsQueue[index++] ?? []);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chain: any = {
     then,
@@ -64,7 +63,12 @@ export function createChain(resultsQueue: TerminalResult[]): QueryChain {
  * Routes that read `request.json()` will receive `body ?? { content: 'Test content' }`.
  * The default content ensures POST schema validation passes in most routes.
  */
-export function createRequest(method: string, pathname: string, searchParams?: string, body?: unknown): any {
+export function createRequest(
+  method: string,
+  pathname: string,
+  searchParams?: string,
+  body?: unknown,
+): any {
   return {
     method,
     nextUrl: {

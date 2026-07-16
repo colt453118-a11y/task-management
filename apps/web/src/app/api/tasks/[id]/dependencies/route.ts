@@ -10,10 +10,12 @@ import { z } from 'zod';
 
 export const runtime = 'nodejs';
 
-const DependencyCreateSchema = z.object({
-  dependsOnTaskId: z.string().uuid('Invalid task ID'),
-  dependencyType: z.enum(['blocks', 'relates_to', 'duplicates']).default('blocks'),
-}).strict('Unexpected fields');
+const DependencyCreateSchema = z
+  .object({
+    dependsOnTaskId: z.string().uuid('Invalid task ID'),
+    dependencyType: z.enum(['blocks', 'relates_to', 'duplicates']).default('blocks'),
+  })
+  .strict('Unexpected fields');
 
 // GET /api/tasks/[id]/dependencies - List dependencies
 export const GET = withAuth(
@@ -117,7 +119,11 @@ export const POST = withAuth(
       // Check both tasks exist and belong to the same org
       const [sourceTask, targetTask] = await Promise.all([
         db()
-          .select({ id: schema.tasks.id, organizationId: schema.tasks.organizationId, status: schema.tasks.status })
+          .select({
+            id: schema.tasks.id,
+            organizationId: schema.tasks.organizationId,
+            status: schema.tasks.status,
+          })
           .from(schema.tasks)
           .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
           .limit(1),
@@ -137,7 +143,12 @@ export const POST = withAuth(
       // Block dependency changes on read-only tasks
       if (READONLY_STATUSES.has(sourceTask[0]!.status)) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${sourceTask[0]!.status}'` } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: `Cannot modify dependencies on tasks with status '${sourceTask[0]!.status}'`,
+            },
+          },
           { status: 422 },
         );
       }
@@ -228,7 +239,11 @@ export const DELETE = withAuth(
 
       // Verify task exists, belongs to org, and is not read-only
       const [task] = await db()
-        .select({ id: schema.tasks.id, organizationId: schema.tasks.organizationId, status: schema.tasks.status })
+        .select({
+          id: schema.tasks.id,
+          organizationId: schema.tasks.organizationId,
+          status: schema.tasks.status,
+        })
         .from(schema.tasks)
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
@@ -239,7 +254,12 @@ export const DELETE = withAuth(
 
       if (READONLY_STATUSES.has(task!.status)) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: `Cannot modify dependencies on tasks with status '${task!.status}'` } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: `Cannot modify dependencies on tasks with status '${task!.status}'`,
+            },
+          },
           { status: 422 },
         );
       }

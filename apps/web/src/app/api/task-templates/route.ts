@@ -8,31 +8,47 @@ import { z } from 'zod';
 
 export const runtime = 'nodejs';
 
-export const TemplateCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200).transform((s) => s.trim()),
-  description: z.string().max(1000).optional().nullable(),
-  taskTitle: z.string().max(500).optional().nullable(),
-  taskDescription: z.string().max(10000).optional().nullable(),
-  priority: z.enum(['none', 'low', 'medium', 'high', 'urgent', 'critical']).optional().default('medium'),
-  category: z.string().max(100).optional().nullable(),
-  labels: z.array(z.string().max(100)).optional().nullable(),
-  tags: z.array(z.string().max(100)).optional().nullable(),
-  estimatedHours: z.number().positive().optional().nullable(),
-  isDefault: z.boolean().optional().default(false),
-}).strict('Unexpected fields');
+export const TemplateCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200)
+      .transform((s) => s.trim()),
+    description: z.string().max(1000).optional().nullable(),
+    taskTitle: z.string().max(500).optional().nullable(),
+    taskDescription: z.string().max(10000).optional().nullable(),
+    priority: z
+      .enum(['none', 'low', 'medium', 'high', 'urgent', 'critical'])
+      .optional()
+      .default('medium'),
+    category: z.string().max(100).optional().nullable(),
+    labels: z.array(z.string().max(100)).optional().nullable(),
+    tags: z.array(z.string().max(100)).optional().nullable(),
+    estimatedHours: z.number().positive().optional().nullable(),
+    isDefault: z.boolean().optional().default(false),
+  })
+  .strict('Unexpected fields');
 
-export const TemplateUpdateSchema = z.object({
-  name: z.string().min(1).max(200).transform((s) => s.trim()).optional(),
-  description: z.string().max(1000).optional().nullable(),
-  taskTitle: z.string().max(500).optional().nullable(),
-  taskDescription: z.string().max(10000).optional().nullable(),
-  priority: z.enum(['none', 'low', 'medium', 'high', 'urgent', 'critical']).optional(),
-  category: z.string().max(100).optional().nullable(),
-  labels: z.array(z.string().max(100)).optional().nullable(),
-  tags: z.array(z.string().max(100)).optional().nullable(),
-  estimatedHours: z.number().positive().optional().nullable(),
-  isDefault: z.boolean().optional(),
-}).strict('Unexpected fields');
+export const TemplateUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(200)
+      .transform((s) => s.trim())
+      .optional(),
+    description: z.string().max(1000).optional().nullable(),
+    taskTitle: z.string().max(500).optional().nullable(),
+    taskDescription: z.string().max(10000).optional().nullable(),
+    priority: z.enum(['none', 'low', 'medium', 'high', 'urgent', 'critical']).optional(),
+    category: z.string().max(100).optional().nullable(),
+    labels: z.array(z.string().max(100)).optional().nullable(),
+    tags: z.array(z.string().max(100)).optional().nullable(),
+    estimatedHours: z.number().positive().optional().nullable(),
+    isDefault: z.boolean().optional(),
+  })
+  .strict('Unexpected fields');
 
 // GET /api/task-templates - List templates
 export const GET = withAuth(
@@ -81,7 +97,18 @@ export const POST = withAuth(
         );
       }
 
-      const { name, description, taskTitle, taskDescription, priority, category, labels, tags, estimatedHours, isDefault } = parsed.data;
+      const {
+        name,
+        description,
+        taskTitle,
+        taskDescription,
+        priority,
+        category,
+        labels,
+        tags,
+        estimatedHours,
+        isDefault,
+      } = parsed.data;
 
       const [template] = await db()
         .insert(schema.taskTemplates)
@@ -176,7 +203,18 @@ export const PATCH = withAuth(
         );
       }
 
-      const { name, description, taskTitle, taskDescription, priority, category, labels, tags, estimatedHours, isDefault } = parsed.data;
+      const {
+        name,
+        description,
+        taskTitle,
+        taskDescription,
+        priority,
+        category,
+        labels,
+        tags,
+        estimatedHours,
+        isDefault,
+      } = parsed.data;
 
       const updateData: Record<string, unknown> = { updatedBy: user.id, updatedAt: new Date() };
       if (name !== undefined) updateData.name = name;

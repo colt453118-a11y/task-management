@@ -33,8 +33,8 @@ export interface WithAuthRateLimit {
   max: number;
   /** Namespace for the Redis key */
   namespace: string;
-  /** 
-   * Rate limit key strategy. 
+  /**
+   * Rate limit key strategy.
    * - 'user': keyed by user ID (default for authenticated routes)
    * - 'ip': keyed by client IP
    */
@@ -89,7 +89,9 @@ export function withAuth(
       const isActive = await checkUserActive(user.id);
       if (!isActive) {
         return NextResponse.json(
-          { error: { code: 'USER_NOT_ACTIVE', message: 'Your account is suspended or deactivated' } },
+          {
+            error: { code: 'USER_NOT_ACTIVE', message: 'Your account is suspended or deactivated' },
+          },
           { status: 403 },
         );
       }
@@ -98,10 +100,7 @@ export function withAuth(
 
       // Apply rate limiting after authentication if configured
       if (rateLimit) {
-        const identifier =
-          rateLimit.key === 'ip'
-            ? ipFromRequest(req)
-            : user.id;
+        const identifier = rateLimit.key === 'ip' ? ipFromRequest(req) : user.id;
 
         const key = rateLimitKey(rateLimit.namespace, identifier);
         const result = await checkRateLimit(key, {
@@ -147,11 +146,7 @@ export async function checkPermission(userId: string, permissionCode: string): P
 export async function requirePermission(userId: string, permissionCode: string): Promise<void> {
   const hasPerm = await checkPermission(userId, permissionCode);
   if (!hasPerm) {
-    throw new AuthError(
-      `Forbidden: requires '${permissionCode}' permission`,
-      'FORBIDDEN',
-      403,
-    );
+    throw new AuthError(`Forbidden: requires '${permissionCode}' permission`, 'FORBIDDEN', 403);
   }
 }
 

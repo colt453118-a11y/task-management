@@ -76,12 +76,7 @@ export const POST = withAuth(
       const [existing] = await db()
         .select({ id: schema.taskWatchers.id })
         .from(schema.taskWatchers)
-        .where(
-          and(
-            eq(schema.taskWatchers.taskId, taskId),
-            eq(schema.taskWatchers.userId, user.id),
-          ),
-        )
+        .where(and(eq(schema.taskWatchers.taskId, taskId), eq(schema.taskWatchers.userId, user.id)))
         .limit(1);
 
       if (existing) {
@@ -145,12 +140,7 @@ export const DELETE = withAuth(
       const [existing] = await db()
         .select({ id: schema.taskWatchers.id })
         .from(schema.taskWatchers)
-        .where(
-          and(
-            eq(schema.taskWatchers.taskId, taskId),
-            eq(schema.taskWatchers.userId, user.id),
-          ),
-        )
+        .where(and(eq(schema.taskWatchers.taskId, taskId), eq(schema.taskWatchers.userId, user.id)))
         .limit(1);
 
       if (!existing) {
@@ -160,9 +150,7 @@ export const DELETE = withAuth(
         );
       }
 
-      await db()
-        .delete(schema.taskWatchers)
-        .where(eq(schema.taskWatchers.id, existing.id));
+      await db().delete(schema.taskWatchers).where(eq(schema.taskWatchers.id, existing.id));
 
       await createAuditEntry({
         organizationId: orgId,

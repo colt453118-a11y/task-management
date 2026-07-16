@@ -125,7 +125,9 @@ describe('checkTaskAccess', () => {
   });
 
   it('returns NOT_FOUND with custom message when provided', () => {
-    const result = checkTaskAccess(undefined, 'org-1', { deletedMessage: 'Deleted task not found' });
+    const result = checkTaskAccess(undefined, 'org-1', {
+      deletedMessage: 'Deleted task not found',
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe('NOT_FOUND');
@@ -154,12 +156,20 @@ describe('checkTaskAccess', () => {
 
 describe('accessErrorToResponse', () => {
   it('returns a 404 NextResponse for NOT_FOUND', () => {
-    const response = accessErrorToResponse({ code: 'NOT_FOUND', status: 404, message: 'Not found' });
+    const response = accessErrorToResponse({
+      code: 'NOT_FOUND',
+      status: 404,
+      message: 'Not found',
+    });
     expect(response.status).toBe(404);
   });
 
   it('returns a 403 NextResponse for FORBIDDEN', () => {
-    const response = accessErrorToResponse({ code: 'FORBIDDEN', status: 403, message: 'Access denied' });
+    const response = accessErrorToResponse({
+      code: 'FORBIDDEN',
+      status: 403,
+      message: 'Access denied',
+    });
     expect(response.status).toBe(403);
   });
 });
@@ -185,7 +195,9 @@ describe('checkTaskAccessOrRespond', () => {
   });
 
   it('passes custom deletedMessage to the underlying check', () => {
-    const result = checkTaskAccessOrRespond(undefined, 'org-1', { deletedMessage: 'Custom not found' });
+    const result = checkTaskAccessOrRespond(undefined, 'org-1', {
+      deletedMessage: 'Custom not found',
+    });
     expect(result).not.toBeNull();
   });
 });

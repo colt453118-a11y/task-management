@@ -30,7 +30,9 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
     }
   }, [taskId]);
 
-  useEffect(() => { fetchWatchers(); }, [fetchWatchers]);
+  useEffect(() => {
+    fetchWatchers();
+  }, [fetchWatchers]);
 
   const toggleWatch = async () => {
     setToggling(true);
@@ -60,7 +62,7 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
   };
 
   if (loading) {
-    return <div className="h-8 w-24 shimmer rounded-xl" />;
+    return <div className="shimmer h-8 w-24 rounded-xl" />;
   }
 
   return (
@@ -70,27 +72,29 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
       onClick={toggleWatch}
       disabled={toggling}
       className={cn(
-        'rounded-xl text-xs h-8 shrink-0 transition-all duration-200',
+        'h-8 shrink-0 rounded-xl text-xs transition-all duration-200',
         isWatching
           ? 'bg-brand-500/10 text-brand-500 border-brand-500/20 hover:bg-brand-500/15 hover:border-brand-500/30'
           : 'text-surface-600 dark:text-surface-400',
       )}
     >
       {toggling ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
       ) : isWatching ? (
-        <Eye className="h-3.5 w-3.5 mr-1.5" />
+        <Eye className="mr-1.5 h-3.5 w-3.5" />
       ) : (
-        <EyeOff className="h-3.5 w-3.5 mr-1.5" />
+        <EyeOff className="mr-1.5 h-3.5 w-3.5" />
       )}
       {isWatching ? 'Watching' : 'Watch'}
       {watcherCount > 0 && (
-        <span className={cn(
-          'ml-1.5 inline-flex items-center justify-center h-4 min-w-[16px] rounded-full px-1 text-[10px] font-medium',
-          isWatching
-            ? 'bg-brand-500/15 text-brand-400'
-            : 'bg-surface-200/70 text-surface-500 dark:bg-surface-700/50',
-        )}>
+        <span
+          className={cn(
+            'ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium',
+            isWatching
+              ? 'bg-brand-500/15 text-brand-400'
+              : 'bg-surface-200/70 text-surface-500 dark:bg-surface-700/50',
+          )}
+        >
           {watcherCount}
         </span>
       )}

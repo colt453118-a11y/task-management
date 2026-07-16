@@ -72,9 +72,7 @@ vi.mock('@workmanagement/database', () => ({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
           limit: vi.fn(() =>
-            Promise.resolve([
-              { organizationId: 'org-1', isActive: true, isSuspended: false },
-            ]),
+            Promise.resolve([{ organizationId: 'org-1', isActive: true, isSuspended: false }]),
           ),
         })),
       })),
@@ -314,10 +312,10 @@ describe('withAuth — rate limit config validation', () => {
     });
     await handler(createRequest('GET'));
 
-    expect(mockCheckRateLimit).toHaveBeenCalledWith(
-      expect.stringContaining('hourly:endpoint'),
-      { windowMs: 3_600_000, max: 1000 },
-    );
+    expect(mockCheckRateLimit).toHaveBeenCalledWith(expect.stringContaining('hourly:endpoint'), {
+      windowMs: 3_600_000,
+      max: 1000,
+    });
   });
 
   it('uses rate limit key that includes namespace and identifier', async () => {
@@ -329,9 +327,6 @@ describe('withAuth — rate limit config validation', () => {
     });
     await handler(createRequest('GET'));
 
-    expect(mockCheckRateLimit).toHaveBeenCalledWith(
-      'rl:tasks:create:user-1',
-      expect.any(Object),
-    );
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('rl:tasks:create:user-1', expect.any(Object));
   });
 });

@@ -42,14 +42,7 @@ export const COMPLETED_STATUSES = new Set(['completed', 'closed']);
 
 // ─── Allowed Priorities ──────────────────────────────────────
 
-export const VALID_PRIORITIES = [
-  'none',
-  'low',
-  'medium',
-  'high',
-  'urgent',
-  'critical',
-] as const;
+export const VALID_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent', 'critical'] as const;
 
 // ─── Allowed File Types ──────────────────────────────────────
 
@@ -67,8 +60,21 @@ export const ALLOWED_MIME_TYPES = new Set([
 ]);
 
 export const BLOCKED_EXTENSIONS = new Set([
-  '.exe', '.js', '.sh', '.bat', '.cmd', '.php', '.html', '.htm',
-  '.svg', '.msi', '.dll', '.ps1', '.jar', '.vbs', '.scr',
+  '.exe',
+  '.js',
+  '.sh',
+  '.bat',
+  '.cmd',
+  '.php',
+  '.html',
+  '.htm',
+  '.svg',
+  '.msi',
+  '.dll',
+  '.ps1',
+  '.jar',
+  '.vbs',
+  '.scr',
 ]);
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -84,143 +90,322 @@ export function isValidTransition(from: string, to: string): boolean {
 // ─── Zod Schemas ─────────────────────────────────────────────
 
 // Task schemas
-export const TaskCreateSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(500, 'Title must be under 500 characters').transform((s) => s.trim()),
-  description: z.string().max(10000, 'Description too long').optional().nullable().transform((s) => s?.trim() ?? null),
-  projectId: z.string().uuid('Invalid project ID').optional().nullable(),
-  milestoneId: z.string().uuid('Invalid milestone ID').optional().nullable(),
-  priority: z.enum(VALID_PRIORITIES).optional().default('medium'),
-  assignedTo: z.string().optional().nullable(),
-  dueDate: z.string().optional().nullable(),
-}).strict('Unexpected fields in task creation');
+export const TaskCreateSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, 'Title is required')
+      .max(500, 'Title must be under 500 characters')
+      .transform((s) => s.trim()),
+    description: z
+      .string()
+      .max(10000, 'Description too long')
+      .optional()
+      .nullable()
+      .transform((s) => s?.trim() ?? null),
+    projectId: z.string().uuid('Invalid project ID').optional().nullable(),
+    milestoneId: z.string().uuid('Invalid milestone ID').optional().nullable(),
+    priority: z.enum(VALID_PRIORITIES).optional().default('medium'),
+    assignedTo: z.string().optional().nullable(),
+    dueDate: z.string().optional().nullable(),
+  })
+  .strict('Unexpected fields in task creation');
 
-export const TaskUpdateSchema = z.object({
-  title: z.string().min(1).max(500).transform((s) => s.trim()).optional(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  status: z.string().optional(),
-  priority: z.enum(VALID_PRIORITIES).optional(),
-  assignedTo: z.string().optional().nullable(),
-  dueDate: z.string().optional().nullable(),
-  projectId: z.string().uuid().optional().nullable(),
-  // Cannot be set by client
-}).strict('Unexpected fields in task update');
+export const TaskUpdateSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1)
+      .max(500)
+      .transform((s) => s.trim())
+      .optional(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    status: z.string().optional(),
+    priority: z.enum(VALID_PRIORITIES).optional(),
+    assignedTo: z.string().optional().nullable(),
+    dueDate: z.string().optional().nullable(),
+    projectId: z.string().uuid().optional().nullable(),
+    // Cannot be set by client
+  })
+  .strict('Unexpected fields in task update');
 
-export const CommentCreateSchema = z.object({
-  content: z.string().min(1, 'Comment is required').max(10000, 'Comment too long').transform((s) => s.trim()),
-}).strict('Unexpected fields in comment');
+export const CommentCreateSchema = z
+  .object({
+    content: z
+      .string()
+      .min(1, 'Comment is required')
+      .max(10000, 'Comment too long')
+      .transform((s) => s.trim()),
+  })
+  .strict('Unexpected fields in comment');
 
-export const AttachmentCreateSchema = z.object({
-  fileName: z.string().min(1, 'File name is required').max(500),
-  fileSize: z.number().int().positive().max(MAX_FILE_SIZE).optional().nullable(),
-  mimeType: z.string().max(100).optional().nullable(),
-  storageKey: z.string().min(1, 'storageKey is required'),
-}).strict('Unexpected fields in attachment');
+export const AttachmentCreateSchema = z
+  .object({
+    fileName: z.string().min(1, 'File name is required').max(500),
+    fileSize: z.number().int().positive().max(MAX_FILE_SIZE).optional().nullable(),
+    mimeType: z.string().max(100).optional().nullable(),
+    storageKey: z.string().min(1, 'storageKey is required'),
+  })
+  .strict('Unexpected fields in attachment');
 
 // Project schemas
-export const ProjectCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(300).transform((s) => s.trim()),
-  code: z.string().max(20).transform((s) => s.trim()).optional().nullable(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  ownerId: z.string().min(1, 'ownerId is required'),
-  departmentId: z.string().uuid().optional().nullable(),
-  teamId: z.string().uuid().optional().nullable(),
-  startDate: z.string().optional().nullable(),
-  endDate: z.string().optional().nullable(),
-}).strict('Unexpected fields in project creation');
+export const ProjectCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(300)
+      .transform((s) => s.trim()),
+    code: z
+      .string()
+      .max(20)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    ownerId: z.string().min(1, 'ownerId is required'),
+    departmentId: z.string().uuid().optional().nullable(),
+    teamId: z.string().uuid().optional().nullable(),
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+  })
+  .strict('Unexpected fields in project creation');
 
 // Project update schema
-export const ProjectUpdateSchema = z.object({
-  name: z.string().min(1).max(300).transform((s) => s.trim()).optional(),
-  code: z.string().max(20).transform((s) => s.trim()).optional().nullable(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  ownerId: z.string().min(1).optional(),
-  departmentId: z.string().uuid().optional().nullable(),
-  teamId: z.string().uuid().optional().nullable(),
-  status: z.string().max(50).optional(),
-  priority: z.string().max(20).optional(),
-  progress: z.number().int().min(0).max(100).optional(),
-  startDate: z.string().optional().nullable(),
-  endDate: z.string().optional().nullable(),
-  isActive: z.boolean().optional(),
-  tags: z.array(z.string().max(100)).optional(),
-}).strict('Unexpected fields in project update');
+export const ProjectUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(300)
+      .transform((s) => s.trim())
+      .optional(),
+    code: z
+      .string()
+      .max(20)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    ownerId: z.string().min(1).optional(),
+    departmentId: z.string().uuid().optional().nullable(),
+    teamId: z.string().uuid().optional().nullable(),
+    status: z.string().max(50).optional(),
+    priority: z.string().max(20).optional(),
+    progress: z.number().int().min(0).max(100).optional(),
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+    isActive: z.boolean().optional(),
+    tags: z.array(z.string().max(100)).optional(),
+  })
+  .strict('Unexpected fields in project update');
 
 // Team schemas
-export const TeamCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200).transform((s) => s.trim()),
-  code: z.string().max(50).transform((s) => s.trim()).optional().nullable(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  departmentId: z.string().uuid().optional().nullable(),
-  leadUserId: z.string().optional().nullable(),
-}).strict('Unexpected fields in team creation');
+export const TeamCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200)
+      .transform((s) => s.trim()),
+    code: z
+      .string()
+      .max(50)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    departmentId: z.string().uuid().optional().nullable(),
+    leadUserId: z.string().optional().nullable(),
+  })
+  .strict('Unexpected fields in team creation');
 
-export const TeamUpdateSchema = z.object({
-  name: z.string().min(1).max(200).transform((s) => s.trim()).optional(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  departmentId: z.string().uuid().optional().nullable(),
-  leadUserId: z.string().optional().nullable(),
-  isActive: z.boolean().optional(),
-}).strict('Unexpected fields in team update');
+export const TeamUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(200)
+      .transform((s) => s.trim())
+      .optional(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    departmentId: z.string().uuid().optional().nullable(),
+    leadUserId: z.string().optional().nullable(),
+    isActive: z.boolean().optional(),
+  })
+  .strict('Unexpected fields in team update');
 
-export const TeamMemberAddSchema = z.object({
-  userId: z.string().min(1, 'userId is required'),
-  role: z.string().max(50).optional().default('member'),
-}).strict('Unexpected fields in team member add');
+export const TeamMemberAddSchema = z
+  .object({
+    userId: z.string().min(1, 'userId is required'),
+    role: z.string().max(50).optional().default('member'),
+  })
+  .strict('Unexpected fields in team member add');
 
 // Department schemas
-export const DepartmentCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200).transform((s) => s.trim()),
-  code: z.string().max(50).transform((s) => s.trim()).optional().nullable(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  headUserId: z.string().optional().nullable(),
-  parentId: z.string().uuid().optional().nullable(),
-}).strict('Unexpected fields in department creation');
+export const DepartmentCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200)
+      .transform((s) => s.trim()),
+    code: z
+      .string()
+      .max(50)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    headUserId: z.string().optional().nullable(),
+    parentId: z.string().uuid().optional().nullable(),
+  })
+  .strict('Unexpected fields in department creation');
 
-export const DepartmentUpdateSchema = z.object({
-  name: z.string().min(1).max(200).transform((s) => s.trim()).optional(),
-  description: z.string().max(10000).transform((s) => s.trim()).optional().nullable(),
-  headUserId: z.string().optional().nullable(),
-  isActive: z.boolean().optional(),
-}).strict('Unexpected fields in department update');
+export const DepartmentUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(200)
+      .transform((s) => s.trim())
+      .optional(),
+    description: z
+      .string()
+      .max(10000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    headUserId: z.string().optional().nullable(),
+    isActive: z.boolean().optional(),
+  })
+  .strict('Unexpected fields in department update');
 
 // Time Entry schemas
-export const TimeEntryCreateSchema = z.object({
-  entryType: z.enum(['timer', 'manual']).optional().default('manual'),
-  durationMinutes: z.number().int().positive('Duration must be positive').optional().nullable(),
-  description: z.string().max(1000, 'Description too long').optional().nullable(),
-}).strict('Unexpected fields in time entry');
+export const TimeEntryCreateSchema = z
+  .object({
+    entryType: z.enum(['timer', 'manual']).optional().default('manual'),
+    durationMinutes: z.number().int().positive('Duration must be positive').optional().nullable(),
+    description: z.string().max(1000, 'Description too long').optional().nullable(),
+  })
+  .strict('Unexpected fields in time entry');
 
 // Role schemas
-export const RoleCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100).transform((s) => s.trim()),
-  slug: z.string().min(1, 'Slug is required').max(100).transform((s) => s.trim()),
-  description: z.string().max(500).transform((s) => s.trim()).optional().nullable(),
-  permissionIds: z.array(z.string().uuid()).optional(),
-}).strict('Unexpected fields in role creation');
+export const RoleCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(100)
+      .transform((s) => s.trim()),
+    slug: z
+      .string()
+      .min(1, 'Slug is required')
+      .max(100)
+      .transform((s) => s.trim()),
+    description: z
+      .string()
+      .max(500)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    permissionIds: z.array(z.string().uuid()).optional(),
+  })
+  .strict('Unexpected fields in role creation');
 
-export const RoleUpdateSchema = z.object({
-  name: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
-  description: z.string().max(500).transform((s) => s.trim()).optional().nullable(),
-  permissionIds: z.array(z.string().uuid()).optional(),
-  isActive: z.boolean().optional(),
-}).strict('Unexpected fields in role update');
+export const RoleUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(100)
+      .transform((s) => s.trim())
+      .optional(),
+    description: z
+      .string()
+      .max(500)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+    permissionIds: z.array(z.string().uuid()).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict('Unexpected fields in role update');
 
-export const RoleAssignSchema = z.object({
-  roleId: z.string().uuid('Invalid role ID').min(1, 'roleId is required'),
-}).strict('Unexpected fields in role assignment');
+export const RoleAssignSchema = z
+  .object({
+    roleId: z.string().uuid('Invalid role ID').min(1, 'roleId is required'),
+  })
+  .strict('Unexpected fields in role assignment');
 
 // User update schema
-export const UserUpdateSchema = z.object({
-  firstName: z.string().max(100).transform((s) => s.trim()).optional(),
-  lastName: z.string().max(100).transform((s) => s.trim()).optional(),
-  displayName: z.string().max(200).transform((s) => s.trim()).optional(),
-  phone: z.string().max(50).transform((s) => s.trim()).optional(),
-  designation: z.string().max(200).transform((s) => s.trim()).optional(),
-  departmentId: z.string().uuid().optional().nullable(),
-  teamId: z.string().uuid().optional().nullable(),
-  location: z.string().max(255).transform((s) => s.trim()).optional(),
-  timezone: z.string().max(50).optional(),
-}).strict('Unexpected fields in user update');
+export const UserUpdateSchema = z
+  .object({
+    firstName: z
+      .string()
+      .max(100)
+      .transform((s) => s.trim())
+      .optional(),
+    lastName: z
+      .string()
+      .max(100)
+      .transform((s) => s.trim())
+      .optional(),
+    displayName: z
+      .string()
+      .max(200)
+      .transform((s) => s.trim())
+      .optional(),
+    phone: z
+      .string()
+      .max(50)
+      .transform((s) => s.trim())
+      .optional(),
+    designation: z
+      .string()
+      .max(200)
+      .transform((s) => s.trim())
+      .optional(),
+    departmentId: z.string().uuid().optional().nullable(),
+    teamId: z.string().uuid().optional().nullable(),
+    location: z
+      .string()
+      .max(255)
+      .transform((s) => s.trim())
+      .optional(),
+    timezone: z.string().max(50).optional(),
+  })
+  .strict('Unexpected fields in user update');
 
 // Validation response helper
 export function validationError(errors: z.ZodError) {

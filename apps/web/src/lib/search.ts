@@ -86,7 +86,10 @@ export async function indexTasks(tasks: TaskSearchDocument[]): Promise<void> {
     const client = getSearchClient();
     await client.index(INDEXES.TASKS).addDocuments(tasks);
   } catch (error) {
-    console.error('[search] Failed to index tasks:', error instanceof Error ? error.message : error);
+    console.error(
+      '[search] Failed to index tasks:',
+      error instanceof Error ? error.message : error,
+    );
   }
 }
 
@@ -97,7 +100,10 @@ export async function removeTaskFromIndex(taskId: string): Promise<void> {
     const client = getSearchClient();
     await client.index(INDEXES.TASKS).deleteDocument(taskId);
   } catch (error) {
-    console.error('[search] Failed to remove task from index:', error instanceof Error ? error.message : error);
+    console.error(
+      '[search] Failed to remove task from index:',
+      error instanceof Error ? error.message : error,
+    );
   }
 }
 
@@ -119,7 +125,9 @@ export interface SearchResult<T> {
   offset: number;
 }
 
-export async function searchTasks(options: SearchOptions): Promise<SearchResult<TaskSearchDocument>> {
+export async function searchTasks(
+  options: SearchOptions,
+): Promise<SearchResult<TaskSearchDocument>> {
   const client = getSearchClient();
 
   const filterParts: string[] = [`organizationId = ${options.organizationId}`];

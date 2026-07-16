@@ -53,7 +53,11 @@ export const POST = withAuth(
 
       // Validate target user is in same org
       const [targetUser] = await db()
-        .select({ id: schema.users.id, organizationId: schema.users.organizationId, isActive: schema.users.isActive })
+        .select({
+          id: schema.users.id,
+          organizationId: schema.users.organizationId,
+          isActive: schema.users.isActive,
+        })
         .from(schema.users)
         .where(and(eq(schema.users.id, targetUserId), isNull(schema.users.deletedAt)))
         .limit(1);
@@ -84,10 +88,7 @@ export const POST = withAuth(
         .select()
         .from(schema.teamMembers)
         .where(
-          and(
-            eq(schema.teamMembers.teamId, teamId),
-            eq(schema.teamMembers.userId, targetUserId),
-          ),
+          and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, targetUserId)),
         )
         .limit(1);
 
@@ -171,7 +172,11 @@ export const DELETE = withAuth(
 
       // Verify team exists and belongs to org
       const [team] = await db()
-        .select({ id: schema.teams.id, organizationId: schema.teams.organizationId, leadUserId: schema.teams.leadUserId })
+        .select({
+          id: schema.teams.id,
+          organizationId: schema.teams.organizationId,
+          leadUserId: schema.teams.leadUserId,
+        })
         .from(schema.teams)
         .where(and(eq(schema.teams.id, teamId), isNull(schema.teams.deletedAt)))
         .limit(1);
@@ -193,7 +198,12 @@ export const DELETE = withAuth(
       // Prevent removing the team lead
       if (team.leadUserId === targetUserId) {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: 'Cannot remove the team lead. Reassign lead first.' } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: 'Cannot remove the team lead. Reassign lead first.',
+            },
+          },
           { status: 422 },
         );
       }
@@ -202,10 +212,7 @@ export const DELETE = withAuth(
         .select()
         .from(schema.teamMembers)
         .where(
-          and(
-            eq(schema.teamMembers.teamId, teamId),
-            eq(schema.teamMembers.userId, targetUserId),
-          ),
+          and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, targetUserId)),
         )
         .limit(1);
 
@@ -216,9 +223,7 @@ export const DELETE = withAuth(
         );
       }
 
-      await db()
-        .delete(schema.teamMembers)
-        .where(eq(schema.teamMembers.id, existing.id));
+      await db().delete(schema.teamMembers).where(eq(schema.teamMembers.id, existing.id));
 
       await createAuditEntry({
         organizationId: orgId,

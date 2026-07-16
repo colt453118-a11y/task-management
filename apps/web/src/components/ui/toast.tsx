@@ -15,7 +15,7 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      'fixed bottom-0 right-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:max-w-[420px] gap-2',
+      'fixed bottom-0 right-0 z-[100] flex max-h-screen w-full flex-col-reverse gap-2 p-4 sm:max-w-[420px]',
       className,
     )}
     {...props}
@@ -28,10 +28,14 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-surface-300/20 bg-surface-50/95 backdrop-blur-xl text-surface-900 dark:border-surface-700/30 dark:bg-surface-900/95 dark:text-surface-100',
-        success: 'border-success/20 bg-success/5 backdrop-blur-xl text-green-900 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300',
-        error: 'border-error/20 bg-error/5 backdrop-blur-xl text-red-900 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300',
-        warning: 'border-warning/20 bg-warning/5 backdrop-blur-xl text-yellow-900 dark:border-yellow-500/20 dark:bg-yellow-500/10 dark:text-yellow-300',
+        default:
+          'border-surface-300/20 bg-surface-50/95 backdrop-blur-xl text-surface-900 dark:border-surface-700/30 dark:bg-surface-900/95 dark:text-surface-100',
+        success:
+          'border-success/20 bg-success/5 backdrop-blur-xl text-green-900 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300',
+        error:
+          'border-error/20 bg-error/5 backdrop-blur-xl text-red-900 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300',
+        warning:
+          'border-warning/20 bg-warning/5 backdrop-blur-xl text-yellow-900 dark:border-yellow-500/20 dark:bg-yellow-500/10 dark:text-yellow-300',
       },
     },
     defaultVariants: {
@@ -42,8 +46,7 @@ const toastVariants = cva(
 
 const Toast = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
@@ -62,7 +65,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'absolute right-3 top-3 rounded-lg p-1 text-surface-500 opacity-0 transition-all hover:text-surface-700 hover:bg-surface-200/70 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 group-hover:opacity-100 dark:hover:text-surface-300 dark:hover:bg-surface-800',
+      'text-surface-500 hover:text-surface-700 hover:bg-surface-200/70 focus:ring-brand-500/50 dark:hover:text-surface-300 dark:hover:bg-surface-800 absolute right-3 top-3 rounded-lg p-1 opacity-0 transition-all focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100',
       className,
     )}
     toast-close=""
@@ -77,11 +80,7 @@ const ToastTitle = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title
-    ref={ref}
-    className={cn('text-sm font-semibold', className)}
-    {...props}
-  />
+  <ToastPrimitives.Title ref={ref} className={cn('text-sm font-semibold', className)} {...props} />
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 

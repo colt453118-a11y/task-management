@@ -112,9 +112,7 @@ describe('TaskChecklist (React Testing Library)', () => {
 
   it('renders correct number of items from the API response', async () => {
     const items = sampleItems(5);
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-count" taskStatus="open" />);
 
@@ -231,9 +229,7 @@ describe('TaskChecklist (React Testing Library)', () => {
     const input = screen.getByPlaceholderText('Add checklist item...');
     fireEvent.change(input, { target: { value: 'Spinner test' } });
 
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => postPromise,
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => postPromise);
 
     fireEvent.click(screen.getByRole('button', { name: '' }));
 
@@ -250,9 +246,7 @@ describe('TaskChecklist (React Testing Library)', () => {
 
   it('toggles a checkbox from unchecked to checked', async () => {
     const items = sampleItems(2);
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-toggle-on" taskStatus="open" />);
 
@@ -305,9 +299,7 @@ describe('TaskChecklist (React Testing Library)', () => {
 
   it('reverts checkbox state when toggle API fails', async () => {
     const items = sampleItems(2);
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-toggle-fail" taskStatus="open" />);
 
@@ -463,9 +455,7 @@ describe('TaskChecklist (React Testing Library)', () => {
 
   it('deletes a checklist item', async () => {
     const items = sampleItems(3);
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-delete" taskStatus="open" />);
 
@@ -555,9 +545,7 @@ describe('TaskChecklist (React Testing Library)', () => {
       { ...sampleItems(1)[0]!, isChecked: true },
       { ...sampleItems(1)[0]!, id: 'item-done-2', content: 'Second item', isChecked: true },
     ];
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-celebrate" taskStatus="open" />);
 
@@ -614,9 +602,7 @@ describe('TaskChecklist (React Testing Library)', () => {
     // DnD reorder testing in jsdom is limited (@dnd-kit sensors need
     // native pointer events). We verify initial sort order here.
     const items = sampleItems(2);
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse({ items }),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockFetchResponse({ items }));
 
     render(<TaskChecklist taskId="task-dnd" taskStatus="open" />);
 

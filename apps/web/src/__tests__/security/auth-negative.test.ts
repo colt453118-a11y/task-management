@@ -87,7 +87,10 @@ describe('user status validation scenarios', () => {
     //   1. User exists in DB
     //   2. User is not suspended (isSuspended !== true)
     //   3. User is active (isActive === true)
-    const simulateLoginHook = (input: { isActive?: boolean; isSuspended?: boolean }): string | null => {
+    const simulateLoginHook = (input: {
+      isActive?: boolean;
+      isSuspended?: boolean;
+    }): string | null => {
       if (input.isSuspended) {
         return 'Your account has been suspended';
       }
@@ -101,11 +104,13 @@ describe('user status validation scenarios', () => {
     expect(simulateLoginHook({ isActive: true, isSuspended: false })).toBeNull();
 
     // Suspended user — login blocked
-    expect(simulateLoginHook({ isActive: true, isSuspended: true })).toBe('Your account has been suspended');
+    expect(simulateLoginHook({ isActive: true, isSuspended: true })).toBe(
+      'Your account has been suspended',
+    );
 
     // Deactivated user — login blocked
-    expect(simulateLoginHook({ isActive: false, isSuspended: false })).toBe('Your account has been deactivated');
+    expect(simulateLoginHook({ isActive: false, isSuspended: false })).toBe(
+      'Your account has been deactivated',
+    );
   });
 });
-
-

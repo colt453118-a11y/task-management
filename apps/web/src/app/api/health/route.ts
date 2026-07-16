@@ -73,19 +73,12 @@ export async function GET(request: NextRequest) {
     return rateLimitResponse(rateLimitResult, 'Health check rate limit exceeded');
   }
 
-  const [dbResult, redisResult] = await Promise.all([
-    checkDatabase(),
-    checkRedis(),
-  ]);
+  const [dbResult, redisResult] = await Promise.all([checkDatabase(), checkRedis()]);
 
   const allHealthy = dbResult.status === 'healthy' && redisResult.status === 'healthy';
   const anyUnhealthy = dbResult.status === 'unhealthy' || redisResult.status === 'unhealthy';
 
-  const overallStatus = allHealthy
-    ? 'healthy'
-    : anyUnhealthy
-      ? 'degraded'
-      : 'healthy';
+  const overallStatus = allHealthy ? 'healthy' : anyUnhealthy ? 'degraded' : 'healthy';
 
   const statusCode = overallStatus === 'healthy' ? 200 : 503;
 

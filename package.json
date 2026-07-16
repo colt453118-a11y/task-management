@@ -13,6 +13,7 @@
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "clean": "turbo clean",
+    "test:smoke": "vitest run",
     "db:generate": "pnpm --filter @workmanagement/database db:generate",
     "db:migrate": "pnpm --filter @workmanagement/database db:migrate",
     "db:push": "pnpm --filter @workmanagement/database db:push",
@@ -28,7 +29,8 @@
     "prettier": "^3.4.0",
     "prettier-plugin-tailwindcss": "^0.6.0",
     "turbo": "^2.3.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.6"
   },
   "pnpm": {
     "overrides": {

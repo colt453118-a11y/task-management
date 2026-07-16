@@ -35,6 +35,7 @@ pnpm dev
 ```
 
 Or use the automated setup script:
+
 ```bash
 chmod +x scripts/setup.sh && ./scripts/setup.sh
 ```
@@ -82,17 +83,18 @@ workmanagement/
 
 ### Database Schema (30+ tables)
 
-| Module | Tables |
-|--------|--------|
-| **Core** | organizations, users, departments, teams, teamMembers |
-| **Auth** | accounts, sessions, verificationTokens, loginHistory |
-| **Roles & Permissions** | roles, permissions, rolePermissions, userRoles |
-| **Projects** | projects, milestones |
-| **Tasks** | tasks, taskAssignees, taskHistory, taskComments, taskAttachments, taskChecklistItems, taskDependencies, taskWatchers, timeEntries |
+| Module                  | Tables                                                                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Core**                | organizations, users, departments, teams, teamMembers                                                                             |
+| **Auth**                | accounts, sessions, verificationTokens, loginHistory                                                                              |
+| **Roles & Permissions** | roles, permissions, rolePermissions, userRoles                                                                                    |
+| **Projects**            | projects, milestones                                                                                                              |
+| **Tasks**               | tasks, taskAssignees, taskHistory, taskComments, taskAttachments, taskChecklistItems, taskDependencies, taskWatchers, timeEntries |
 
 ### Authentication
 
 Better Auth handles all authentication with:
+
 - Email/password authentication
 - Google & Microsoft OAuth (configurable)
 - Forgot/reset password flow
@@ -103,15 +105,15 @@ Better Auth handles all authentication with:
 
 All routes are protected by middleware and wired with Drizzle ORM queries:
 
-| Route | Methods | Description |
-|-------|---------|-------------|
-| `/api/auth/[...all]` | GET, POST | Better Auth handler |
-| `/api/tasks` | GET, POST | List & create tasks |
-| `/api/tasks/[id]` | GET, PATCH, DELETE | CRUD for individual tasks |
-| `/api/projects` | GET, POST | List & create projects |
-| `/api/teams` | GET, POST | List & create teams |
-| `/api/users` | GET | List users (searchable, filterable) |
-| `/api/users/[id]` | GET, PATCH | Read & update users |
+| Route                | Methods            | Description                         |
+| -------------------- | ------------------ | ----------------------------------- |
+| `/api/auth/[...all]` | GET, POST          | Better Auth handler                 |
+| `/api/tasks`         | GET, POST          | List & create tasks                 |
+| `/api/tasks/[id]`    | GET, PATCH, DELETE | CRUD for individual tasks           |
+| `/api/projects`      | GET, POST          | List & create projects              |
+| `/api/teams`         | GET, POST          | List & create teams                 |
+| `/api/users`         | GET                | List users (searchable, filterable) |
+| `/api/users/[id]`    | GET, PATCH         | Read & update users                 |
 
 ---
 
@@ -142,31 +144,32 @@ pnpm db:studio    # Open Drizzle Studio
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `AUTH_SECRET` | ✅ | Random secret for auth tokens |
-| `NEXT_PUBLIC_APP_URL` | ✅ | Application URL |
-| `AUTH_GOOGLE_ID` | OAuth | Google OAuth client ID |
-| `AUTH_GOOGLE_SECRET` | OAuth | Google OAuth client secret |
-| `AUTH_MICROSOFT_ID` | OAuth | Microsoft OAuth client ID |
-| `AUTH_MICROSOFT_SECRET` | OAuth | Microsoft OAuth client secret |
+| Variable                | Required | Description                   |
+| ----------------------- | -------- | ----------------------------- |
+| `DATABASE_URL`          | ✅       | PostgreSQL connection string  |
+| `AUTH_SECRET`           | ✅       | Random secret for auth tokens |
+| `NEXT_PUBLIC_APP_URL`   | ✅       | Application URL               |
+| `AUTH_GOOGLE_ID`        | OAuth    | Google OAuth client ID        |
+| `AUTH_GOOGLE_SECRET`    | OAuth    | Google OAuth client secret    |
+| `AUTH_MICROSOFT_ID`     | OAuth    | Microsoft OAuth client ID     |
+| `AUTH_MICROSOFT_SECRET` | OAuth    | Microsoft OAuth client secret |
 
 ### Infrastructure Services
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| PostgreSQL | 5432 | Primary database |
-| Redis | 6379 | Caching & queues |
-| MinIO | 9000/9001 | File storage (S3-compatible) |
-| Meilisearch | 7700 | Full-text search |
-| Mailpit | 1025/8025 | Email testing UI |
+| Service     | Port      | Purpose                      |
+| ----------- | --------- | ---------------------------- |
+| PostgreSQL  | 5432      | Primary database             |
+| Redis       | 6379      | Caching & queues             |
+| MinIO       | 9000/9001 | File storage (S3-compatible) |
+| Meilisearch | 7700      | Full-text search             |
+| Mailpit     | 1025/8025 | Email testing UI             |
 
 ---
 
 ## Project Status
 
 ### ✅ Completed
+
 - Database schema with 30+ tables and relations
 - Authentication (sign-up, sign-in, forgot/reset password)
 - Dashboard layout with sidebar navigation & theme toggle
@@ -185,6 +188,7 @@ pnpm db:studio    # Open Drizzle Studio
 - Database seed script
 
 ### 🔜 Roadmap
+
 - Dependencies & task relationships
 - Drag-and-drop Kanban board
 - Time tracking & reporting
@@ -200,24 +204,24 @@ pnpm db:studio    # Open Drizzle Studio
 
 ## Tech Stack
 
-| Category | Choice |
-|----------|--------|
-| **Framework** | Next.js 15 (App Router, Turbopack) |
-| **Language** | TypeScript (strict mode) |
-| **Styling** | Tailwind CSS v4 |
-| **Database ORM** | Drizzle ORM |
-| **Database** | PostgreSQL 17 |
-| **Auth** | Better Auth |
-| **State** | TanStack Query + Zustand |
-| **Forms** | React Hook Form + Zod |
-| **UI Library** | Radix UI primitives |
-| **Icons** | Lucide React |
-| **Rich Text** | TipTap |
-| **Drag & Drop** | dnd-kit |
-| **Charts** | Recharts + Tremor |
-| **Caching** | Redis (BullMQ) |
-| **Search** | Meilisearch |
-| **Storage** | MinIO (S3-compatible) |
-| **Package Manager** | pnpm workspaces |
-| **Monorepo Tool** | Turborepo |
-| **Container** | Docker Compose |
+| Category            | Choice                             |
+| ------------------- | ---------------------------------- |
+| **Framework**       | Next.js 15 (App Router, Turbopack) |
+| **Language**        | TypeScript (strict mode)           |
+| **Styling**         | Tailwind CSS v4                    |
+| **Database ORM**    | Drizzle ORM                        |
+| **Database**        | PostgreSQL 17                      |
+| **Auth**            | Better Auth                        |
+| **State**           | TanStack Query + Zustand           |
+| **Forms**           | React Hook Form + Zod              |
+| **UI Library**      | Radix UI primitives                |
+| **Icons**           | Lucide React                       |
+| **Rich Text**       | TipTap                             |
+| **Drag & Drop**     | dnd-kit                            |
+| **Charts**          | Recharts + Tremor                  |
+| **Caching**         | Redis (BullMQ)                     |
+| **Search**          | Meilisearch                        |
+| **Storage**         | MinIO (S3-compatible)              |
+| **Package Manager** | pnpm workspaces                    |
+| **Monorepo Tool**   | Turborepo                          |
+| **Container**       | Docker Compose                     |

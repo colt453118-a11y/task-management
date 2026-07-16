@@ -37,8 +37,7 @@ export type TaskAccessError =
   | { code: 'FORBIDDEN'; status: 403; message: string };
 
 export type TaskAccessResult =
-  | { ok: true; task: TaskAccessInfo }
-  | { ok: false; error: TaskAccessError };
+  { ok: true; task: TaskAccessInfo } | { ok: false; error: TaskAccessError };
 
 /**
  * Check whether a task exists and belongs to the user's organization.
@@ -112,5 +111,3 @@ export function checkTaskAccessOrRespond(
 export function actionTargetsDeletedTasks(action: string): boolean {
   return action === 'restore' || action === 'permanent_delete';
 }
-
-

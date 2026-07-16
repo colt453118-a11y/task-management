@@ -17,19 +17,19 @@
 
 :root {
   /* Brand Colors */
-  --color-brand-50:  #eef2ff;
+  --color-brand-50: #eef2ff;
   --color-brand-100: #e0e7ff;
   --color-brand-200: #c7d2fe;
   --color-brand-300: #a5b4fc;
   --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;    /* Primary - Indigo */
+  --color-brand-500: #6366f1; /* Primary - Indigo */
   --color-brand-600: #4f46e5;
   --color-brand-700: #4338ca;
   --color-brand-800: #3730a3;
   --color-brand-900: #312e81;
 
   /* Neutral / Surface */
-  --color-surface-50:  #fafafa;     /* Lightest background */
+  --color-surface-50: #fafafa; /* Lightest background */
   --color-surface-100: #f4f4f5;
   --color-surface-200: #e4e4e7;
   --color-surface-300: #d4d4d8;
@@ -38,7 +38,7 @@
   --color-surface-600: #52525b;
   --color-surface-700: #3f3f46;
   --color-surface-800: #27272a;
-  --color-surface-900: #18181b;     /* Darkest background */
+  --color-surface-900: #18181b; /* Darkest background */
   --color-surface-950: #09090b;
 
   /* Task Status Colors */
@@ -104,7 +104,7 @@
   --color-surface-800: #e4e4e7;
   --color-surface-900: #f4f4f5;
   --color-surface-950: #fafafa;
-  
+
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4);
   --shadow-dropdown: 0 4px 6px -1px rgb(0 0 0 / 0.4);
   --shadow-modal: 0 10px 15px -3px rgb(0 0 0 / 0.4);
@@ -118,16 +118,44 @@
 ```css
 /* Inter font — excellent readability at all sizes */
 
-h1 { font-size: 2rem; font-weight: 600; line-height: 1.25; }      /* 32px - Page titles */
-h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; }     /* 24px - Section headers */
-h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; }    /* 20px - Card titles */
-h4 { font-size: 1rem; font-weight: 600; line-height: 1.5; }       /* 16px - Subsection */
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.25;
+} /* 32px - Page titles */
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+} /* 24px - Section headers */
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+} /* 20px - Card titles */
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+} /* 16px - Subsection */
 
-body-large  { font-size: 1rem; line-height: 1.5; }                /* 16px - Body text */
-body-small  { font-size: 0.875rem; line-height: 1.5; }             /* 14px - Secondary text */
-body-xs     { font-size: 0.75rem; line-height: 1.5; }              /* 12px - Labels, metadata */
+body-large {
+  font-size: 1rem;
+  line-height: 1.5;
+} /* 16px - Body text */
+body-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+} /* 14px - Secondary text */
+body-xs {
+  font-size: 0.75rem;
+  line-height: 1.5;
+} /* 12px - Labels, metadata */
 
-code        { font-size: 0.875rem; font-family: var(--font-mono); }
+code {
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+}
 ```
 
 ---
@@ -135,6 +163,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 ## Component System
 
 ### Sidebar Navigation
+
 ```
 ┌─────────────────────┐
 │ [Logo] WorkManager   │
@@ -167,6 +196,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 - Smooth width transition on collapse
 
 ### Top Navigation Bar
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [← Back]  Project Name  │  🔔  💬  👤 User Name  ▼       │
@@ -180,6 +210,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 - User dropdown menu with theme toggle, settings, logout
 
 ### Kanban Board
+
 ```
 ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
 │  TO DO (4)  │ │ IN PROGRESS │ │  REVIEW (3) │ │  DONE (7)   │
@@ -209,6 +240,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 - Card count badge at column header
 
 ### Task Card
+
 ```
 ┌────────────────────────────────┐
 │ TASK-1042  ● High  🔥          │ (Task ID + Priority indicator)
@@ -233,6 +265,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 - Color-coded left border by status
 
 ### Task Detail View
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ [← Back to Tasks]  TASK-1042     ● Open   ● High  ★ Watch   │
@@ -280,6 +313,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 ## Page Layouts
 
 ### Dashboard
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Dashboard                  [📅 This Week ▼] [👤 My Tasks]   │
@@ -312,6 +346,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 ```
 
 ### Empty States
+
 ```
 ┌────────────────────────────────────┐
 │                                    │
@@ -331,6 +366,7 @@ code        { font-size: 0.875rem; font-family: var(--font-mono); }
 ```
 
 Each empty state:
+
 - Custom illustration (not generic)
 - Clear, contextual message
 - Primary CTA button
@@ -342,17 +378,20 @@ Each empty state:
 ## Micro-interactions
 
 ### Loading States
+
 - **Skeleton loaders** for all list/card views (pulsing with brand color)
 - **Spinner** only for in-line actions (saving, submitting)
 - **Progress bar** at top of page for page transitions (Next.js native)
 - **Optimistic updates** for task status changes, comments (no loading state needed)
 
 ### Animations
+
 ```css
 /* Card hover */
 .task-card {
-  transition: transform var(--transition-fast),
-              box-shadow var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 .task-card:hover {
   transform: translateY(-2px);
@@ -370,17 +409,32 @@ Each empty state:
 }
 
 /* Modal enter/exit */
-.modal-enter { animation: scale-in 0.2s ease-out; }
-.modal-exit  { animation: scale-out 0.15s ease-in; }
+.modal-enter {
+  animation: scale-in 0.2s ease-out;
+}
+.modal-exit {
+  animation: scale-out 0.15s ease-in;
+}
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* Drag animation */
@@ -411,11 +465,7 @@ Each empty state:
 
 /* Subtle gradient backgrounds for cards */
 .card-gradient {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.05) 0%,
-    rgba(139, 92, 246, 0.05) 100%
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
 }
 ```
 
@@ -442,33 +492,33 @@ xl:  1280px  /* Large desktop */
 
 ## Accessibility (WCAG 2.2 AA)
 
-| Requirement | Implementation |
-|-------------|---------------|
-| Color contrast | All text: 4.5:1 minimum. Large text: 3:1. Interactive elements: 3:1 |
-| Keyboard navigation | Full tab order, arrow keys for Kanban, Space for checkboxes |
-| Focus indicators | 3px brand-colored outline, never `outline: none` |
-| Screen readers | ARIA labels on all interactive elements, live regions for notifications |
-| Reduced motion | `prefers-reduced-motion` disables all animations |
-| Touch targets | Minimum 44x44px for all interactive elements |
-| Error announcements | `role="alert"` on form errors |
+| Requirement         | Implementation                                                          |
+| ------------------- | ----------------------------------------------------------------------- |
+| Color contrast      | All text: 4.5:1 minimum. Large text: 3:1. Interactive elements: 3:1     |
+| Keyboard navigation | Full tab order, arrow keys for Kanban, Space for checkboxes             |
+| Focus indicators    | 3px brand-colored outline, never `outline: none`                        |
+| Screen readers      | ARIA labels on all interactive elements, live regions for notifications |
+| Reduced motion      | `prefers-reduced-motion` disables all animations                        |
+| Touch targets       | Minimum 44x44px for all interactive elements                            |
+| Error announcements | `role="alert"` on form errors                                           |
 
 ---
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `⌘K` | Command palette |
-| `⌘B` | Toggle sidebar |
-| `⌘N` | New task |
-| `⌘P` | Quick project switcher |
-| `⌘I` | Back to inbox / notifications |
-| `⌘Enter` | Submit / Save |
-| `⌘Z` | Undo (optimistic update revert) |
-| `Shift+C` | Quick comment |
-| `Shift+A` | Assign task |
-| `E` | Edit task title |
-| `Esc` | Close modal / deselect |
-| `?` | Show keyboard shortcuts |
-| `↑↓` | Navigate list items |
-| `Space` | Open task detail |
+| Shortcut  | Action                          |
+| --------- | ------------------------------- |
+| `⌘K`      | Command palette                 |
+| `⌘B`      | Toggle sidebar                  |
+| `⌘N`      | New task                        |
+| `⌘P`      | Quick project switcher          |
+| `⌘I`      | Back to inbox / notifications   |
+| `⌘Enter`  | Submit / Save                   |
+| `⌘Z`      | Undo (optimistic update revert) |
+| `Shift+C` | Quick comment                   |
+| `Shift+A` | Assign task                     |
+| `E`       | Edit task title                 |
+| `Esc`     | Close modal / deselect          |
+| `?`       | Show keyboard shortcuts         |
+| `↑↓`      | Navigate list items             |
+| `Space`   | Open task detail                |

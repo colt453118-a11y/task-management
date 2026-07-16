@@ -32,12 +32,11 @@ vi.mock('next/server', () => ({
 vi.mock('@/lib/auth/api-auth', () => ({
   // Wrap the handler so exported GET/POST/DELETE keep their original
   // (req) => Response signature — no second arg needed in tests.
-  withAuth: (handler: Function) =>
-    async (req: unknown) =>
-      handler(req, {
-        user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
-        orgId: 'org-1',
-      }),
+  withAuth: (handler: Function) => async (req: unknown) =>
+    handler(req, {
+      user: { id: 'user-1', email: 'test@test.com', name: 'Test User' },
+      orgId: 'org-1',
+    }),
   requirePermission: mockRequirePermission,
   checkPermission: vi.fn(() => Promise.resolve(true)),
   enforceOrgScope: vi.fn(),
@@ -48,9 +47,22 @@ vi.mock('@/lib/api/db', () => ({
   schema: {
     // These just need to not throw when properties are accessed.
     // The actual values are passed to the mocked chain and never used directly.
-    tasks: { id: 'tasks.id', organizationId: 'tasks.orgId', deletedAt: 'tasks.deletedAt' } as Record<string, string>,
-    taskWatchers: { id: 'tw.id', taskId: 'tw.taskId', userId: 'tw.userId', watchType: 'tw.watchType', createdAt: 'tw.createdAt' } as Record<string, string>,
-    users: { id: 'users.id', name: 'users.name', avatarUrl: 'users.avatarUrl' } as Record<string, string>,
+    tasks: {
+      id: 'tasks.id',
+      organizationId: 'tasks.orgId',
+      deletedAt: 'tasks.deletedAt',
+    } as Record<string, string>,
+    taskWatchers: {
+      id: 'tw.id',
+      taskId: 'tw.taskId',
+      userId: 'tw.userId',
+      watchType: 'tw.watchType',
+      createdAt: 'tw.createdAt',
+    } as Record<string, string>,
+    users: { id: 'users.id', name: 'users.name', avatarUrl: 'users.avatarUrl' } as Record<
+      string,
+      string
+    >,
   },
   handleApiError: vi.fn((_error: unknown, message: string) => ({
     error: { code: 'INTERNAL_ERROR', message },
@@ -129,10 +141,7 @@ describe('Watchers API — full CRUD flow', () => {
       },
     ];
 
-    const chain = createChain([
-      [{ id: 'task-123', organizationId: 'org-1' }],
-      watchers,
-    ]);
+    const chain = createChain([[{ id: 'task-123', organizationId: 'org-1' }], watchers]);
     mockDb.mockReturnValue(chain);
 
     const response = await GET(createRequest('GET', '/api/tasks/task-123/watchers'));
@@ -156,10 +165,7 @@ describe('Watchers API — full CRUD flow', () => {
       },
     ];
 
-    const chain = createChain([
-      [{ id: 'task-123', organizationId: 'org-1' }],
-      watchers,
-    ]);
+    const chain = createChain([[{ id: 'task-123', organizationId: 'org-1' }], watchers]);
     mockDb.mockReturnValue(chain);
 
     await GET(createRequest('GET', '/api/tasks/task-123/watchers'));
@@ -195,7 +201,6 @@ describe('Watchers API — full CRUD flow', () => {
       }),
     );
   });
-
 });
 
 // ─── Error Cases ────────────────────────────────────────────────
@@ -231,8 +236,8 @@ describe('Watchers API — error cases', () => {
   it('POST returns 500 when watcher insert fails (returns empty)', async () => {
     const chain = createChain([
       [{ id: 'task-123', organizationId: 'org-1' }], // task exists
-      [],                                              // not watching
-      [],                                              // insert returned empty!
+      [], // not watching
+      [], // insert returned empty!
     ]);
     mockDb.mockReturnValue(chain);
 
@@ -287,9 +292,7 @@ describe('Watchers API — error cases', () => {
 
 describe('Watchers API — permission enforcement', () => {
   it('GET enforces task:view permission', async () => {
-    mockRequirePermission.mockImplementation(() =>
-      Promise.reject(new Error('Forbidden')),
-    );
+    mockRequirePermission.mockImplementation(() => Promise.reject(new Error('Forbidden')));
     const response = await GET(createRequest('GET', '/api/tasks/task-123/watchers'));
     expect(response.status).toBeGreaterThanOrEqual(400);
     expect(mockRequirePermission).toHaveBeenCalledWith('user-1', 'task:view');
@@ -329,12 +332,7 @@ describe('Watchers API — response contract', () => {
       },
     ];
 
-    mockDb.mockReturnValue(
-      createChain([
-        [{ id: 'task-123', organizationId: 'org-1' }],
-        watchers,
-      ]),
-    );
+    mockDb.mockReturnValue(createChain([[{ id: 'task-123', organizationId: 'org-1' }], watchers]));
 
     await GET(createRequest('GET', '/api/tasks/task-123/watchers'));
 
@@ -385,11 +383,7 @@ describe('Watchers API — response contract', () => {
 
   it('DELETE returns 200 with success:true on unwatch', async () => {
     mockDb.mockReturnValue(
-      createChain([
-        [{ id: 'task-123', organizationId: 'org-1' }],
-        [{ id: 'watcher-1' }],
-        [],
-      ]),
+      createChain([[{ id: 'task-123', organizationId: 'org-1' }], [{ id: 'watcher-1' }], []]),
     );
 
     await DELETE(createRequest('DELETE', '/api/tasks/task-123/watchers'));

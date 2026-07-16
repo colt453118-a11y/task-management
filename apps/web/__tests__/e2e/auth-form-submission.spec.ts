@@ -12,7 +12,8 @@ async function mockSignInSuccess(page: import('@playwright/test').Page) {
       status: 200,
       contentType: 'application/json',
       headers: {
-        'set-cookie': 'better-auth.session_token=mock-session-token; Path=/; HttpOnly; SameSite=Lax',
+        'set-cookie':
+          'better-auth.session_token=mock-session-token; Path=/; HttpOnly; SameSite=Lax',
       },
       body: JSON.stringify({
         user: { id: 'user-1', email: 'test@example.com', name: 'Test User' },
@@ -32,7 +33,8 @@ async function mockSignUpSuccess(page: import('@playwright/test').Page) {
       status: 200,
       contentType: 'application/json',
       headers: {
-        'set-cookie': 'better-auth.session_token=mock-session-token; Path=/; HttpOnly; SameSite=Lax',
+        'set-cookie':
+          'better-auth.session_token=mock-session-token; Path=/; HttpOnly; SameSite=Lax',
       },
       body: JSON.stringify({
         user: { id: 'user-2', email: 'new@example.com', name: 'New User' },
@@ -157,7 +159,9 @@ test.describe('register page', () => {
     // The error appears inside a role="alert" inside the form; avoid matching the
     // Next.js route announcer (also role="alert") and the hint text "Must be at least
     // 8 characters" that's also on the page. Scope to the form element.
-    await expect(page.locator('form [role="alert"]')).toContainText(/at least 8 characters/i, { timeout: 10_000 });
+    await expect(page.locator('form [role="alert"]')).toContainText(/at least 8 characters/i, {
+      timeout: 10_000,
+    });
   });
 
   test('shows error when registration fails', async ({ page }) => {

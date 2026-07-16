@@ -2,7 +2,7 @@ import type { TaskStatus, TaskPriority, ProjectStatus } from '../types';
 
 // ─── Task Status ─────────────────────────────────────────────
 
-export const TASK_STATUSES: TaskStatus[] = [
+export const TASK_STATUSES = [
   'draft',
   'open',
   'assigned',
@@ -17,7 +17,7 @@ export const TASK_STATUSES: TaskStatus[] = [
   'rejected',
   'cancelled',
   'reopened',
-];
+] as const;
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   draft: 'Draft',
@@ -55,14 +55,7 @@ export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
 
 // ─── Task Priority ───────────────────────────────────────────
 
-export const TASK_PRIORITIES: TaskPriority[] = [
-  'none',
-  'low',
-  'medium',
-  'high',
-  'urgent',
-  'critical',
-];
+export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent', 'critical'] as const;
 
 export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
   none: 'None',
@@ -84,13 +77,7 @@ export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
 
 // ─── Project Status ──────────────────────────────────────────
 
-export const PROJECT_STATUSES: ProjectStatus[] = [
-  'draft',
-  'active',
-  'on_hold',
-  'completed',
-  'archived',
-];
+export const PROJECT_STATUSES = ['draft', 'active', 'on_hold', 'completed', 'archived'] as const;
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   draft: 'Draft',
@@ -115,6 +102,30 @@ export const DEFAULT_WORKFLOW = [
   'closed',
   'archived',
 ] as const;
+
+// ─── Task Status Transition Map ──────────────────────────────
+// Key is current status, value is array of allowed next statuses.
+
+export const TASK_STATUS_TRANSITION_MAP: Record<string, readonly string[]> = {
+  draft: ['open', 'cancelled', 'archived'],
+  open: ['assigned', 'in_progress', 'cancelled', 'archived'],
+  assigned: ['in_progress', 'blocked', 'on_hold', 'cancelled', 'archived'],
+  in_progress: ['blocked', 'on_hold', 'under_review', 'cancelled', 'archived'],
+  blocked: ['in_progress', 'on_hold', 'cancelled', 'archived'],
+  on_hold: ['in_progress', 'cancelled', 'archived'],
+  under_review: ['completed', 'in_progress', 'blocked', 'cancelled', 'archived'],
+  approved: ['completed', 'reopened', 'cancelled', 'archived'],
+  completed: ['closed', 'reopened', 'cancelled', 'archived'],
+  closed: ['reopened', 'archived'],
+  reopened: ['assigned', 'in_progress', 'cancelled', 'archived'],
+  rejected: ['reopened', 'archived'],
+  cancelled: ['reopened', 'archived'],
+  archived: [],
+};
+
+// Completed/Closed statuses that make a task read-only for most edits
+export const READONLY_STATUSES = new Set(['closed', 'archived'] as const);
+export const COMPLETED_STATUSES = new Set(['completed', 'closed'] as const);
 
 // ─── Pagination ──────────────────────────────────────────────
 

@@ -102,7 +102,9 @@ export const POST = withAuth(
       const ext = '.' + (file.name.split('.').pop() ?? '').toLowerCase();
       if (BLOCKED_EXTENSIONS.has(ext)) {
         return NextResponse.json(
-          { error: { code: 'VALIDATION_ERROR', message: `File extension '${ext}' is not allowed` } },
+          {
+            error: { code: 'VALIDATION_ERROR', message: `File extension '${ext}' is not allowed` },
+          },
           { status: 400 },
         );
       }

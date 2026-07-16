@@ -36,9 +36,7 @@ export const GET = withAuth(
       const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
       const fieldsOnly = searchParams.get('fields') === 'id';
 
-      const conditions = [
-        eq(schema.tasks.organizationId, orgId!),
-      ];
+      const conditions = [eq(schema.tasks.organizationId, orgId!)];
 
       if (showDeleted) {
         // Show only soft-deleted tasks
@@ -161,7 +159,15 @@ export const POST = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { title, description: rawDescription, projectId, milestoneId, priority, assignedTo, dueDate } = parsed.data;
+      const {
+        title,
+        description: rawDescription,
+        projectId,
+        milestoneId,
+        priority,
+        assignedTo,
+        dueDate,
+      } = parsed.data;
       const description = sanitizeRichText(rawDescription);
 
       // Validate project org scope if projectId provided
@@ -188,7 +194,12 @@ export const POST = withAuth(
       // Validate assignedTo is in same org if provided
       if (assignedTo) {
         const [assigneeUser] = await db()
-          .select({ id: schema.users.id, organizationId: schema.users.organizationId, isActive: schema.users.isActive, isSuspended: schema.users.isSuspended })
+          .select({
+            id: schema.users.id,
+            organizationId: schema.users.organizationId,
+            isActive: schema.users.isActive,
+            isSuspended: schema.users.isSuspended,
+          })
           .from(schema.users)
           .where(eq(schema.users.id, assignedTo))
           .limit(1);
@@ -206,7 +217,12 @@ export const POST = withAuth(
         }
         if (!assigneeUser.isActive || assigneeUser.isSuspended) {
           return NextResponse.json(
-            { error: { code: 'INVALID_STATE', message: 'Cannot assign task to inactive or suspended user' } },
+            {
+              error: {
+                code: 'INVALID_STATE',
+                message: 'Cannot assign task to inactive or suspended user',
+              },
+            },
             { status: 422 },
           );
         }

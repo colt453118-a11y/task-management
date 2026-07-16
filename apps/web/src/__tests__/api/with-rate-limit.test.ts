@@ -6,14 +6,19 @@ import type { NextRequest } from 'next/server';
 // Hoisted mocks
 // ═══════════════════════════════════════════════════════════════════
 
-const { mockCheckRateLimit, mockRateLimitResponse, mockAddRateLimitHeaders, mockIpFromRequest, mockRateLimitKey } =
-  vi.hoisted(() => ({
-    mockCheckRateLimit: vi.fn(),
-    mockRateLimitResponse: vi.fn(),
-    mockAddRateLimitHeaders: vi.fn(),
-    mockIpFromRequest: vi.fn(),
-    mockRateLimitKey: vi.fn(),
-  }));
+const {
+  mockCheckRateLimit,
+  mockRateLimitResponse,
+  mockAddRateLimitHeaders,
+  mockIpFromRequest,
+  mockRateLimitKey,
+} = vi.hoisted(() => ({
+  mockCheckRateLimit: vi.fn(),
+  mockRateLimitResponse: vi.fn(),
+  mockAddRateLimitHeaders: vi.fn(),
+  mockIpFromRequest: vi.fn(),
+  mockRateLimitKey: vi.fn(),
+}));
 
 // ═══════════════════════════════════════════════════════════════════
 // Module-level mocks
@@ -78,14 +83,26 @@ function createRequest(): NextRequest {
   return { method: 'GET' } as NextRequest;
 }
 
-const successResult = { ok: true, limit: 5, remaining: 4, reset: Math.floor(Date.now() / 1000) + 60 };
-const blockedResult = { ok: false, limit: 5, remaining: 0, reset: Math.floor(Date.now() / 1000) + 30 };
+const successResult = {
+  ok: true,
+  limit: 5,
+  remaining: 4,
+  reset: Math.floor(Date.now() / 1000) + 60,
+};
+const blockedResult = {
+  ok: false,
+  limit: 5,
+  remaining: 0,
+  reset: Math.floor(Date.now() / 1000) + 30,
+};
 const defaultConfig = { windowMs: 60_000, max: 5, namespace: 'login' };
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockCheckRateLimit.mockResolvedValue(successResult);
-  mockRateLimitResponse.mockReturnValue(NextResponse.json({ error: { code: 'RATE_LIMIT_EXCEEDED' } }, { status: 429 }));
+  mockRateLimitResponse.mockReturnValue(
+    NextResponse.json({ error: { code: 'RATE_LIMIT_EXCEEDED' } }, { status: 429 }),
+  );
   mockAddRateLimitHeaders.mockImplementation((res: Response) => res as NextResponse);
   mockIpFromRequest.mockReturnValue('203.0.113.42');
   mockRateLimitKey.mockReturnValue('key:login:203.0.113.42');
@@ -165,7 +182,10 @@ describe('withRateLimit — rate limit flow', () => {
   it('responds with rateLimitResponse when blocked', async () => {
     mockCheckRateLimit.mockResolvedValue(blockedResult);
 
-    const wrapped = withRateLimit(defaultConfig, vi.fn(async () => NextResponse.json({ ok: true })));
+    const wrapped = withRateLimit(
+      defaultConfig,
+      vi.fn(async () => NextResponse.json({ ok: true })),
+    );
     await wrapped(createRequest());
 
     expect(mockRateLimitResponse).toHaveBeenCalledWith(blockedResult);
@@ -179,16 +199,16 @@ describe('withRateLimit — response headers', () => {
 
     await wrapped(createRequest());
 
-    expect(mockAddRateLimitHeaders).toHaveBeenCalledWith(
-      expect.any(NextResponse),
-      successResult,
-    );
+    expect(mockAddRateLimitHeaders).toHaveBeenCalledWith(expect.any(NextResponse), successResult);
   });
 
   it('forwards the rate limit result to addRateLimitHeaders', async () => {
     mockCheckRateLimit.mockResolvedValue({ ...successResult, remaining: 2 });
 
-    const wrapped = withRateLimit(defaultConfig, vi.fn(async () => NextResponse.json({ ok: true })));
+    const wrapped = withRateLimit(
+      defaultConfig,
+      vi.fn(async () => NextResponse.json({ ok: true })),
+    );
     await wrapped(createRequest());
 
     expect(mockAddRateLimitHeaders).toHaveBeenCalledWith(
@@ -276,10 +296,10 @@ describe('withRateLimit — config propagation', () => {
 
     await wrapped(createRequest());
 
-    expect(mockCheckRateLimit).toHaveBeenCalledWith(
-      expect.any(String),
-      { windowMs: 3_600_000, max: 100 },
-    );
+    expect(mockCheckRateLimit).toHaveBeenCalledWith(expect.any(String), {
+      windowMs: 3_600_000,
+      max: 100,
+    });
   });
 
   it('forwards the request to the handler', async () => {

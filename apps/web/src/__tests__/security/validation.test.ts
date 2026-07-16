@@ -51,7 +51,19 @@ describe('isValidTransition', () => {
   });
 
   it('rejects transition from archived to any other status', () => {
-    const statuses: TaskStatus[] = ['draft', 'open', 'assigned', 'in_progress', 'blocked', 'on_hold', 'under_review', 'completed', 'closed', 'reopened', 'cancelled'];
+    const statuses: TaskStatus[] = [
+      'draft',
+      'open',
+      'assigned',
+      'in_progress',
+      'blocked',
+      'on_hold',
+      'under_review',
+      'completed',
+      'closed',
+      'reopened',
+      'cancelled',
+    ];
     for (const status of statuses) {
       expect(isValidTransition('archived', status)).toBe(false);
     }
@@ -105,7 +117,23 @@ describe('COMPLETED_STATUSES', () => {
 // ─── File Upload Security ──────────────────────────────────────
 
 describe('BLOCKED_EXTENSIONS', () => {
-  const dangerousExtensions = ['.exe', '.js', '.sh', '.bat', '.cmd', '.php', '.html', '.htm', '.svg', '.msi', '.dll', '.ps1', '.jar', '.vbs', '.scr'];
+  const dangerousExtensions = [
+    '.exe',
+    '.js',
+    '.sh',
+    '.bat',
+    '.cmd',
+    '.php',
+    '.html',
+    '.htm',
+    '.svg',
+    '.msi',
+    '.dll',
+    '.ps1',
+    '.jar',
+    '.vbs',
+    '.scr',
+  ];
 
   for (const ext of dangerousExtensions) {
     it(`blocks dangerous extension: ${ext}`, () => {

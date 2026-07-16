@@ -11,6 +11,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
+import { motion } from 'framer-motion';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
 import { isValidTransition } from '@/lib/api/validation';
@@ -24,34 +25,41 @@ interface ColumnDef {
 }
 
 const COLUMN_HEADER_BG: Record<string, string> = {
-  draft:        'bg-status-draft/5 dark:bg-status-draft/10',
-  open:         'bg-status-open/5 dark:bg-status-open/10',
-  assigned:     'bg-status-on-hold/5 dark:bg-status-on-hold/10',
-  in_progress:  'bg-status-in-progress/5 dark:bg-status-in-progress/10',
-  blocked:      'bg-status-blocked/5 dark:bg-status-blocked/10',
-  on_hold:      'bg-status-on-hold/5 dark:bg-status-on-hold/10',
+  draft: 'bg-status-draft/5 dark:bg-status-draft/10',
+  open: 'bg-status-open/5 dark:bg-status-open/10',
+  assigned: 'bg-status-on-hold/5 dark:bg-status-on-hold/10',
+  in_progress: 'bg-status-in-progress/5 dark:bg-status-in-progress/10',
+  blocked: 'bg-status-blocked/5 dark:bg-status-blocked/10',
+  on_hold: 'bg-status-on-hold/5 dark:bg-status-on-hold/10',
   under_review: 'bg-status-under-review/5 dark:bg-status-under-review/10',
-  approved:     'bg-status-approved/5 dark:bg-status-approved/10',
-  completed:    'bg-status-completed/5 dark:bg-status-completed/10',
-  closed:       'bg-status-closed/5 dark:bg-status-closed/10',
-  reopened:     'bg-status-approved/5 dark:bg-status-approved/10',
-  cancelled:    'bg-status-cancelled/5 dark:bg-status-cancelled/10',
-  archived:     'bg-status-archived/5 dark:bg-status-archived/10',
-  rejected:     'bg-status-rejected/5 dark:bg-status-rejected/10',
+  approved: 'bg-status-approved/5 dark:bg-status-approved/10',
+  completed: 'bg-status-completed/5 dark:bg-status-completed/10',
+  closed: 'bg-status-closed/5 dark:bg-status-closed/10',
+  reopened: 'bg-status-approved/5 dark:bg-status-approved/10',
+  cancelled: 'bg-status-cancelled/5 dark:bg-status-cancelled/10',
+  archived: 'bg-status-archived/5 dark:bg-status-archived/10',
+  rejected: 'bg-status-rejected/5 dark:bg-status-rejected/10',
 };
 
 const WORKFLOW_COLUMNS: ColumnDef[] = [
-  { status: 'draft',       label: 'Draft',       headerBg: COLUMN_HEADER_BG.draft! },
-  { status: 'open',        label: 'Open',        headerBg: COLUMN_HEADER_BG.open! },
-  { status: 'assigned',    label: 'Assigned',    headerBg: COLUMN_HEADER_BG.assigned! },
+  { status: 'draft', label: 'Draft', headerBg: COLUMN_HEADER_BG.draft! },
+  { status: 'open', label: 'Open', headerBg: COLUMN_HEADER_BG.open! },
+  { status: 'assigned', label: 'Assigned', headerBg: COLUMN_HEADER_BG.assigned! },
   { status: 'in_progress', label: 'In Progress', headerBg: COLUMN_HEADER_BG.in_progress! },
-  { status: 'blocked',     label: 'Blocked',     headerBg: COLUMN_HEADER_BG.blocked! },
-  { status: 'under_review',label: 'Review',      headerBg: COLUMN_HEADER_BG.under_review! },
-  { status: 'completed',   label: 'Done',        headerBg: COLUMN_HEADER_BG.completed! },
-  { status: 'closed',      label: 'Closed',      headerBg: COLUMN_HEADER_BG.closed! },
+  { status: 'blocked', label: 'Blocked', headerBg: COLUMN_HEADER_BG.blocked! },
+  { status: 'under_review', label: 'Review', headerBg: COLUMN_HEADER_BG.under_review! },
+  { status: 'completed', label: 'Done', headerBg: COLUMN_HEADER_BG.completed! },
+  { status: 'closed', label: 'Closed', headerBg: COLUMN_HEADER_BG.closed! },
 ];
 
-const SECONDARY_STATUSES = new Set(['on_hold', 'reopened', 'cancelled', 'archived', 'approved', 'rejected']);
+const SECONDARY_STATUSES = new Set([
+  'on_hold',
+  'reopened',
+  'cancelled',
+  'archived',
+  'approved',
+  'rejected',
+]);
 
 // ─── Task Type ─────────────────────────────────────────────────
 
@@ -195,30 +203,52 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
     [onStatusChange],
   );
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.04 },
+    },
+  };
+
+  const columnVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 100, damping: 15 },
+    },
+  };
+
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div
-        className="flex gap-3 pb-4 overflow-x-auto overflow-y-hidden"
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'var(--color-surface-300) transparent',
         }}
       >
-        {columns.map((col) => (
-          <KanbanColumn
+        {columns.map((col, idx) => (
+          <motion.div
             key={col.status}
-            status={col.status}
-            label={col.label}
-            tasks={groups[col.status] ?? []}
-            headerBg={col.headerBg}
-            isValidDropTarget={activeTask ? isDropValid(col.status) : undefined}
-          />
+            variants={columnVariants}
+            custom={idx}
+            className="flex-shrink-0"
+          >
+            <KanbanColumn
+              status={col.status}
+              label={col.label}
+              tasks={groups[col.status] ?? []}
+              headerBg={col.headerBg}
+              isValidDropTarget={activeTask ? isDropValid(col.status) : undefined}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Drag Overlay — shows the card being dragged */}
       <DragOverlay dropAnimation={null}>

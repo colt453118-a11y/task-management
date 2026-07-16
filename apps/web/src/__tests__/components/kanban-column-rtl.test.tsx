@@ -41,15 +41,17 @@ vi.mock('@dnd-kit/sortable', () => ({
 // Sample task factory
 // ═══════════════════════════════════════════════════════════════════
 
-function sampleTask(overrides: Partial<{
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  taskIdDisplay: string;
-  assignedTo: string | null;
-  dueDate: string | null;
-}> = {}) {
+function sampleTask(
+  overrides: Partial<{
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    taskIdDisplay: string;
+    assignedTo: string | null;
+    dueDate: string | null;
+  }> = {},
+) {
   return {
     id: 'task-1',
     title: 'Test Task',
@@ -79,14 +81,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('renders column header with label and task count', () => {
     const tasks = [sampleTask({ id: 't1' }), sampleTask({ id: 't2' })];
-    render(
-      <KanbanColumn
-        status="open"
-        label="Open"
-        tasks={tasks}
-        headerBg="bg-status-open/5"
-      />,
-    );
+    render(<KanbanColumn status="open" label="Open" tasks={tasks} headerBg="bg-status-open/5" />);
 
     // Label in heading
     expect(screen.getByText('Open')).toBeInTheDocument();
@@ -112,12 +107,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('falls back to bg-surface-400 for unknown status dot color', () => {
     const { container } = render(
-      <KanbanColumn
-        status="unknown"
-        label="Unknown"
-        tasks={[]}
-        headerBg=""
-      />,
+      <KanbanColumn status="unknown" label="Unknown" tasks={[]} headerBg="" />,
     );
 
     const dot = container.querySelector('span.h-2\\.5');
@@ -143,14 +133,7 @@ describe('KanbanColumn (React Testing Library)', () => {
   // ── Empty state ────────────────────────────────────────────
 
   it('shows "No tasks" and "Drag tasks here" when tasks array is empty', () => {
-    render(
-      <KanbanColumn
-        status="draft"
-        label="Draft"
-        tasks={[]}
-        headerBg="bg-status-draft/5"
-      />,
-    );
+    render(<KanbanColumn status="draft" label="Draft" tasks={[]} headerBg="bg-status-draft/5" />);
 
     expect(screen.getByText('No tasks')).toBeInTheDocument();
     expect(screen.getByText('Drag tasks here')).toBeInTheDocument();
@@ -179,14 +162,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       sampleTask({ id: 't3', title: 'Task Three' }),
     ];
 
-    render(
-      <KanbanColumn
-        status="open"
-        label="Open"
-        tasks={tasks}
-        headerBg="bg-status-open/5"
-      />,
-    );
+    render(<KanbanColumn status="open" label="Open" tasks={tasks} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('Task One')).toBeInTheDocument();
     expect(screen.getByText('Task Two')).toBeInTheDocument();
@@ -196,28 +172,14 @@ describe('KanbanColumn (React Testing Library)', () => {
   it('renders task cards with correct status inheritance', () => {
     const task = sampleTask({ id: 't1', title: 'My Task', status: 'open' });
 
-    render(
-      <KanbanColumn
-        status="open"
-        label="Open"
-        tasks={[task]}
-        headerBg="bg-status-open/5"
-      />,
-    );
+    render(<KanbanColumn status="open" label="Open" tasks={[task]} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('My Task')).toBeInTheDocument();
     expect(screen.getByText('TASK-1')).toBeInTheDocument();
   });
 
   it('passes 0 count badge when tasks array is empty', () => {
-    render(
-      <KanbanColumn
-        status="open"
-        label="Open"
-        tasks={[]}
-        headerBg="bg-status-open/5"
-      />,
-    );
+    render(<KanbanColumn status="open" label="Open" tasks={[]} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('0')).toBeInTheDocument();
   });
@@ -340,12 +302,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('falls back to border-l-surface-300 for unknown status', () => {
     const { container } = render(
-      <KanbanColumn
-        status="unknown"
-        label="Unknown"
-        tasks={[]}
-        headerBg=""
-      />,
+      <KanbanColumn status="unknown" label="Unknown" tasks={[]} headerBg="" />,
     );
 
     const column = container.firstChild as HTMLElement;
@@ -355,14 +312,7 @@ describe('KanbanColumn (React Testing Library)', () => {
   // ── Create button ──────────────────────────────────────────
 
   it('renders create button with correct aria-label based on label prop', () => {
-    render(
-      <KanbanColumn
-        status="open"
-        label="Open"
-        tasks={[]}
-        headerBg="bg-status-open/5"
-      />,
-    );
+    render(<KanbanColumn status="open" label="Open" tasks={[]} headerBg="bg-status-open/5" />);
 
     const button = screen.getByRole('button', { name: 'Create task in Open' });
     expect(button).toBeInTheDocument();

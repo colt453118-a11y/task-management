@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from '@/lib/auth';
-import {
-  checkRateLimit,
-  rateLimitKey,
-  ipFromRequest,
-} from '@/lib/api/rate-limit';
+import { checkRateLimit, rateLimitKey, ipFromRequest } from '@/lib/api/rate-limit';
 
-let _handler: { POST: (req: Request) => Promise<Response>; GET: (req: Request) => Promise<Response> } | null = null;
+let _handler: {
+  POST: (req: Request) => Promise<Response>;
+  GET: (req: Request) => Promise<Response>;
+} | null = null;
 
 async function getHandler() {
   if (!_handler) {
