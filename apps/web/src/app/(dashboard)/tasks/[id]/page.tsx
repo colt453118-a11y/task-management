@@ -173,7 +173,7 @@ export default function TaskDetailPage() {
   // Time tracking
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualMinutes, setManualMinutes] = useState('');
-  const [manualDescription, setManualDescription] = useState(''); // eslint-disable-line react-hooks/purity
+  const [manualDescription, setManualDescription] = useState('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
   // Use store data as source of truth
   const task = storeCurrentTask;
