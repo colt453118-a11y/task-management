@@ -67,12 +67,7 @@ export const GET = withAuth(
           )`,
         })
         .from(schema.teams)
-        .where(
-          and(
-            eq(schema.teams.departmentId, id),
-            isNull(schema.teams.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.teams.departmentId, id), isNull(schema.teams.deletedAt)))
         .orderBy(desc(schema.teams.createdAt));
 
       // Get department members (users with this departmentId)
@@ -102,12 +97,7 @@ export const GET = withAuth(
         })
         .from(schema.tasks)
         .innerJoin(schema.teams, eq(schema.tasks.teamId, schema.teams.id))
-        .where(
-          and(
-            eq(schema.teams.departmentId, id),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.teams.departmentId, id), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.status);
 
       const totalTasks = taskStats.reduce((sum, t) => sum + t.count, 0);
@@ -136,7 +126,7 @@ export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
-      await requirePermission(user.id, 'team:edit');
+      await requirePermission(user.id, 'department:edit');
 
       const body = await request.json();
       const parsed = DepartmentUpdateSchema.safeParse(body);
@@ -165,10 +155,22 @@ export const PATCH = withAuth(
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 
-      if (name !== undefined) { oldValues.name = existing.name; newValues.name = name; }
-      if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
-      if (headUserId !== undefined) { oldValues.headUserId = existing.headUserId; newValues.headUserId = headUserId; }
-      if (isActive !== undefined) { oldValues.isActive = existing.isActive; newValues.isActive = isActive; }
+      if (name !== undefined) {
+        oldValues.name = existing.name;
+        newValues.name = name;
+      }
+      if (description !== undefined) {
+        oldValues.description = existing.description;
+        newValues.description = description;
+      }
+      if (headUserId !== undefined) {
+        oldValues.headUserId = existing.headUserId;
+        newValues.headUserId = headUserId;
+      }
+      if (isActive !== undefined) {
+        oldValues.isActive = existing.isActive;
+        newValues.isActive = isActive;
+      }
 
       if (Object.keys(newValues).length > 0) {
         await db()

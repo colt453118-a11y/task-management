@@ -54,7 +54,9 @@ describe('sanitizeCsvCell', () => {
 
   it('does NOT prefix normal text', () => {
     expect(sanitizeCsvCell('Hello World')).toBe('Hello World');
-    expect(sanitizeCsvCell('Normal text with = sign in middle')).toBe('Normal text with = sign in middle');
+    expect(sanitizeCsvCell('Normal text with = sign in middle')).toBe(
+      'Normal text with = sign in middle',
+    );
     expect(sanitizeCsvCell('email@example.com')).toBe('email@example.com');
     expect(sanitizeCsvCell('1 + 1 = 2')).toBe('1 + 1 = 2');
   });
@@ -149,12 +151,7 @@ describe('buildCsv', () => {
   });
 
   it('wraps cells with special characters', () => {
-    const csv = buildCsv(
-      ['Name', 'Comment'],
-      [
-        ['Charlie', 'Hello, "World"!'],
-      ],
-    );
+    const csv = buildCsv(['Name', 'Comment'], [['Charlie', 'Hello, "World"!']]);
 
     const lines = csv.trim().split('\n');
     expect(lines[1]).toContain('"Hello, ""World""!"');

@@ -2,16 +2,19 @@
 
 import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor, RichTextViewer } from '@/components/tasks/rich-text-editor';
+import { TaskChecklist } from '@/components/tasks/task-checklist';
+import { TaskActivityFeed } from '@/components/tasks/task-activity-feed';
+import { TaskWatcherButton } from '@/components/tasks/task-watcher-button';
+import { TaskMentionText } from '@/components/tasks/task-hover-card';
+import { EmptyState } from '@/components/ui/state-display';
+import { useTaskStore } from '@/stores/task-store';
+import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import {
   Loader2,
   ArrowLeft,
@@ -34,84 +37,16 @@ import {
   Play,
   StopCircle,
   Timer,
+  History,
+  Copy,
 } from 'lucide-react';
-
-// ─── Types ──────────────────────────────────────────────────
-
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  taskIdDisplay: string;
-  status: string;
-  priority: string;
-  assignedTo: string | null;
-  projectId: string | null;
-  departmentId: string | null;
-  teamId: string | null;
-  createdBy: string;
-  updatedBy: string | null;
-  dueDate: string | null;
-  startDate: string | null;
-  estimatedHours: string | null;
-  actualHours: string | null;
-  labels: string[] | null;
-  tags: string[] | null;
-  category: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type Comment = {
-  id: string;
-  taskId: string;
-  userId: string;
-  content: string;
-  isInternalNote: boolean;
-  parentId: string | null;
-  isEdited: boolean;
-  editedAt: string | null;
-  createdAt: string;
-  user: { id: string; name: string | null; avatarUrl: string | null } | null;
-};
-
-type Attachment = {
-  id: string;
-  taskId: string;
-  userId: string;
-  fileName: string;
-  fileSize: number | null;
-  mimeType: string | null;
-  createdAt: string;
-  user: { id: string; name: string | null } | null;
-};
-
-type TimeEntry = {
-  id: string;
-  taskId: string;
-  userId: string;
-  startTime: string;
-  endTime: string | null;
-  durationMinutes: number | null;
-  entryType: string;
-  description: string | null;
-  createdAt: string;
-  user: { id: string; name: string | null; avatarUrl: string | null } | null;
-};
-
-type Dependency = {
-  id: string;
-  taskId: string;
-  dependsOnTaskId: string;
-  dependencyType: string;
-  createdAt: string;
-  dependsOnTask?: { id: string; title: string; taskIdDisplay: string; status: string };
-  blockingTask?: { id: string; title: string; taskIdDisplay: string; status: string };
-};
 
 // ─── Constants ──────────────────────────────────────────────
 
-const statusColors: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'> = {
+const statusColors: Record<
+  string,
+  'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'
+> = {
   draft: 'default',
   open: 'primary',
   in_progress: 'warning',
@@ -126,12 +61,26 @@ const statusColors: Record<string, 'default' | 'primary' | 'success' | 'warning'
 };
 
 const statusOptions = [
-  'draft', 'open', 'in_progress', 'blocked', 'under_review',
-  'on_hold', 'completed', 'closed', 'reopened', 'cancelled', 'archived',
+  'draft',
+  'open',
+  'in_progress',
+  'blocked',
+  'under_review',
+  'on_hold',
+  'completed',
+  'closed',
+  'reopened',
+  'cancelled',
+  'archived',
 ];
 
 const priorityLabel: Record<string, string> = {
-  none: 'None', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent', critical: 'Critical',
+  none: 'None',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  urgent: 'Urgent',
+  critical: 'Critical',
 };
 
 const priorityOptions = ['none', 'low', 'medium', 'high', 'urgent', 'critical'];
@@ -154,26 +103,64 @@ function getInitials(name: string | null | undefined): string {
   return first + last;
 }
 
+function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+};
+
 // ─── Page Component ─────────────────────────────────────────
 
 export default function TaskDetailPage() {
   const params = useParams();
   const taskId = params.id as string;
 
-  const [task, setTask] = useState<Task | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  // Zustand store
+  const storeCurrentTask = useTaskStore((s) => s.currentTask);
+  const storeComments = useTaskStore((s) => s.comments);
+  const storeAttachments = useTaskStore((s) => s.attachments);
+  const storeTimeEntries = useTaskStore((s) => s.timeEntries);
+  const storeBlockedBy = useTaskStore((s) => s.blockedBy);
+  const storeBlocking = useTaskStore((s) => s.blocking);
+  const storeError = useTaskStore((s) => s.detailError);
+  const fetchTaskDetail = useTaskStore((s) => s.fetchTaskDetail);
+  const updateCurrentTask = useTaskStore((s) => s.updateCurrentTask);
+  const addCommentAction = useTaskStore((s) => s.addComment);
+  const removeCommentAction = useTaskStore((s) => s.removeComment);
+  const addAttachment = useTaskStore((s) => s.addAttachment);
+  const removeAttachment = useTaskStore((s) => s.removeAttachment);
+  const removeTimeEntryAction = useTaskStore((s) => s.removeTimeEntry);
+  const setDependencies = useTaskStore((s) => s.setDependencies);
+  const removeDependency = useTaskStore((s) => s.removeDependency);
+  const setTimeEntries = useTaskStore((s) => s.setTimeEntries);
+
+  const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notFound, setNotFound] = useState(false);
 
   // Comment form
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
   // Dependencies
-  const [blockedBy, setBlockedBy] = useState<Dependency[]>([]);
-  const [blocking, setBlocking] = useState<Dependency[]>([]);
   const [depTaskId, setDepTaskId] = useState('');
   const [addingDep, setAddingDep] = useState(false);
   const [depError, setDepError] = useState<string | null>(null);
@@ -184,109 +171,51 @@ export default function TaskDetailPage() {
   const [savingDescription, setSavingDescription] = useState(false);
 
   // Time tracking
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualMinutes, setManualMinutes] = useState('');
   const [manualDescription, setManualDescription] = useState('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  // Use store data as source of truth
+  const task = storeCurrentTask;
+  const comments = storeComments;
+  const attachments = storeAttachments;
+  const timeEntries = storeTimeEntries;
+  const blockedBy = storeBlockedBy;
+  const blocking = storeBlocking;
+
   const [elapsed, setElapsed] = useState('00:00:00');
 
   const runningTimer = timeEntries.find((e) => !e.endTime) ?? null;
 
-  const secondsSince = (startTime: string): number => {
-    return Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
-  };
+  // Toast
+  const { toast } = useToast();
 
-  const formatElapsed = (seconds: number): string => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
-  const formatDuration = (minutes: number): string => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
-  };
+  // Duplicate task
+  const [duplicating, setDuplicating] = useState(false);
 
   // Status / Priority editing
   const [updating, setUpdating] = useState<string | null>(null);
 
-  // ── Fetch task data ─────────────────────────────────────
-
-  const fetchTask = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}`);
-      if (res.status === 404) {
-        setNotFound(true);
-        setLoading(false);
-        return;
-      }
-      if (!res.ok) throw new Error('Failed to fetch task');
-      const data = await res.json();
-      setTask(data.task);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load task');
-    }
-  }, [taskId]);
-
-  const fetchComments = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/comments`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data.comments ?? []);
-      }
-    } catch {
-      // Comments are non-critical
-    }
-  }, [taskId]);
-
-  const fetchAttachments = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/attachments`);
-      if (res.ok) {
-        const data = await res.json();
-        setAttachments(data.attachments ?? []);
-      }
-    } catch {
-      // Attachments are non-critical
-    }
-  }, [taskId]);
-
-  const fetchDependencies = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/dependencies`);
-      if (res.ok) {
-        const data = await res.json();
-        setBlockedBy(data.blockedBy ?? []);
-        setBlocking(data.blocking ?? []);
-      }
-    } catch {
-      // Dependencies are non-critical
-    }
-  }, [taskId]);
-
-  const fetchTimeEntries = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/time-entries`);
-      if (res.ok) {
-        const data = await res.json();
-        setTimeEntries(data.entries ?? []);
-      }
-    } catch {
-      // Time entries are non-critical
-    }
-  }, [taskId]);
+  // ── Fetch task data via Zustand store ─────────────────────
 
   useEffect(() => {
+    // store action is async, no cascading render
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     startTransition(() => {
-      Promise.all([fetchTask(), fetchComments(), fetchAttachments(), fetchDependencies(), fetchTimeEntries()])
-        .finally(() => setLoading(false));
+      fetchTaskDetail(taskId).finally(() => setLoading(false));
     });
-  }, [fetchTask, fetchComments, fetchAttachments, fetchDependencies, fetchTimeEntries]);
+  }, [taskId, fetchTaskDetail]);
+
+  // Derive notFound from store error
+  // needed to sync store errors into local state
+  useEffect(() => {
+    if (storeError === 'Task not found') {
+      startTransition(() => setNotFound(true));
+    }
+    if (storeError && storeError !== 'Task not found') {
+      startTransition(() => setError(storeError));
+    }
+  }, [storeError]);
 
   // ── Status / Priority update ────────────────────────────
 
@@ -300,7 +229,7 @@ export default function TaskDetailPage() {
       });
       if (!res.ok) throw new Error('Failed to update');
       const data = await res.json();
-      setTask(data.task);
+      updateCurrentTask(data.task);
     } catch (err) {
       console.error(`Failed to update ${field}:`, err);
     } finally {
@@ -321,7 +250,7 @@ export default function TaskDetailPage() {
       });
       if (!res.ok) throw new Error('Failed to post comment');
       const data = await res.json();
-      setComments((prev) => [data.comment, ...prev]);
+      addCommentAction(data.comment);
       setCommentText('');
     } catch (err) {
       console.error('Failed to submit comment:', err);
@@ -353,7 +282,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error?.message ?? 'Failed to upload attachment');
       }
       const data = await res.json();
-      setAttachments((prev) => [data.attachment, ...prev]);
+      addAttachment(data.attachment);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Failed to upload file');
     }
@@ -364,12 +293,11 @@ export default function TaskDetailPage() {
 
   const deleteAttachment = async (attachmentId: string) => {
     try {
-      const res = await fetch(
-        `/api/tasks/${taskId}/attachments?attachmentId=${attachmentId}`,
-        { method: 'DELETE' },
-      );
+      const res = await fetch(`/api/tasks/${taskId}/attachments?attachmentId=${attachmentId}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error('Failed to delete attachment');
-      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+      removeAttachment(attachmentId);
     } catch (err) {
       console.error('Failed to delete attachment:', err);
     }
@@ -379,12 +307,25 @@ export default function TaskDetailPage() {
 
   useEffect(() => {
     if (!runningTimer) return;
-    // Initial tick deferred to interval; elapsed is already initialized to '00:00:00'
+    const secondsSince = (startTime: string): number =>
+      Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
     const interval = setInterval(() => {
       setElapsed(formatElapsed(secondsSince(runningTimer.startTime)));
     }, 1000);
     return () => clearInterval(interval);
   }, [runningTimer]);
+
+  // ── Refetch time entries helper ───────────────────────
+
+  const refetchTimeEntries = async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/time-entries`);
+      if (res.ok) {
+        const data = await res.json();
+        setTimeEntries(data.entries ?? []);
+      }
+    } catch {}
+  };
 
   // ── Start timer ───────────────────────────────────────
 
@@ -399,7 +340,7 @@ export default function TaskDetailPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error?.message ?? 'Failed to start timer');
       }
-      fetchTimeEntries();
+      refetchTimeEntries();
     } catch (err) {
       console.error('Failed to start timer:', err);
     }
@@ -415,7 +356,7 @@ export default function TaskDetailPage() {
         body: JSON.stringify({}),
       });
       if (!res.ok) throw new Error('Failed to stop timer');
-      fetchTimeEntries();
+      refetchTimeEntries();
     } catch (err) {
       console.error('Failed to stop timer:', err);
     }
@@ -429,7 +370,7 @@ export default function TaskDetailPage() {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete time entry');
-      setTimeEntries((prev) => prev.filter((e) => e.id !== entryId));
+      removeTimeEntryAction(entryId);
     } catch (err) {
       console.error('Failed to delete time entry:', err);
     }
@@ -452,7 +393,7 @@ export default function TaskDetailPage() {
         }),
       });
       if (!res.ok) throw new Error('Failed to log time');
-      fetchTimeEntries();
+      refetchTimeEntries();
       setShowManualForm(false);
       setManualMinutes('');
       setManualDescription('');
@@ -464,6 +405,16 @@ export default function TaskDetailPage() {
   };
 
   // ── Add dependency ────────────────────────────────────
+
+  const refetchDependencies = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/dependencies`);
+      if (res.ok) {
+        const data = await res.json();
+        setDependencies(data.blockedBy ?? [], data.blocking ?? []);
+      }
+    } catch {}
+  }, [taskId, setDependencies]);
 
   const addDependency = async () => {
     const targetId = depTaskId.trim();
@@ -481,7 +432,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error?.message ?? 'Failed to add dependency');
       }
       setDepTaskId('');
-      fetchDependencies();
+      refetchDependencies();
     } catch (err) {
       setDepError(err instanceof Error ? err.message : 'Failed to add dependency');
     } finally {
@@ -491,17 +442,16 @@ export default function TaskDetailPage() {
 
   // ── Remove dependency ──────────────────────────────────
 
-  const removeDependency = async (dependencyId: string) => {
+  const handleRemoveDependency = async (dependencyId: string) => {
+    removeDependency(dependencyId); // Optimistic from store
     try {
-      const res = await fetch(
-        `/api/tasks/${taskId}/dependencies?dependencyId=${dependencyId}`,
-        { method: 'DELETE' },
-      );
+      const res = await fetch(`/api/tasks/${taskId}/dependencies?dependencyId=${dependencyId}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error('Failed to remove dependency');
-      setBlockedBy((prev) => prev.filter((d) => d.id !== dependencyId));
-      setBlocking((prev) => prev.filter((d) => d.id !== dependencyId));
     } catch (err) {
       console.error('Failed to remove dependency:', err);
+      refetchDependencies(); // Refetch on failure
     }
   };
 
@@ -515,14 +465,13 @@ export default function TaskDetailPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          description: descriptionDraft === '<p></p>' || !descriptionDraft.trim()
-            ? null
-            : descriptionDraft,
+          description:
+            descriptionDraft === '<p></p>' || !descriptionDraft.trim() ? null : descriptionDraft,
         }),
       });
       if (!res.ok) throw new Error('Failed to save description');
       const data = await res.json();
-      setTask(data.task);
+      updateCurrentTask(data.task);
       setEditingDescription(false);
     } catch (err) {
       console.error('Failed to save description:', err);
@@ -535,12 +484,11 @@ export default function TaskDetailPage() {
 
   const deleteComment = async (commentId: string) => {
     try {
-      const res = await fetch(
-        `/api/tasks/${taskId}/comments?commentId=${commentId}`,
-        { method: 'DELETE' },
-      );
+      const res = await fetch(`/api/tasks/${taskId}/comments?commentId=${commentId}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error('Failed to delete comment');
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      removeCommentAction(commentId);
     } catch (err) {
       console.error('Failed to delete comment:', err);
     }
@@ -550,36 +498,91 @@ export default function TaskDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="max-w-4xl space-y-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="shimmer h-9 w-9 rounded-xl" />
+          <div className="space-y-2">
+            <div className="shimmer h-5 w-24 rounded-lg" />
+            <div className="shimmer h-7 w-72 rounded-lg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-6 lg:col-span-2"
+          >
+            <div className="shimmer h-48 rounded-xl" />
+            <div className="shimmer h-64 rounded-xl" />
+            <div className="shimmer h-40 rounded-xl" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
+          >
+            <div className="shimmer h-72 rounded-xl" />
+            <div className="shimmer h-48 rounded-xl" />
+            <div className="shimmer h-48 rounded-xl" />
+          </motion.div>
+        </div>
+      </motion.div>
     );
   }
 
   if (notFound) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="h-12 w-12 text-surface-300 mb-4" />
-        <h2 className="text-xl font-semibold text-surface-700">Task not found</h2>
-        <p className="text-sm text-surface-500 mt-1">This task may have been deleted or you don&apos;t have access.</p>
-        <Button variant="outline" className="mt-4" onClick={() => window.location.href = '/tasks'}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-20"
+      >
+        <AlertCircle className="text-surface-500 mb-4 h-12 w-12" />
+        <h2 className="text-surface-300 text-xl font-semibold">Task not found</h2>
+        <p className="text-surface-500 mt-1 text-sm">
+          This task may have been deleted or you don&apos;t have access.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4 rounded-xl"
+          onClick={() => (window.location.href = '/tasks')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to tasks
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
-        <h2 className="text-xl font-semibold text-surface-700">Failed to load task</h2>
-        <p className="text-sm text-red-500 mt-1">{error}</p>
-        <Button variant="outline" className="mt-4" onClick={() => { setLoading(true); setError(null); fetchTask(); }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-20"
+      >
+        <AlertCircle className="text-error mb-4 h-12 w-12" />
+        <h2 className="text-surface-300 text-xl font-semibold">Failed to load task</h2>
+        <p className="text-error mt-1 text-sm">{error}</p>
+        <Button
+          variant="outline"
+          className="mt-4 rounded-xl"
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            fetchTaskDetail(taskId);
+          }}
+        >
           Try again
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
@@ -588,67 +591,123 @@ export default function TaskDetailPage() {
   // ── Main render ─────────────────────────────────────────
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="max-w-4xl space-y-6"
+    >
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <motion.div variants={itemVariants} className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => window.history.back()}
-            className="shrink-0"
+            className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 flex h-9 w-9 items-center justify-center rounded-xl border transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </motion.button>
           <div>
-            <div className="flex items-center gap-2 text-sm text-surface-500">
-              <span className="font-mono text-xs">{task!.taskIdDisplay}</span>
-              <Badge variant={statusColors[task!.status] ?? 'default'}>
-                {task!.status.replace(/_/g, ' ')}
+            <div className="text-surface-500 flex items-center gap-2 text-sm">
+              <span className="font-mono text-xs">{task.taskIdDisplay}</span>
+              <Badge variant={statusColors[task.status] ?? 'default'}>
+                {task.status.replace(/_/g, ' ')}
               </Badge>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                task!.priority === 'critical' || task!.priority === 'urgent' || task!.priority === 'high'
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                  : task!.priority === 'medium'
-                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                    : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300'
-              }`}>
-                {priorityLabel[task!.priority] ?? task!.priority}
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  task.priority === 'critical' ||
+                  task.priority === 'urgent' ||
+                  task.priority === 'high'
+                    ? 'bg-red-500/10 text-red-400'
+                    : task.priority === 'medium'
+                      ? 'bg-amber-500/10 text-amber-400'
+                      : 'bg-surface-200 text-surface-500'
+                }`}
+              >
+                {priorityLabel[task.priority] ?? task.priority}
               </span>
             </div>
-            <h1 className="text-xl font-semibold text-surface-900 dark:text-surface-50 mt-1">
-              {task!.title}
-            </h1>
+            <h1 className="text-surface-900 mt-1 text-xl font-semibold">{task.title}</h1>
           </div>
         </div>
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              if (!task || duplicating) return;
+              setDuplicating(true);
+              try {
+                const res = await fetch('/api/tasks', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: `${task.title} (copy)`,
+                    description: task.description,
+                    priority: task.priority,
+                    projectId: task.projectId,
+                    assignedTo: task.assignedTo,
+                  }),
+                });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}));
+                  throw new Error(data.error?.message ?? 'Failed to duplicate task');
+                }
+                const data = await res.json();
+                window.location.href = `/tasks/${data.task.id}`;
+              } catch (err) {
+                toast({
+                  title: 'Failed to duplicate task',
+                  description: err instanceof Error ? err.message : 'An unexpected error occurred',
+                  variant: 'error',
+                });
+              } finally {
+                setDuplicating(false);
+              }
+            }}
+            disabled={duplicating}
+            className="btn-shine h-8 rounded-xl text-xs"
+            title="Duplicate this task"
+          >
+            {duplicating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Copy className="mr-1 h-3.5 w-3.5" />
+            )}
+            Duplicate
+          </Button>
+          <TaskWatcherButton taskId={task.id} />
+        </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Description */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 flex items-center justify-between border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <FileText className="text-surface-500 h-4 w-4" />
                 Description
-              </CardTitle>
+              </h2>
               {!editingDescription && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => {
-                    setDescriptionDraft(task!.description ?? '');
+                    setDescriptionDraft(task.description ?? '');
                     setEditingDescription(true);
                   }}
-                  className="text-surface-400 hover:text-surface-600"
+                  className="text-surface-500 hover:bg-surface-200 hover:text-surface-300 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all"
                 >
-                  <Edit3 className="h-3.5 w-3.5 mr-1" />
+                  <Edit3 className="h-3.5 w-3.5" />
                   Edit
-                </Button>
+                </button>
               )}
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-5 py-4">
               {editingDescription ? (
                 <div className="space-y-3">
                   <RichTextEditor
@@ -662,9 +721,10 @@ export default function TaskDetailPage() {
                       size="sm"
                       onClick={() => {
                         setEditingDescription(false);
-                        setDescriptionDraft(task!.description ?? '');
+                        setDescriptionDraft(task.description ?? '');
                       }}
                       disabled={savingDescription}
+                      className="rounded-xl"
                     >
                       Cancel
                     </Button>
@@ -672,35 +732,55 @@ export default function TaskDetailPage() {
                       size="sm"
                       onClick={saveDescription}
                       disabled={savingDescription}
+                      className="rounded-xl"
                     >
                       {savingDescription ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <Check className="h-3.5 w-3.5 mr-1" />
+                        <Check className="mr-1 h-3.5 w-3.5" />
                       )}
                       Save
                     </Button>
                   </div>
                 </div>
               ) : (
-                <RichTextViewer content={task!.description} />
+                <RichTextViewer content={task.description} />
               )}
-            </CardContent>
-          </Card>
-
+            </div>
+          </motion.div>
+          {/* Checklist */}
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Check className="text-surface-500 h-4 w-4" />
+                Checklist
+              </h2>
+            </div>
+            <div className="px-5 py-4">
+              <TaskChecklist taskId={task.id} taskStatus={task.status} />
+            </div>
+          </motion.div>
           {/* Comments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <MessageSquare className="text-surface-500 h-4 w-4" />
                 Comments
-                <span className="text-xs font-normal text-surface-400 ml-1">({comments.length})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                <span className="text-surface-500 ml-1 text-xs font-normal">
+                  ({comments.length})
+                </span>
+              </h2>
+            </div>
+            <div className="space-y-4 px-5 py-4">
               {/* Comment input */}
               <div className="flex gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+                <div className="from-brand-400 to-brand-600 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-medium text-white">
                   {getInitials('You')}
                 </div>
                 <div className="flex-1 space-y-2">
@@ -708,7 +788,7 @@ export default function TaskDetailPage() {
                     placeholder="Write a comment..."
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
-                    className="min-h-[60px]"
+                    className="min-h-[60px] rounded-xl"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey && !submittingComment) {
                         e.preventDefault();
@@ -721,11 +801,12 @@ export default function TaskDetailPage() {
                       size="sm"
                       onClick={submitComment}
                       disabled={!commentText.trim() || submittingComment}
+                      className="rounded-xl"
                     >
                       {submittingComment ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       ) : (
-                        <Send className="h-3 w-3 mr-1" />
+                        <Send className="mr-1 h-3 w-3" />
                       )}
                       Send
                     </Button>
@@ -735,196 +816,277 @@ export default function TaskDetailPage() {
 
               {/* Comment list */}
               {comments.length === 0 ? (
-                <p className="text-sm text-surface-400 text-center py-4">
-                  No comments yet. Start the conversation.
-                </p>
+                <EmptyState
+                  variant="compact"
+                  animated={false}
+                  icon={<MessageSquare className="h-8 w-8" />}
+                  title="No comments yet"
+                  message="Start the conversation."
+                  className="border-0 bg-transparent py-6"
+                />
               ) : (
                 <div className="space-y-4 pt-2">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
-                        {getInitials(comment.user?.name)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-surface-900 dark:text-surface-50">
-                            {comment.user?.name ?? 'Unknown user'}
-                          </span>
-                          <span className="text-xs text-surface-400">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
-                          {comment.isEdited && (
-                            <span className="text-xs text-surface-400">(edited)</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-surface-700 dark:text-surface-300 mt-1 whitespace-pre-wrap">
-                          {comment.content}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => deleteComment(comment.id)}
-                            className="text-xs text-surface-400 hover:text-red-500"
+                  <AnimatePresence initial={false}>
+                    {comments.map((comment, idx) => (
+                      <motion.div
+                        key={comment.id}
+                        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                          delay: idx * 0.03,
+                          type: 'spring',
+                          stiffness: 200,
+                          damping: 20,
+                        }}
+                        className="hover:bg-surface-200/30 dark:hover:bg-surface-800/30 group -mx-2 flex gap-3 rounded-xl px-2 py-2 transition-all duration-200"
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          className="from-brand-400 to-brand-600 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-medium text-white"
+                        >
+                          {getInitials(comment.user?.name)}
+                        </motion.div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                              {comment.user?.name ?? 'Unknown user'}
+                            </span>
+                            <span className="text-surface-500 text-xs">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </span>
+                            {comment.isEdited && (
+                              <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-surface-500 text-xs"
+                              >
+                                (edited)
+                              </motion.span>
+                            )}
+                          </div>
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-surface-700 dark:text-surface-300 mt-1 whitespace-pre-wrap text-sm"
                           >
-                            Delete
-                          </button>
+                            <TaskMentionText text={comment.content} />
+                          </motion.p>
+                          <div className="mt-1 flex items-center gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              onClick={() => deleteComment(comment.id)}
+                              className="text-surface-500 hover:text-error text-xs transition-colors"
+                            >
+                              Delete
+                            </motion.button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
+            </div>
+          </motion.div>{' '}
+          {/* Activity Feed */}
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <History className="text-surface-500 h-4 w-4" />
+                Activity
+              </h2>
+            </div>
+            <div className="px-5 py-4">
+              <TaskActivityFeed taskId={task.id} />
+            </div>
+          </motion.div>
           {/* Attachments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Paperclip className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Paperclip className="text-surface-500 h-4 w-4" />
                 Attachments
-                <span className="text-xs font-normal text-surface-400 ml-1">({attachments.length})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                <span className="text-surface-500 ml-1 text-xs font-normal">
+                  ({attachments.length})
+                </span>
+              </h2>
+            </div>
+            <div className="space-y-4 px-5 py-4">
               {/* Upload button */}
-              {uploadError && (
-                <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md px-3 py-2">
-                  {uploadError}
-                </p>
-              )}
+              <AnimatePresence>
+                {uploadError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="text-error bg-error/5 rounded-xl px-3 py-2 text-sm"
+                  >
+                    {uploadError}
+                  </motion.p>
+                )}
+              </AnimatePresence>
               <div>
-                <label className="cursor-pointer inline-flex items-center gap-2 rounded-md border border-dashed border-surface-300 px-4 py-2 text-sm text-surface-500 hover:border-brand-400 hover:text-brand-600 transition-colors dark:border-surface-600">
+                <motion.label
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="border-surface-400/30 text-surface-500 hover:border-brand-500/40 hover:text-brand-500 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-4 py-2 text-sm transition-all duration-200"
+                >
                   <Upload className="h-4 w-4" />
                   Upload file
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                  />
-                </label>
+                  <input type="file" className="hidden" onChange={handleFileUpload} />
+                </motion.label>
               </div>
 
               {/* Attachment list */}
               {attachments.length === 0 ? (
-                <p className="text-sm text-surface-400 text-center py-2">
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-surface-500 py-2 text-center text-sm"
+                >
                   No attachments yet.
-                </p>
+                </motion.p>
               ) : (
                 <div className="space-y-2">
-                  {attachments.map((att) => (
-                    <div
-                      key={att.id}
-                      className="flex items-center justify-between rounded-lg border border-surface-200 px-3 py-2 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:hover:bg-surface-800"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="h-4 w-4 shrink-0 text-surface-400" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
-                            {att.fileName}
-                          </p>
-                          <p className="text-xs text-surface-400">
-                            {formatFileSize(att.fileSize)} · {att.user?.name ?? 'Unknown'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => deleteAttachment(att.id)}
-                        className="shrink-0 rounded p-1 text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  <AnimatePresence initial={false}>
+                    {attachments.map((att) => (
+                      <motion.div
+                        key={att.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className="border-surface-300/10 bg-surface-200/30 hover:bg-surface-200/50 hover:border-surface-400/20 group flex items-center justify-between rounded-xl border px-3 py-2 transition-all"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex min-w-0 items-center gap-3">
+                          <FileText className="text-surface-500 h-4 w-4 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-surface-900 dark:text-surface-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 truncate text-sm font-medium transition-colors">
+                              {att.fileName}
+                            </p>
+                            <p className="text-surface-500 text-xs">
+                              {formatFileSize(att.fileSize)} · {att.user?.name ?? 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => deleteAttachment(att.id)}
+                          className="text-surface-500 hover:text-error hover:bg-error/5 shrink-0 rounded-lg p-1 transition-all duration-200"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         </div>
 
         {/* Sidebar - Task Properties */}
         <div className="space-y-6">
           {/* Properties card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Properties</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 text-base font-semibold">Properties</h2>
+            </div>
+            <div className="space-y-4 px-5 py-4">
               {/* Status */}
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Status</label>
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Status</label>
                 <select
-                  value={task!.status}
+                  value={task.status}
                   onChange={(e) => updateField('status', e.target.value)}
                   disabled={updating === 'status'}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm dark:bg-surface-800 dark:text-surface-100 disabled:opacity-50"
+                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
                 >
                   {statusOptions.map((s) => (
-                    <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+                    <option key={s} value={s}>
+                      {s.replace(/_/g, ' ')}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Priority */}
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Priority</label>
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Priority</label>
                 <select
-                  value={task!.priority}
+                  value={task.priority}
                   onChange={(e) => updateField('priority', e.target.value)}
                   disabled={updating === 'priority'}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm dark:bg-surface-800 dark:text-surface-100 disabled:opacity-50"
+                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
                 >
                   {priorityOptions.map((p) => (
-                    <option key={p} value={p}>{priorityLabel[p]}</option>
+                    <option key={p} value={p}>
+                      {priorityLabel[p]}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Due Date */}
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Due Date</label>
-                <div className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300">
-                  <Calendar className="h-3.5 w-3.5 text-surface-400" />
-                  {task!.dueDate
-                    ? new Date(task!.dueDate).toLocaleDateString('en-US', {
-                        year: 'numeric', month: 'short', day: 'numeric',
-                      })
-                    : <span className="text-surface-400">Not set</span>}
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Due Date</label>
+                <div className="text-surface-300 flex items-center gap-2 text-sm">
+                  <Calendar className="text-surface-500 h-3.5 w-3.5" />
+                  {task.dueDate ? (
+                    new Date(task.dueDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  ) : (
+                    <span className="text-surface-500">Not set</span>
+                  )}
                 </div>
               </div>
 
               {/* Assignee */}
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Assignee</label>
-                <div className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300">
-                  <User className="h-3.5 w-3.5 text-surface-400" />
-                  {task!.assignedTo ? (
-                    <span className="font-mono text-xs">{task!.assignedTo.substring(0, 12)}...</span>
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Assignee</label>
+                <div className="text-surface-300 flex items-center gap-2 text-sm">
+                  <User className="text-surface-500 h-3.5 w-3.5" />
+                  {task.assignedTo ? (
+                    <span className="font-mono text-xs">{task.assignedTo.substring(0, 12)}...</span>
                   ) : (
-                    <span className="text-surface-400">Unassigned</span>
+                    <span className="text-surface-500">Unassigned</span>
                   )}
                 </div>
               </div>
 
               {/* Category */}
-              {task!.category && (
+              {task.category && (
                 <div>
-                  <label className="block text-xs font-medium text-surface-500 mb-1">Category</label>
-                  <div className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300">
-                    <Tag className="h-3.5 w-3.5 text-surface-400" />
-                    {task!.category}
+                  <label className="text-surface-500 mb-1 block text-xs font-medium">
+                    Category
+                  </label>
+                  <div className="text-surface-300 flex items-center gap-2 text-sm">
+                    <Tag className="text-surface-500 h-3.5 w-3.5" />
+                    {task.category}
                   </div>
                 </div>
               )}
 
               {/* Labels */}
-              {task!.labels && task!.labels.length > 0 && (
+              {task.labels && task.labels.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-surface-500 mb-1">Labels</label>
+                  <label className="text-surface-500 mb-1 block text-xs font-medium">Labels</label>
                   <div className="flex flex-wrap gap-1">
-                    {task!.labels.map((label, i) => (
+                    {task.labels.map((label, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300"
+                        className="bg-brand-500/10 text-brand-400 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                       >
                         {label}
                       </span>
@@ -934,107 +1096,153 @@ export default function TaskDetailPage() {
               )}
 
               {/* Estimated Hours */}
-              {task!.estimatedHours && (
+              {task.estimatedHours && (
                 <div>
-                  <label className="block text-xs font-medium text-surface-500 mb-1">Estimated Hours</label>
-                  <div className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300">
-                    <Clock className="h-3.5 w-3.5 text-surface-400" />
-                    {task!.estimatedHours}h
-                    {task!.actualHours && (
-                      <span className="text-surface-400">({task!.actualHours}h logged)</span>
+                  <label className="text-surface-500 mb-1 block text-xs font-medium">
+                    Estimated Hours
+                  </label>
+                  <div className="text-surface-300 flex items-center gap-2 text-sm">
+                    <Clock className="text-surface-500 h-3.5 w-3.5" />
+                    {task.estimatedHours}h
+                    {task.actualHours && (
+                      <span className="text-surface-500">({task.actualHours}h logged)</span>
                     )}
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Dependencies */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Link2 className="text-surface-500 h-4 w-4" />
                 Dependencies
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            </div>
+            <div className="space-y-4 px-5 py-4">
               {/* Blocked by */}
-              {blockedBy.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-surface-500 mb-2 flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
-                    Blocked by
-                  </p>
-                  <div className="space-y-1.5">
-                    {blockedBy.map((dep) => (
-                      <div
-                        key={dep.id}
-                        className="group flex items-center justify-between rounded-md border border-surface-200 bg-amber-50/30 px-2.5 py-1.5 dark:border-surface-700 dark:bg-amber-900/10"
-                      >
-                        <a
-                          href={`/tasks/${dep.dependsOnTaskId}`}
-                          className="min-w-0 text-sm text-surface-900 hover:text-brand-600 truncate dark:text-surface-100"
+              <AnimatePresence>
+                {blockedBy.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <p className="text-surface-500 mb-2 flex items-center gap-1 text-xs font-medium">
+                      <motion.span
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="inline-block h-2 w-2 rounded-full bg-amber-500"
+                      />
+                      Blocked by
+                    </p>
+                    <div className="space-y-1.5">
+                      {blockedBy.map((dep) => (
+                        <motion.div
+                          key={dep.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="border-surface-300/10 group flex items-center justify-between rounded-xl border bg-amber-500/5 px-2.5 py-1.5 transition-all hover:border-amber-500/20 hover:bg-amber-500/10"
                         >
-                          <span className="font-mono text-xs text-surface-400">
-                            {dep.dependsOnTask?.taskIdDisplay ?? ''}
-                          </span>{' '}
-                          {dep.dependsOnTask?.title ?? dep.dependsOnTaskId.substring(0, 8)}
-                        </a>
-                        <button
-                          onClick={() => removeDependency(dep.id)}
-                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                          <a
+                            href={`/tasks/${dep.dependsOnTaskId}`}
+                            className="text-surface-900 hover:text-brand-500 min-w-0 truncate text-sm transition-colors"
+                          >
+                            <span className="text-surface-500 font-mono text-xs">
+                              {dep.dependsOnTask?.taskIdDisplay ?? ''}
+                            </span>{' '}
+                            {dep.dependsOnTask?.title ?? dep.dependsOnTaskId.substring(0, 8)}
+                          </a>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            onClick={() => handleRemoveDependency(dep.id)}
+                            className="text-surface-500 hover:text-error ml-2 shrink-0 rounded p-0.5 opacity-0 transition-all duration-200 group-hover:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Blocking */}
-              {blocking.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-surface-500 mb-2 flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
-                    Blocking
-                  </p>
-                  <div className="space-y-1.5">
-                    {blocking.map((dep) => (
-                      <div
-                        key={dep.id}
-                        className="group flex items-center justify-between rounded-md border border-surface-200 bg-red-50/30 px-2.5 py-1.5 dark:border-surface-700 dark:bg-red-900/10"
-                      >
-                        <a
-                          href={`/tasks/${dep.taskId}`}
-                          className="min-w-0 text-sm text-surface-900 hover:text-brand-600 truncate dark:text-surface-100"
+              <AnimatePresence>
+                {blocking.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <p className="text-surface-500 mb-2 flex items-center gap-1 text-xs font-medium">
+                      <motion.span
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="bg-error inline-block h-2 w-2 rounded-full"
+                      />
+                      Blocking
+                    </p>
+                    <div className="space-y-1.5">
+                      {blocking.map((dep) => (
+                        <motion.div
+                          key={dep.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="border-surface-300/10 bg-error/5 hover:bg-error/10 hover:border-error/20 group flex items-center justify-between rounded-xl border px-2.5 py-1.5 transition-all"
                         >
-                          <span className="font-mono text-xs text-surface-400">
-                            {dep.blockingTask?.taskIdDisplay ?? ''}
-                          </span>{' '}
-                          {dep.blockingTask?.title ?? dep.taskId.substring(0, 8)}
-                        </a>
-                        <button
-                          onClick={() => removeDependency(dep.id)}
-                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                          <a
+                            href={`/tasks/${dep.taskId}`}
+                            className="text-surface-900 hover:text-brand-500 min-w-0 truncate text-sm transition-colors"
+                          >
+                            <span className="text-surface-500 font-mono text-xs">
+                              {dep.blockingTask?.taskIdDisplay ?? ''}
+                            </span>{' '}
+                            {dep.blockingTask?.title ?? dep.taskId.substring(0, 8)}
+                          </a>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            onClick={() => handleRemoveDependency(dep.id)}
+                            className="text-surface-500 hover:text-error ml-2 shrink-0 rounded p-0.5 opacity-0 transition-all duration-200 group-hover:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {blockedBy.length === 0 && blocking.length === 0 && (
-                <p className="text-sm text-surface-400 text-center py-2">No dependencies.</p>
+                <EmptyState
+                  variant="compact"
+                  animated={false}
+                  icon={<Link2 className="h-7 w-7" />}
+                  title="No dependencies"
+                  className="border-0 bg-transparent py-4"
+                />
               )}
 
               {/* Add dependency */}
-              <div className="pt-1 border-t border-surface-100 dark:border-surface-800">
-                {depError && (
-                  <p className="text-xs text-red-500 mb-2">{depError}</p>
-                )}
+              <div className="border-surface-300/20 border-t pt-1">
+                <AnimatePresence>
+                  {depError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="text-error mb-2 text-xs"
+                    >
+                      {depError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -1047,199 +1255,299 @@ export default function TaskDetailPage() {
                         addDependency();
                       }
                     }}
-                    className="flex-1 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-500 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 flex-1 rounded-xl border px-2.5 py-1.5 text-xs transition-all duration-200 focus:outline-none focus:ring-2"
                   />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={addDependency}
-                    disabled={!depTaskId.trim() || addingDep}
-                    className="shrink-0"
-                  >
-                    {addingDep ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Plus className="h-3 w-3" />
-                    )}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={addDependency}
+                      disabled={!depTaskId.trim() || addingDep}
+                      className="shrink-0 rounded-xl"
+                    >
+                      {addingDep ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Plus className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Time Tracking */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Timer className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Timer className="text-surface-500 h-4 w-4" />
                 Time Tracking
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            </div>
+            <div className="space-y-4 px-5 py-4">
               {/* Current timer */}
               {runningTimer ? (
-                <div className="rounded-lg border border-brand-200 bg-brand-50/50 p-4 text-center dark:border-brand-800 dark:bg-brand-900/20">
-                  <p className="text-2xl font-mono font-bold text-brand-700 dark:text-brand-300 tabular-nums">
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="border-brand-500/20 bg-brand-500/5 rounded-xl border p-4 text-center"
+                >
+                  <motion.p
+                    key={elapsed}
+                    initial={{ scale: 1.05 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    className="text-brand-400 font-mono text-2xl font-bold tabular-nums"
+                  >
                     {elapsed}
-                  </p>
-                  <p className="text-xs text-surface-500 mt-1">
+                  </motion.p>
+                  <p className="text-surface-500 mt-1 text-xs">
                     Started {new Date(runningTimer.startTime).toLocaleTimeString()}
                   </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-3 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
-                    onClick={() => stopTimer(runningTimer.id)}
-                  >
-                    <StopCircle className="h-4 w-4 mr-1" />
-                    Stop Timer
-                  </Button>
-                </div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-error/30 text-error hover:bg-error/5 mt-3 rounded-xl"
+                      onClick={() => stopTimer(runningTimer.id)}
+                    >
+                      <StopCircle className="mr-1 h-4 w-4" />
+                      Stop Timer
+                    </Button>
+                  </motion.div>
+                </motion.div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-900/20"
-                  onClick={startTimer}
-                >
-                  <Play className="h-4 w-4 mr-1.5" />
-                  Start Timer
-                </Button>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="outline"
+                    className="border-brand-500/30 text-brand-400 hover:bg-brand-500/5 w-full rounded-xl"
+                    onClick={startTimer}
+                  >
+                    <Play className="mr-1.5 h-4 w-4" />
+                    Start Timer
+                  </Button>
+                </motion.div>
               )}
 
               {/* Manual log toggle */}
               {!showManualForm && !runningTimer && (
-                <button
+                <motion.button
+                  whileHover={{ x: 4 }}
                   onClick={() => setShowManualForm(true)}
-                  className="w-full text-xs text-surface-500 hover:text-surface-700 py-1 transition-colors"
+                  className="text-surface-500 hover:text-surface-300 w-full py-1 text-xs transition-colors"
                 >
                   + Log time manually
-                </button>
+                </motion.button>
               )}
 
               {/* Manual log form */}
-              {showManualForm && (
-                <div className="space-y-2 pt-1 border-t border-surface-100 dark:border-surface-800">
-                  <p className="text-xs font-medium text-surface-500">Log time manually</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Minutes"
-                      value={manualMinutes}
-                      onChange={(e) => setManualMinutes(e.target.value)}
-                      className="w-24 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Description (optional)"
-                      value={manualDescription}
-                      onChange={(e) => setManualDescription(e.target.value)}
-                      className="flex-1 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-800 dark:text-surface-100"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={submitManualEntry}
-                      disabled={!manualMinutes || manualSubmitting}
-                    >
-                      {manualSubmitting ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : (
-                        <Check className="h-3 w-3 mr-1" />
-                      )}
-                      Log
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setShowManualForm(false);
-                        setManualMinutes('');
-                        setManualDescription('');
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {showManualForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+                    className="border-surface-300/20 space-y-2 overflow-hidden border-t pt-1"
+                  >
+                    <p className="text-surface-500 text-xs font-medium">Log time manually</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Minutes"
+                        value={manualMinutes}
+                        onChange={(e) => setManualMinutes(e.target.value)}
+                        className="border-surface-300/30 bg-surface-200 placeholder:text-surface-500 focus:border-brand-500 focus:ring-brand-500/20 w-24 rounded-xl border px-2.5 py-1.5 text-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description (optional)"
+                        value={manualDescription}
+                        onChange={(e) => setManualDescription(e.target.value)}
+                        className="border-surface-300/30 bg-surface-200 placeholder:text-surface-500 focus:border-brand-500 focus:ring-brand-500/20 flex-1 rounded-xl border px-2.5 py-1.5 text-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={submitManualEntry}
+                        disabled={!manualMinutes || manualSubmitting}
+                        className="rounded-xl"
+                      >
+                        {manualSubmitting ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="mr-1 h-3 w-3" />
+                        )}
+                        Log
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowManualForm(false);
+                          setManualMinutes('');
+                          setManualDescription('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Progress bar — total tracked vs estimated */}
+              {(() => {
+                const totalMinutes = timeEntries.reduce(
+                  (sum, e) => sum + (e.durationMinutes ?? 0),
+                  0,
+                );
+                const totalHours = (totalMinutes / 60).toFixed(1);
+                const estimated = task?.estimatedHours ? parseFloat(task.estimatedHours) : 0;
+                const pct =
+                  estimated > 0 ? Math.min((totalMinutes / 60 / estimated) * 100, 100) : 0;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="pt-1"
+                  >
+                    <div className="text-surface-500 mb-1.5 flex items-center justify-between text-[10px]">
+                      <span>{totalHours}h logged</span>
+                      {estimated > 0 && <span>{estimated}h estimated</span>}
+                    </div>
+                    {estimated > 0 && (
+                      <div className="bg-surface-300/30 dark:bg-surface-700/30 h-1 w-full overflow-hidden rounded-full">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                          className={cn(
+                            'h-full rounded-full transition-colors',
+                            pct >= 100 ? 'bg-error' : pct >= 75 ? 'bg-amber-500' : 'bg-brand-500',
+                          )}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })()}
 
               {/* Recent entries */}
               {timeEntries.length > 0 && (
-                <div className="pt-1 border-t border-surface-100 dark:border-surface-800">
-                  <p className="text-xs font-medium text-surface-500 mb-2">
-                    Recent entries
-                    <span className="font-normal ml-1">({timeEntries.length})</span>
+                <div className="border-surface-300/20 border-t pt-2">
+                  <p className="text-surface-500 mb-2 flex items-center gap-1.5 text-xs font-medium">
+                    <Timer className="h-3 w-3" />
+                    Recent entries{' '}
+                    <span className="text-surface-400 font-normal">({timeEntries.length})</span>
                   </p>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {timeEntries.slice(0, 10).map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="group flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm border border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            {entry.endTime ? (
-                              <span className="font-mono text-xs font-medium text-surface-900 dark:text-surface-100">
-                                {entry.durationMinutes ? formatDuration(entry.durationMinutes) : '—'}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
-                                Running
-                              </span>
-                            )}
-                            <span className="text-xs text-surface-400">
-                              {new Date(entry.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
-                          </div>
-                          {entry.description && (
-                            <p className="text-xs text-surface-500 truncate mt-0.5">{entry.description}</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => deleteTimeEntry(entry.id)}
-                          className="shrink-0 ml-2 rounded p-0.5 text-surface-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                  <div className="scrollbar-thin max-h-48 space-y-1.5 overflow-y-auto">
+                    <AnimatePresence initial={false}>
+                      {timeEntries.slice(0, 10).map((entry, idx) => (
+                        <motion.div
+                          key={entry.id}
+                          initial={{ opacity: 0, x: -8, scale: 0.97 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, x: 8, scale: 0.95 }}
+                          transition={{
+                            delay: idx * 0.02,
+                            type: 'spring',
+                            stiffness: 200,
+                            damping: 22,
+                          }}
+                          className="border-surface-300/10 bg-surface-200/30 hover:bg-surface-200/50 hover:border-surface-400/20 group flex items-center justify-between rounded-xl border px-2.5 py-1.5 text-sm transition-all"
+                          layout
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              {entry.endTime ? (
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                                  className="text-surface-900 dark:text-surface-100 font-mono text-xs font-medium"
+                                >
+                                  {entry.durationMinutes
+                                    ? formatDuration(entry.durationMinutes)
+                                    : '—'}
+                                </motion.span>
+                              ) : (
+                                <span className="text-brand-400 inline-flex items-center gap-1 text-xs">
+                                  <span className="bg-brand-500 inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
+                                  Running
+                                </span>
+                              )}
+                              <span className="text-surface-500 text-xs">
+                                {new Date(entry.startTime).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                            {entry.description && (
+                              <p className="text-surface-500 mt-0.5 truncate text-xs">
+                                {entry.description}
+                              </p>
+                            )}
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => deleteTimeEntry(entry.id)}
+                            className="text-surface-500 hover:text-error hover:bg-error/5 ml-2 shrink-0 rounded-lg p-1 opacity-0 transition-all duration-200 group-hover:opacity-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
 
               {timeEntries.length === 0 && (
-                <p className="text-xs text-surface-400 text-center py-2">
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-surface-500 py-2 text-center text-xs"
+                >
                   No time logged yet.
-                </p>
+                </motion.p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Metadata card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-surface-600 dark:text-surface-400">
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5" />
-                Created {new Date(task!.createdAt).toLocaleDateString()}
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5" />
-                Updated {new Date(task!.updatedAt).toLocaleDateString()}
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-3.5 w-3.5" />
-                Created by {(task!.createdBy ?? '').substring(0, 12)}...
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 text-base font-semibold">Details</h2>
+            </div>
+            <div className="text-surface-500 space-y-3 px-5 py-4 text-sm">
+              <motion.div className="group flex items-center gap-2" whileHover={{ x: 2 }}>
+                <Clock className="text-surface-400 group-hover:text-brand-500 h-3.5 w-3.5 transition-colors" />
+                Created {new Date(task.createdAt).toLocaleDateString()}
+              </motion.div>
+              <motion.div className="group flex items-center gap-2" whileHover={{ x: 2 }}>
+                <Clock className="text-surface-400 group-hover:text-brand-500 h-3.5 w-3.5 transition-colors" />
+                Updated {new Date(task.updatedAt).toLocaleDateString()}
+              </motion.div>
+              <motion.div className="group flex items-center gap-2" whileHover={{ x: 2 }}>
+                <User className="text-surface-400 group-hover:text-brand-500 h-3.5 w-3.5 transition-colors" />
+                Created by {(task.createdBy ?? '').substring(0, 12)}...
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

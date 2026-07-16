@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
-import { withAuth, enforceOrgScope } from '@/lib/auth/api-auth';
+import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -12,9 +12,11 @@ function getIdFromPath(request: NextRequest): string {
 
 // GET /api/reports/snapshots/[id] - Retrieve a specific report snapshot (rate limited: 60 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
+
+      await requirePermission(user.id, 'report:view');
 
       const [snapshot] = await db()
         .select()

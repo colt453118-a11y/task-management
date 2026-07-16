@@ -60,7 +60,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      await requirePermission(user.id, 'report:generate');
+      await requirePermission(user.id, 'report:create');
 
       const body = await request.json().catch(() => ({}));
       const { label, snapshotType = 'eod' } = body;
@@ -77,12 +77,7 @@ export const POST = withAuth(
           count: sql<number>`COUNT(*)::int`.as('count'),
         })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.status);
 
       // Task counts by priority
@@ -92,12 +87,7 @@ export const POST = withAuth(
           count: sql<number>`COUNT(*)::int`.as('count'),
         })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.priority);
 
       const now = new Date();
@@ -148,12 +138,7 @@ export const POST = withAuth(
       const [totalTasksResult] = await db()
         .select({ count: sql<number>`COUNT(*)::int`.as('count') })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-          ),
-        );
+        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)));
 
       // Project counts by status
       const projectStatusCounts = await db()
@@ -162,24 +147,14 @@ export const POST = withAuth(
           count: sql<number>`COUNT(*)::int`.as('count'),
         })
         .from(schema.projects)
-        .where(
-          and(
-            eq(schema.projects.organizationId, orgId!),
-            isNull(schema.projects.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.projects.organizationId, orgId!), isNull(schema.projects.deletedAt)))
         .groupBy(schema.projects.status);
 
       // Total projects
       const [totalProjectsResult] = await db()
         .select({ count: sql<number>`COUNT(*)::int`.as('count') })
         .from(schema.projects)
-        .where(
-          and(
-            eq(schema.projects.organizationId, orgId!),
-            isNull(schema.projects.deletedAt),
-          ),
-        );
+        .where(and(eq(schema.projects.organizationId, orgId!), isNull(schema.projects.deletedAt)));
 
       // User counts
       const [activeUsersResult] = await db()
@@ -197,23 +172,13 @@ export const POST = withAuth(
       const [totalUsersResult] = await db()
         .select({ count: sql<number>`COUNT(*)::int`.as('count') })
         .from(schema.users)
-        .where(
-          and(
-            eq(schema.users.organizationId, orgId!),
-            isNull(schema.users.deletedAt),
-          ),
-        );
+        .where(and(eq(schema.users.organizationId, orgId!), isNull(schema.users.deletedAt)));
 
       // Team count
       const [totalTeamsResult] = await db()
         .select({ count: sql<number>`COUNT(*)::int`.as('count') })
         .from(schema.teams)
-        .where(
-          and(
-            eq(schema.teams.organizationId, orgId!),
-            isNull(schema.teams.deletedAt),
-          ),
-        );
+        .where(and(eq(schema.teams.organizationId, orgId!), isNull(schema.teams.deletedAt)));
 
       // ── Build snapshot data ───────────────────────────────
 

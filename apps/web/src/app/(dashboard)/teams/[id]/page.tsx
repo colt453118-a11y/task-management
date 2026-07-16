@@ -2,14 +2,9 @@
 
 import { useEffect, useState, useCallback, startTransition } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   ArrowLeft,
@@ -41,15 +36,8 @@ type TeamMember = {
   } | null;
 };
 
-type TaskStat = {
-  status: string;
-  count: number;
-};
-
-type MemberTaskCount = {
-  userId: string;
-  count: number;
-};
+type TaskStat = { status: string; count: number };
+type MemberTaskCount = { userId: string; count: number };
 
 type TeamData = {
   id: string;
@@ -89,11 +77,11 @@ function getInitials(name: string | null | undefined): string {
 }
 
 const statusColors: Record<string, string> = {
-  completed: 'text-green-600 bg-green-50 dark:bg-green-900/20',
-  in_progress: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
-  open: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20',
-  draft: 'text-surface-600 bg-surface-50 dark:bg-surface-900/20',
-  default: 'text-surface-500 bg-surface-50 dark:bg-surface-900/20',
+  completed: 'text-green-400 bg-green-500/10',
+  in_progress: 'text-blue-400 bg-blue-500/10',
+  open: 'text-yellow-400 bg-yellow-500/10',
+  draft: 'text-surface-500 bg-surface-200',
+  default: 'text-surface-500 bg-surface-200',
 };
 
 const statusLabels: Record<string, string> = {
@@ -107,6 +95,16 @@ const statusLabels: Record<string, string> = {
   closed: 'Closed',
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+};
+
 // ─── Page Component ─────────────────────────────────────────
 
 export default function TeamDetailPage() {
@@ -118,9 +116,10 @@ export default function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  // Member management
   const [showAddMember, setShowAddMember] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<
+    { id: string; name: string | null; email: string }[]
+  >([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [addingMember, setAddingMember] = useState(false);
 
@@ -135,8 +134,7 @@ export default function TeamDetailPage() {
         return;
       }
       if (!res.ok) throw new Error('Failed to fetch team');
-      const json = await res.json();
-      setData(json);
+      setData(await res.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load team');
     } finally {
@@ -147,28 +145,27 @@ export default function TeamDetailPage() {
   const fetchAvailableUsers = useCallback(async () => {
     try {
       const res = await fetch('/api/users?limit=100');
-      if (res.ok) {
+      if (res.ok && data) {
         const json = await res.json();
-        if (data) {
-          const memberIds = new Set(data.members.map((m) => m.userId));
-          setAvailableUsers(
-            (json.users ?? []).filter((u: { id: string }) => !memberIds.has(u.id)),
-          );
-        }
+        const memberIds = new Set(data.members.map((m) => m.userId));
+        setAvailableUsers((json.users ?? []).filter((u: { id: string }) => !memberIds.has(u.id)));
       }
     } catch {
-      // Non-critical
+      /* */
     }
   }, [data]);
 
-  useEffect(() => { startTransition(() => { fetchTeam(); }); }, [fetchTeam]);
+  useEffect(() => {
+    startTransition(() => {
+      fetchTeam();
+    });
+  }, [fetchTeam]);
 
   useEffect(() => {
-    if (showAddMember && data) {
+    if (showAddMember && data)
       startTransition(() => {
         fetchAvailableUsers();
       });
-    }
   }, [showAddMember, data, fetchAvailableUsers]);
 
   // ── Member management ──────────────────────────────────
@@ -188,7 +185,7 @@ export default function TeamDetailPage() {
         fetchTeam();
       }
     } catch {
-      // Silently handle
+      /* */
     } finally {
       setAddingMember(false);
     }
@@ -201,7 +198,7 @@ export default function TeamDetailPage() {
       });
       if (res.ok) fetchTeam();
     } catch {
-      // Silently handle
+      /* */
     }
   };
 
@@ -213,124 +210,156 @@ export default function TeamDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      <div className="max-w-4xl space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="shimmer h-9 w-9 rounded-xl" />
+          <div className="space-y-2">
+            <div className="shimmer h-5 w-24 rounded-lg" />
+            <div className="shimmer h-7 w-56 rounded-lg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <div className="shimmer h-40 rounded-xl" />
+            <div className="shimmer h-56 rounded-xl" />
+          </div>
+          <div className="space-y-6">
+            <div className="shimmer h-48 rounded-xl" />
+            <div className="shimmer h-48 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (notFound) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="h-12 w-12 text-surface-300 mb-4" />
-        <h2 className="text-xl font-semibold text-surface-700">Team not found</h2>
-        <p className="text-sm text-surface-500 mt-1">This team may have been deleted or you don&apos;t have access.</p>
-        <Button variant="outline" className="mt-4" onClick={() => window.location.href = '/teams'}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to teams
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-20"
+      >
+        <AlertCircle className="text-surface-500 mb-4 h-12 w-12" />
+        <h2 className="text-surface-300 text-xl font-semibold">Team not found</h2>
+        <p className="text-surface-500 mt-1 text-sm">
+          This team may have been deleted or you don&apos;t have access.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4 rounded-xl"
+          onClick={() => (window.location.href = '/teams')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to teams
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
-        <h2 className="text-xl font-semibold text-surface-700">Failed to load team</h2>
-        <p className="text-sm text-red-500 mt-1">{error}</p>
-        <Button variant="outline" className="mt-4" onClick={() => { setLoading(true); setError(null); fetchTeam(); }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-20"
+      >
+        <AlertCircle className="text-error mb-4 h-12 w-12" />
+        <h2 className="text-surface-300 text-xl font-semibold">Failed to load team</h2>
+        <p className="text-error mt-1 text-sm">{error}</p>
+        <Button
+          variant="outline"
+          className="mt-4 rounded-xl"
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            fetchTeam();
+          }}
+        >
           Try again
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
   const { team, members, taskStats } = data;
 
-  // ── Main render ────────────────────────────────────────
-
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="max-w-4xl space-y-6"
+    >
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <motion.div variants={itemVariants} className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={() => window.history.back()}
-            className="shrink-0"
+            className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 flex h-9 w-9 items-center justify-center rounded-xl border transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </button>
           <div>
-            <div className="flex items-center gap-2 text-sm text-surface-500">
+            <div className="text-surface-500 flex items-center gap-2 text-sm">
               {team.code && <span className="font-mono text-xs">{team.code}</span>}
               <Badge variant={team.isActive ? 'success' : 'default'}>
                 {team.isActive ? 'Active' : 'Inactive'}
               </Badge>
               <span className="text-xs">· {members.length} members</span>
             </div>
-            <h1 className="text-xl font-semibold text-surface-900 dark:text-surface-50 mt-1">
-              {team.name}
-            </h1>
+            <h1 className="text-surface-900 mt-1 text-xl font-semibold">{team.name}</h1>
             {team.description && (
-              <p className="text-sm text-surface-500 mt-1">{team.description}</p>
+              <p className="text-surface-500 mt-1 text-sm">{team.description}</p>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Workload Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ListTodo className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <ListTodo className="text-surface-500 h-4 w-4" />
                 Task Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
-                  <p className="text-xs text-surface-500">Total Tasks</p>
-                  <p className="text-2xl font-semibold text-surface-900 dark:text-surface-50 mt-1">
-                    {taskStats.total}
-                  </p>
+              </h2>
+            </div>
+            <div className="px-5 py-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="border-surface-300/20 bg-surface-200/30 rounded-xl border p-3">
+                  <p className="text-surface-500 text-xs">Total Tasks</p>
+                  <p className="text-surface-900 mt-1 text-2xl font-semibold">{taskStats.total}</p>
                 </div>
-                <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
-                  <p className="text-xs text-surface-500">In Progress</p>
-                  <p className="text-2xl font-semibold text-blue-600 mt-1">
+                <div className="border-surface-300/20 bg-surface-200/30 rounded-xl border p-3">
+                  <p className="text-surface-500 text-xs">In Progress</p>
+                  <p className="mt-1 text-2xl font-semibold text-blue-400">
                     {taskStats.inProgress}
                   </p>
                 </div>
-                <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
-                  <p className="text-xs text-surface-500">Completed</p>
-                  <p className="text-2xl font-semibold text-green-600 mt-1">
+                <div className="border-surface-300/20 bg-surface-200/30 rounded-xl border p-3">
+                  <p className="text-surface-500 text-xs">Completed</p>
+                  <p className="mt-1 text-2xl font-semibold text-green-400">
                     {taskStats.completed}
                   </p>
                 </div>
-                <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
-                  <p className="text-xs text-surface-500">Open</p>
-                  <p className="text-2xl font-semibold text-yellow-600 mt-1">
-                    {taskStats.open}
-                  </p>
+                <div className="border-surface-300/20 bg-surface-200/30 rounded-xl border p-3">
+                  <p className="text-surface-500 text-xs">Open</p>
+                  <p className="mt-1 text-2xl font-semibold text-yellow-400">{taskStats.open}</p>
                 </div>
               </div>
 
-              {/* Task breakdown by status */}
               {taskStats.byStatus.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-xs font-medium text-surface-500">Breakdown</p>
+                  <p className="text-surface-500 text-xs font-medium">Breakdown</p>
                   <div className="flex flex-wrap gap-2">
                     {taskStats.byStatus.map((stat) => (
                       <span
                         key={stat.status}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                          statusColors[stat.status] ?? statusColors.default
-                        }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[stat.status] ?? statusColors.default}`}
                       >
                         {statusLabels[stat.status] ?? stat.status.replace(/_/g, ' ')}
                         <span className="font-semibold">{stat.count}</span>
@@ -341,34 +370,40 @@ export default function TeamDetailPage() {
               )}
 
               {taskStats.total === 0 && (
-                <p className="text-sm text-surface-400 text-center py-4">
+                <p className="text-surface-500 py-4 text-center text-sm">
                   No tasks assigned to this team yet.
                 </p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Members */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-surface-400" />
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 flex items-center justify-between border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Users className="text-surface-500 h-4 w-4" />
                 Members
-                <span className="text-xs font-normal text-surface-400">({members.length})</span>
-              </CardTitle>
-              <Button size="sm" variant="outline" onClick={() => setShowAddMember(!showAddMember)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Add Member
+                <span className="text-surface-500 text-xs font-normal">({members.length})</span>
+              </h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowAddMember(!showAddMember)}
+                className="rounded-xl"
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add Member
               </Button>
-            </CardHeader>
-            <CardContent>
-              {/* Add member form */}
+            </div>
+            <div className="px-5 py-4">
               {showAddMember && (
-                <div className="flex items-center gap-2 mb-4 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
+                <div className="border-surface-300/20 bg-surface-200/30 mb-4 flex items-center gap-2 rounded-xl border p-3">
                   <select
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="flex-1 h-9 rounded-md border border-surface-300 bg-white px-3 text-sm dark:bg-surface-800 dark:text-surface-100"
+                    className="border-surface-300/30 bg-surface-200 h-9 flex-1 rounded-xl border px-3 text-sm"
                   >
                     <option value="">Select a user...</option>
                     {availableUsers.map((u) => (
@@ -381,27 +416,23 @@ export default function TeamDetailPage() {
                     size="sm"
                     onClick={addMember}
                     disabled={!selectedUserId || addingMember}
+                    className="rounded-xl"
                   >
                     {addingMember ? (
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                     ) : (
-                      <Plus className="h-3 w-3 mr-1" />
-                    )}
+                      <Plus className="mr-1 h-3 w-3" />
+                    )}{' '}
                     Add
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowAddMember(false)}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => setShowAddMember(false)}>
                     Cancel
                   </Button>
                 </div>
               )}
 
-              {/* Member list */}
               {members.length === 0 ? (
-                <p className="text-sm text-surface-400 text-center py-4">
+                <p className="text-surface-500 py-4 text-center text-sm">
                   No members in this team.
                 </p>
               ) : (
@@ -409,44 +440,43 @@ export default function TeamDetailPage() {
                   {members.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between rounded-lg border border-surface-200 px-3 py-2.5 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:hover:bg-surface-800"
+                      className="border-surface-300/10 bg-surface-200/30 hover:bg-surface-200/50 flex items-center justify-between rounded-xl border px-3 py-2.5 transition-all"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="from-brand-400 to-brand-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-medium text-white">
                           {getInitials(member.user?.name)}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
+                            <span className="text-surface-900 truncate text-sm font-medium">
                               {member.user?.name ?? 'Unknown'}
                             </span>
                             {member.userId === team.leadUserId && (
-                              <Badge variant="primary" className="text-[10px] px-1.5 py-0">
+                              <Badge variant="primary" className="px-1.5 py-0 text-[10px]">
                                 Lead
                               </Badge>
                             )}
                             {member.role !== 'member' && (
-                              <span className="text-xs text-surface-400 capitalize">({member.role})</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-surface-400 mt-0.5">
-                            {member.user?.designation && (
-                              <span className="flex items-center gap-1">
-                                <Briefcase className="h-3 w-3" />
-                                {member.user.designation}
+                              <span className="text-surface-500 text-xs capitalize">
+                                ({member.role})
                               </span>
                             )}
                           </div>
+                          {member.user?.designation && (
+                            <div className="text-surface-500 mt-0.5 flex items-center gap-1 text-xs">
+                              <Briefcase className="h-3 w-3" /> {member.user.designation}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-xs text-surface-400">
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className="text-surface-500 text-xs">
                           {memberTaskCount(member.userId)} tasks
                         </span>
                         {member.userId !== team.leadUserId && (
                           <button
                             onClick={() => removeMember(member.userId)}
-                            className="rounded p-1 text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            className="text-surface-500 hover:text-error hover:bg-error/5 rounded-lg p-1"
                             title="Remove member"
                           >
                             <X className="h-3.5 w-3.5" />
@@ -457,87 +487,89 @@ export default function TeamDetailPage() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Team Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Team Info</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 text-base font-semibold">Team Info</h2>
+            </div>
+            <div className="space-y-4 px-5 py-4 text-sm">
               {team.department && (
                 <div>
-                  <label className="block text-xs font-medium text-surface-500 mb-1">Department</label>
-                  <div className="flex items-center gap-2 text-surface-700 dark:text-surface-300">
-                    <Building2 className="h-3.5 w-3.5 text-surface-400" />
+                  <label className="text-surface-500 mb-1 block text-xs font-medium">
+                    Department
+                  </label>
+                  <div className="text-surface-300 flex items-center gap-2">
+                    <Building2 className="text-surface-500 h-3.5 w-3.5" />
                     {team.department.name}
                   </div>
                 </div>
               )}
-
               {team.leadUser && (
                 <div>
-                  <label className="block text-xs font-medium text-surface-500 mb-1">Team Lead</label>
-                  <div className="flex items-center gap-2 text-surface-700 dark:text-surface-300">
-                    <User className="h-3.5 w-3.5 text-surface-400" />
+                  <label className="text-surface-500 mb-1 block text-xs font-medium">
+                    Team Lead
+                  </label>
+                  <div className="text-surface-300 flex items-center gap-2">
+                    <User className="text-surface-500 h-3.5 w-3.5" />
                     {team.leadUser.name ?? team.leadUser.email}
                   </div>
                 </div>
               )}
-
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Created</label>
-                <div className="text-surface-700 dark:text-surface-300">
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Created</label>
+                <div className="text-surface-300">
                   {new Date(team.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric', month: 'short', day: 'numeric',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
                   })}
                 </div>
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-surface-500 mb-1">Code</label>
-                <div className="font-mono text-xs text-surface-500">
-                  {team.code ?? '—'}
-                </div>
+                <label className="text-surface-500 mb-1 block text-xs font-medium">Code</label>
+                <div className="text-surface-500 font-mono text-xs">{team.code ?? '—'}</div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Member Task Load */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="h-4 w-4 text-surface-400" />
-                Workload
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <motion.div
+            variants={itemVariants}
+            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+          >
+            <div className="border-surface-300/10 border-b px-5 py-4">
+              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
+                <Clock className="text-surface-500 h-4 w-4" /> Workload
+              </h2>
+            </div>
+            <div className="space-y-3 px-5 py-4">
               {members.length === 0 ? (
-                <p className="text-sm text-surface-400 text-center py-2">No members to track.</p>
+                <p className="text-surface-500 py-2 text-center text-sm">No members to track.</p>
               ) : (
                 members.map((member) => {
                   const count = memberTaskCount(member.userId);
-                  const maxCount = Math.max(
-                    1,
-                    ...data.taskStats.byMember.map((m) => m.count),
-                  );
+                  const maxCount = Math.max(1, ...data.taskStats.byMember.map((m) => m.count));
                   const percentage = Math.round((count / maxCount) * 100);
-
                   return (
                     <div key={member.id} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-surface-700 dark:text-surface-300 truncate">
+                        <span className="text-surface-300 truncate">
                           {member.user?.name ?? 'Unknown'}
                         </span>
-                        <span className="text-surface-400">{count} tasks</span>
+                        <span className="text-surface-500">{count} tasks</span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-surface-100 dark:bg-surface-800">
+                      <div className="bg-surface-200 h-1.5 w-full rounded-full">
                         <div
-                          className="h-1.5 rounded-full bg-brand-500 transition-all"
+                          className="bg-brand-500 h-1.5 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -545,10 +577,10 @@ export default function TeamDetailPage() {
                   );
                 })
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

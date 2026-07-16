@@ -443,19 +443,24 @@ workmanagement/
 ## Key Architecture Decisions in Folder Structure
 
 ### Why `packages/` monorepo?
+
 - **`packages/shared`** — Shared types, Zod schemas, constants between frontend and backend. Avoids duplication.
 - **`packages/database`** — Schema definitions are independent of the app. Can be used by future services (cron jobs, microservices, data pipelines).
 
 ### Why Server Actions + tRPC?
+
 - **Server Actions** — For form mutations (create task, update status). Simple, built-in.
 - **tRPC** — For complex querying (filtered task lists, dashboard data). Full RPC type safety.
 - Both are offered as options; you can start with Server Actions and add tRPC as complexity grows.
 
 ### Why `lib/db/queries/`?
+
 - Reusable query functions that combine Drizzle queries with caching logic. Each query is a pure function that can be called from Server Actions, tRPC routers, or API routes.
 
 ### Why `server/services/`?
+
 - Business logic is isolated from the transport layer. Services can be called from Server Actions, tRPC, webhooks, or background jobs.
 
 ### Why `server/events/`?
+
 - Decoupled event-driven architecture. When a task is created, the event bus fires — notification, audit log, automation engine, and report cache invalidation all happen independently through handlers.

@@ -47,7 +47,9 @@ test.describe('forgot-password page', () => {
     await page.getByLabel(/email/i).fill('user@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
 
-    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText(/reset link/i)).toBeVisible();
   });
 
@@ -92,7 +94,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password');
 
     // Wait for the page to hydrate: the heading should appear
-    await expect(page.getByRole('heading', { name: /invalid link/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /invalid link/i })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText(/reset link is invalid/i)).toBeVisible();
     await expect(page.getByRole('link', { name: /request new reset link/i })).toBeVisible();
   });
@@ -104,9 +108,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=abc&error=INVALID_TOKEN');
 
     // Wait for hydration by checking a heading that requires useSearchParams()
-    await expect(
-      page.getByRole('heading', { name: /set new password/i }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Now assert the error banner — hydration is complete, so the error state is set.
     // Use a CSS selector to target the specific error banner div, not the Next.js
@@ -119,7 +123,9 @@ test.describe('reset-password page', () => {
   test('renders password form when a token is provided', async ({ page }) => {
     await page.goto('/auth/reset-password?token=valid-reset-token-123');
 
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByLabel(/^new password/i)).toBeVisible();
     await expect(page.getByLabel(/confirm password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /reset password/i })).toBeVisible();
@@ -129,7 +135,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=valid-reset-token');
 
     // Wait for the form to hydrate
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Remove the minLength attribute so browser validation doesn't block submit,
     // then click the button normally to test React's in-component validation.
@@ -148,7 +156,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=valid-reset-token');
 
     // Wait for the form to hydrate
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByLabel(/^new password/i).fill('ValidPassword123');
     await page.getByLabel(/confirm password/i).fill('DifferentPassword456');
@@ -166,13 +176,17 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=valid-reset-token');
 
     // Wait for the form to hydrate
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByLabel(/^new password/i).fill('NewValidP@ss1');
     await page.getByLabel(/confirm password/i).fill('NewValidP@ss1');
     await page.getByRole('button', { name: /reset password/i }).click();
 
-    await expect(page.getByRole('heading', { name: /password reset/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /password reset/i })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText(/password has been reset/i)).toBeVisible();
   });
 
@@ -180,7 +194,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=expired-token');
 
     // Wait for the form to hydrate
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Set up route AFTER navigation
     await page.route('**/api/auth/reset-password', async (route) => {
@@ -203,7 +219,9 @@ test.describe('reset-password page', () => {
     await page.goto('/auth/reset-password?token=valid-reset-token');
 
     // Wait for the form to hydrate
-    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /set new password/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByLabel(/^new password/i).fill('NewValidP@ss1');
     await page.getByLabel(/confirm password/i).fill('NewValidP@ss1');

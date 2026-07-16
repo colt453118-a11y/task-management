@@ -70,24 +70,14 @@ export const GET = withAuth(
           count: sql<number>`COUNT(*)::int`.as('count'),
         })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.projectId, id),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.tasks.projectId, id), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.status);
 
       // Get milestone count
       const [milestoneCount] = await db()
         .select({ count: sql<number>`COUNT(*)::int`.as('count') })
         .from(schema.milestones)
-        .where(
-          and(
-            eq(schema.milestones.projectId, id),
-            isNull(schema.milestones.deletedAt),
-          ),
-        );
+        .where(and(eq(schema.milestones.projectId, id), isNull(schema.milestones.deletedAt)));
 
       const totalTasks = taskCounts.reduce((sum, t) => sum + t.count, 0);
       const completedTasks = taskCounts.find((t) => t.status === 'completed')?.count ?? 0;
@@ -130,8 +120,19 @@ export const PATCH = withAuth(
       }
 
       const {
-        name, code, description, ownerId, departmentId, teamId,
-        status, priority, progress, startDate, endDate, isActive, tags,
+        name,
+        code,
+        description,
+        ownerId,
+        departmentId,
+        teamId,
+        status,
+        priority,
+        progress,
+        startDate,
+        endDate,
+        isActive,
+        tags,
       } = parsed.data;
 
       const [existing] = await db()
@@ -152,19 +153,58 @@ export const PATCH = withAuth(
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 
-      if (name !== undefined) { oldValues.name = existing.name; newValues.name = name; }
-      if (code !== undefined) { oldValues.code = existing.code; newValues.code = code; }
-      if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
-      if (ownerId !== undefined) { oldValues.ownerId = existing.ownerId; newValues.ownerId = ownerId; }
-      if (departmentId !== undefined) { oldValues.departmentId = existing.departmentId; newValues.departmentId = departmentId; }
-      if (teamId !== undefined) { oldValues.teamId = existing.teamId; newValues.teamId = teamId; }
-      if (status !== undefined) { oldValues.status = existing.status; newValues.status = status; }
-      if (priority !== undefined) { oldValues.priority = existing.priority; newValues.priority = priority; }
-      if (progress !== undefined) { oldValues.progress = existing.progress; newValues.progress = progress; }
-      if (startDate !== undefined) { oldValues.startDate = existing.startDate; newValues.startDate = startDate; }
-      if (endDate !== undefined) { oldValues.endDate = existing.endDate; newValues.endDate = endDate; }
-      if (isActive !== undefined) { oldValues.isActive = existing.isActive; newValues.isActive = isActive; }
-      if (tags !== undefined) { oldValues.tags = existing.tags; newValues.tags = tags; }
+      if (name !== undefined) {
+        oldValues.name = existing.name;
+        newValues.name = name;
+      }
+      if (code !== undefined) {
+        oldValues.code = existing.code;
+        newValues.code = code;
+      }
+      if (description !== undefined) {
+        oldValues.description = existing.description;
+        newValues.description = description;
+      }
+      if (ownerId !== undefined) {
+        oldValues.ownerId = existing.ownerId;
+        newValues.ownerId = ownerId;
+      }
+      if (departmentId !== undefined) {
+        oldValues.departmentId = existing.departmentId;
+        newValues.departmentId = departmentId;
+      }
+      if (teamId !== undefined) {
+        oldValues.teamId = existing.teamId;
+        newValues.teamId = teamId;
+      }
+      if (status !== undefined) {
+        oldValues.status = existing.status;
+        newValues.status = status;
+      }
+      if (priority !== undefined) {
+        oldValues.priority = existing.priority;
+        newValues.priority = priority;
+      }
+      if (progress !== undefined) {
+        oldValues.progress = existing.progress;
+        newValues.progress = progress;
+      }
+      if (startDate !== undefined) {
+        oldValues.startDate = existing.startDate;
+        newValues.startDate = startDate;
+      }
+      if (endDate !== undefined) {
+        oldValues.endDate = existing.endDate;
+        newValues.endDate = endDate;
+      }
+      if (isActive !== undefined) {
+        oldValues.isActive = existing.isActive;
+        newValues.isActive = isActive;
+      }
+      if (tags !== undefined) {
+        oldValues.tags = existing.tags;
+        newValues.tags = tags;
+      }
 
       if (Object.keys(newValues).length > 0) {
         await db()

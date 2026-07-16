@@ -35,12 +35,7 @@ export const GET = withAuth(
           )`,
         })
         .from(schema.roles)
-        .where(
-          and(
-            eq(schema.roles.organizationId, orgId!),
-            isNull(schema.roles.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.roles.organizationId, orgId!), isNull(schema.roles.deletedAt)))
         .orderBy(desc(schema.roles.priority), desc(schema.roles.createdAt));
 
       return NextResponse.json({ roles });
@@ -82,7 +77,12 @@ export const POST = withAuth(
 
       if (existing) {
         return NextResponse.json(
-          { error: { code: 'CONFLICT', message: 'A role with this slug already exists in your organization' } },
+          {
+            error: {
+              code: 'CONFLICT',
+              message: 'A role with this slug already exists in your organization',
+            },
+          },
           { status: 409 },
         );
       }
@@ -106,13 +106,15 @@ export const POST = withAuth(
 
       // Assign permissions if provided
       if (permissionIds && permissionIds.length > 0) {
-        await db().insert(schema.rolePermissions).values(
-          permissionIds.map((permissionId: string) => ({
-            roleId: role.id,
-            permissionId,
-            allow: true,
-          })),
-        );
+        await db()
+          .insert(schema.rolePermissions)
+          .values(
+            permissionIds.map((permissionId: string) => ({
+              roleId: role.id,
+              permissionId,
+              allow: true,
+            })),
+          );
       }
 
       await createAuditEntry({

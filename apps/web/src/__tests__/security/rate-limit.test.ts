@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ipFromRequest, rateLimitKey, checkRateLimit, rateLimitResponse, addRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/api/rate-limit';
+import {
+  ipFromRequest,
+  rateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+  addRateLimitHeaders,
+  RATE_LIMIT_PRESETS,
+} from '@/lib/api/rate-limit';
 import { NextResponse } from 'next/server';
 
 // ─── ipFromRequest ─────────────────────────────────────────────
@@ -169,7 +176,12 @@ describe('rateLimitResponse', () => {
 describe('addRateLimitHeaders', () => {
   it('adds rate limit headers to an existing response', () => {
     const res = NextResponse.json({ success: true });
-    const result = { ok: true, limit: 100, remaining: 99, reset: Math.floor(Date.now() / 1000) + 60 };
+    const result = {
+      ok: true,
+      limit: 100,
+      remaining: 99,
+      reset: Math.floor(Date.now() / 1000) + 60,
+    };
 
     addRateLimitHeaders(res, result);
 

@@ -4,7 +4,16 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
+  KeyRound,
+} from 'lucide-react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -20,6 +29,9 @@ export default function ResetPasswordForm() {
       : null,
   );
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [password, setPassword] = useState('');
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,16 +44,16 @@ export default function ResetPasswordForm() {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const password = formData.get('password') as string;
+    const newPassword = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
-    if (password.length < 8) {
+    if (newPassword.length < 8) {
       setError('Password must be at least 8 characters');
       setIsLoading(false);
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
@@ -51,7 +63,7 @@ export default function ResetPasswordForm() {
       const res = await fetch(`${BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: password, token }),
+        body: JSON.stringify({ newPassword, token }),
       });
 
       if (!res.ok) {
@@ -71,114 +83,169 @@ export default function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50 p-4 dark:bg-surface-950">
-        <div className="w-full max-w-sm space-y-4 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-            </svg>
+      <div className="auth-bg flex min-h-screen items-center justify-center p-4">
+        <div className="animate-fade-in-up w-full max-w-sm">
+          <div className="glass rounded-2xl p-8 text-center shadow-lg">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25">
+              <CheckCircle2 className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-surface-900 mt-5 text-xl font-bold">Password reset successful</h1>
+            <p className="text-surface-500 mt-2 text-sm leading-relaxed">
+              Your password has been reset successfully. You can now sign in with your new password.
+            </p>
+            <Button asChild className="mt-6">
+              <Link href="/auth/login">
+                Sign in
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
-          <h1 className="text-2xl font-semibold text-surface-900 dark:text-surface-50">Password reset</h1>
-          <p className="text-sm text-surface-500">
-            Your password has been reset successfully. You can now sign in with your new password.
-          </p>
-          <Link
-            href="/auth/login"
-            className="inline-block text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
-          >
-            Sign in
-          </Link>
+          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Your data is encrypted and secure</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-50 p-4 dark:bg-surface-950">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600">
-            <span className="text-lg font-bold text-white">W</span>
-          </div>
-          {!token ? (
-            <>
-              <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-surface-50">
+    <div className="auth-bg flex min-h-screen items-center justify-center p-4">
+      <div className="relative w-full max-w-sm">
+        {!token ? (
+          <div className="animate-fade-in-up">
+            <div className="glass rounded-2xl p-8 text-center shadow-lg">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25">
+                <span className="text-xl font-bold text-white">!</span>
+              </div>
+              <h1 className="text-surface-900 mt-4 text-xl font-bold tracking-tight">
                 Invalid link
               </h1>
-              <p className="text-sm text-surface-500">
+              <p className="text-surface-500 mt-2 text-sm leading-relaxed">
                 This password reset link is invalid or missing. Please request a new one.
               </p>
               <Link
                 href="/auth/forgot-password"
-                className="inline-block text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                className="text-brand-500 hover:text-brand-400 mt-6 inline-flex items-center gap-1.5 font-semibold transition-colors"
               >
                 Request new reset link
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
-            </>
-          ) : (
-            <>
-              <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-surface-50">
-                Set new password
-              </h1>
-              <p className="text-sm text-surface-500">Enter your new password below.</p>
-            </>
-          )}
-        </div>
-
-        {token && (
-          <form onSubmit={onSubmit} className="space-y-4">
-            {error && (
-              <div
-                className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950 dark:text-red-400"
-                role="alert"
-              >
-                {error}
+            </div>
+            <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Your data is encrypted and secure</span>
+            </div>
+          </div>
+        ) : (
+          <div className="animate-fade-in-up">
+            <div className="glass rounded-2xl p-8 shadow-lg">
+              <div className="mb-8 text-center">
+                <div className="from-brand-500 to-brand-700 shadow-brand-500/25 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
+                  <KeyRound className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-surface-900 mt-4 text-2xl font-bold tracking-tight">
+                  Set new password
+                </h1>
+                <p className="text-surface-500 mt-1.5 text-sm">Enter your new password below</p>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                New password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                className={cn(
-                  'flex h-9 w-full rounded-md border border-surface-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors',
-                  'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',
-                  'dark:border-surface-600 dark:bg-surface-900 dark:text-surface-100',
+              <form onSubmit={onSubmit} className="space-y-4">
+                {error && (
+                  <div
+                    className="animate-slide-up border-error/20 bg-error/5 text-error rounded-xl border px-4 py-3 text-sm"
+                    role="alert"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="bg-error/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                        <span className="text-error text-xs font-bold">!</span>
+                      </div>
+                      <span>{error}</span>
+                    </div>
+                  </div>
                 )}
-                placeholder="Min. 8 characters"
-              />
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="password"
+                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  >
+                    New password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="new-password"
+                      required
+                      minLength={8}
+                      placeholder="Min. 8 characters"
+                      className="bg-surface-100/80 dark:bg-surface-900/80 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Confirm password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirm ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      placeholder="Repeat password"
+                      className="bg-surface-100/80 dark:bg-surface-900/80 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base shadow-sm"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      Reset password
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  )}
+                </Button>
+              </form>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                Confirm password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={cn(
-                  'flex h-9 w-full rounded-md border border-surface-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors',
-                  'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',
-                  'dark:border-surface-600 dark:bg-surface-900 dark:text-surface-100',
-                )}
-                placeholder="Repeat password"
-              />
+            <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Your data is encrypted and secure</span>
             </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Resetting...' : 'Reset password'}
-            </Button>
-          </form>
+          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,9 @@
 import { getDb, schema } from '@workmanagement/database';
 import { eq } from 'drizzle-orm';
-import { hash } from '@node-rs/argon2';
+import { scrypt, randomBytes } from 'node:crypto';
+import { promisify } from 'node:util';
 
+const scryptAsync = promisify(scrypt);
 
 async function createAdmin() {
   const db = getDb();
@@ -46,16 +48,19 @@ async function createAdmin() {
     process.exit(1);
   }
 
-  // ─── Hash password using Argon2id (Better Auth's format) ─
   const userId = crypto.randomUUID();
-  const passwordHash = await hash(password, {
-    memoryCost: 19456,
-    timeCost: 2,
-    outputLen: 32,
-    parallelism: 1,
-  });
 
-  console.log(`  ✓ Password hashed with Argon2id`);
+  // Hash using scrypt with same parameters as better-auth v1.6.23
+  const salt = randomBytes(16).toString('hex');
+  const hashBuf = (await scryptAsync(password, salt, 64, {
+    N: 16384,
+    r: 16,
+    p: 1,
+    maxmem: 64 * 1024 * 1024,
+  })) as Buffer;
+  const passwordHash = `${salt}:${hashBuf.toString('hex')}`;
+
+  console.log(`  ✓ Password hashed with scrypt`);
 
   // ─── Create user ────────────────────────────────────────
   await db.insert(schema.users).values({
@@ -77,7 +82,7 @@ async function createAdmin() {
     id: crypto.randomUUID(),
     userId,
     accountId: email,
-    providerId: 'email',
+    providerId: 'credential',
     password: passwordHash,
   });
   console.log(`  ✓ Account created for email/password login`);

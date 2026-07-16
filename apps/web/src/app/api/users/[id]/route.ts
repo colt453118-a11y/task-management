@@ -68,7 +68,17 @@ export const PATCH = withAuth(
       await requirePermission(user.id, 'user:edit');
       const id = getIdFromPath(request);
       const body = await request.json();
-      const { firstName, lastName, displayName, phone, designation, departmentId, teamId, location, timezone } = body;
+      const {
+        firstName,
+        lastName,
+        displayName,
+        phone,
+        designation,
+        departmentId,
+        teamId,
+        location,
+        timezone,
+      } = body;
 
       // Fetch existing for org scope check
       const [existing] = await db()

@@ -13,9 +13,11 @@ function getIdFromPath(request: NextRequest): string {
 
 // GET /api/roles/[id] - Get a single role with its permissions (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
+
+      await requirePermission(user.id, 'role:view');
 
       const [role] = await db()
         .select()
@@ -36,12 +38,7 @@ export const GET = withAuth(
       const rolePerms = await db()
         .select({ permissionId: schema.rolePermissions.permissionId })
         .from(schema.rolePermissions)
-        .where(
-          and(
-            eq(schema.rolePermissions.roleId, id),
-            eq(schema.rolePermissions.allow, true),
-          ),
-        );
+        .where(and(eq(schema.rolePermissions.roleId, id), eq(schema.rolePermissions.allow, true)));
 
       const permissionIds = rolePerms.map((rp) => rp.permissionId);
 
@@ -92,9 +89,18 @@ export const PATCH = withAuth(
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 
-      if (name !== undefined) { oldValues.name = existing.name; newValues.name = name; }
-      if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
-      if (isActive !== undefined) { oldValues.isActive = existing.isActive; newValues.isActive = isActive; }
+      if (name !== undefined) {
+        oldValues.name = existing.name;
+        newValues.name = name;
+      }
+      if (description !== undefined) {
+        oldValues.description = existing.description;
+        newValues.description = description;
+      }
+      if (isActive !== undefined) {
+        oldValues.isActive = existing.isActive;
+        newValues.isActive = isActive;
+      }
 
       if (Object.keys(newValues).length > 0) {
         await db()
@@ -106,19 +112,19 @@ export const PATCH = withAuth(
       // Update permissions if provided
       if (permissionIds !== undefined && Array.isArray(permissionIds)) {
         // Remove existing permissions
-        await db()
-          .delete(schema.rolePermissions)
-          .where(eq(schema.rolePermissions.roleId, id));
+        await db().delete(schema.rolePermissions).where(eq(schema.rolePermissions.roleId, id));
 
         // Insert new permissions
         if (permissionIds.length > 0) {
-          await db().insert(schema.rolePermissions).values(
-            permissionIds.map((permissionId: string) => ({
-              roleId: id,
-              permissionId,
-              allow: true,
-            })),
-          );
+          await db()
+            .insert(schema.rolePermissions)
+            .values(
+              permissionIds.map((permissionId: string) => ({
+                roleId: id,
+                permissionId,
+                allow: true,
+              })),
+            );
         }
 
         oldValues.permissions = 'previous';
@@ -136,11 +142,7 @@ export const PATCH = withAuth(
       });
 
       // Fetch updated role
-      const [role] = await db()
-        .select()
-        .from(schema.roles)
-        .where(eq(schema.roles.id, id))
-        .limit(1);
+      const [role] = await db().select().from(schema.roles).where(eq(schema.roles.id, id)).limit(1);
 
       return NextResponse.json({ role });
     } catch (error) {

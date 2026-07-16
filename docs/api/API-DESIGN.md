@@ -56,40 +56,42 @@ const CreateTaskSchema = z.object({
   estimatedHours: z.number().positive().optional(),
 });
 
-export type CreateTaskResult = 
-  | { success: true; task: Task }
-  | { success: false; errors: Record<string, string[]> };
+export type CreateTaskResult =
+  { success: true; task: Task } | { success: false; errors: Record<string, string[]> };
 
 export async function createTask(
   prevState: CreateTaskResult | null,
-  formData: FormData
+  formData: FormData,
 ): Promise<CreateTaskResult> {
   // 1. Authenticate
   const session = await requireAuth();
-  
+
   // 2. Authorize
   await requirePermission('task:create');
-  
+
   // 3. Validate
   const parsed = CreateTaskSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { success: false, errors: parsed.error.flatten().fieldErrors };
   }
-  
+
   // 4. Execute
-  const [task] = await db.insert(tasks).values({
-    ...parsed.data,
-    organizationId: session.orgId,
-    createdBy: session.userId,
-    taskIdDisplay: await generateTaskId(session.orgId),
-  }).returning();
-  
+  const [task] = await db
+    .insert(tasks)
+    .values({
+      ...parsed.data,
+      organizationId: session.orgId,
+      createdBy: session.userId,
+      taskIdDisplay: await generateTaskId(session.orgId),
+    })
+    .returning();
+
   // 5. Fire events
   eventBus.emit('task.created', { task, userId: session.userId });
-  
+
   // 6. Revalidate cache
   revalidatePath('/tasks');
-  
+
   return { success: true, task };
 }
 ```
@@ -109,44 +111,42 @@ import { and, eq, inArray, desc, sql } from 'drizzle-orm';
 export const taskRouter = router({
   // Get task list with filters
   list: protectedProcedure
-    .input(z.object({
-      projectId: z.string().uuid().optional(),
-      status: z.array(z.string()).optional(),
-      assignedTo: z.string().uuid().optional(),
-      priority: z.enum(['low', 'medium', 'high', 'urgent', 'critical']).optional(),
-      search: z.string().optional(),
-      cursor: z.string().optional(),       // cursor-based pagination
-      limit: z.number().min(1).max(100).default(50),
-      sortBy: z.enum(['createdAt', 'dueDate', 'priority', 'status']).default('createdAt'),
-      sortOrder: z.enum(['asc', 'desc']).default('desc'),
-    }))
+    .input(
+      z.object({
+        projectId: z.string().uuid().optional(),
+        status: z.array(z.string()).optional(),
+        assignedTo: z.string().uuid().optional(),
+        priority: z.enum(['low', 'medium', 'high', 'urgent', 'critical']).optional(),
+        search: z.string().optional(),
+        cursor: z.string().optional(), // cursor-based pagination
+        limit: z.number().min(1).max(100).default(50),
+        sortBy: z.enum(['createdAt', 'dueDate', 'priority', 'status']).default('createdAt'),
+        sortOrder: z.enum(['asc', 'desc']).default('desc'),
+      }),
+    )
     .query(async ({ input, ctx }) => {
-      const conditions = [
-        eq(tasks.organizationId, ctx.session.orgId),
-        eq(tasks.deletedAt, null),
-      ];
-      
+      const conditions = [eq(tasks.organizationId, ctx.session.orgId), eq(tasks.deletedAt, null)];
+
       if (input.projectId) conditions.push(eq(tasks.projectId, input.projectId));
       if (input.status) conditions.push(inArray(tasks.status, input.status));
       if (input.assignedTo) conditions.push(eq(tasks.assignedTo, input.assignedTo));
-      
-      const results = await db.select()
+
+      const results = await db
+        .select()
         .from(tasks)
         .where(and(...conditions))
-        .limit(input.limit + 1)           // Fetch one extra for cursor
+        .limit(input.limit + 1) // Fetch one extra for cursor
         .orderBy(
-          input.sortOrder === 'desc' 
-            ? desc(tasks[input.sortBy])
-            : sql`${tasks[input.sortBy]} ASC`
+          input.sortOrder === 'desc' ? desc(tasks[input.sortBy]) : sql`${tasks[input.sortBy]} ASC`,
         );
-      
+
       const hasMore = results.length > input.limit;
       const items = hasMore ? results.slice(0, input.limit) : results;
       const nextCursor = hasMore ? items[items.length - 1].id : null;
-      
+
       return { items, nextCursor, hasMore };
     }),
-  
+
   // Get single task with relations
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
@@ -155,7 +155,7 @@ export const taskRouter = router({
         where: and(
           eq(tasks.id, input.id),
           eq(tasks.organizationId, ctx.session.orgId),
-          eq(tasks.deletedAt, null)
+          eq(tasks.deletedAt, null),
         ),
         with: {
           assignees: true,
@@ -167,36 +167,34 @@ export const taskRouter = router({
           // ... other relations
         },
       });
-      
+
       if (!task) throw new TRPCError({ code: 'NOT_FOUND' });
-      
+
       return task;
     }),
-  
+
   // Bulk status update
   bulkUpdateStatus: protectedProcedure
-    .input(z.object({
-      taskIds: z.array(z.string().uuid()).min(1).max(100),
-      status: z.string(),
-    }))
+    .input(
+      z.object({
+        taskIds: z.array(z.string().uuid()).min(1).max(100),
+        status: z.string(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       await requirePermission('task:update');
-      
-      const result = await db.update(tasks)
+
+      const result = await db
+        .update(tasks)
         .set({ status: input.status, updatedAt: new Date() })
-        .where(
-          and(
-            inArray(tasks.id, input.taskIds),
-            eq(tasks.organizationId, ctx.session.orgId)
-          )
-        )
+        .where(and(inArray(tasks.id, input.taskIds), eq(tasks.organizationId, ctx.session.orgId)))
         .returning({ id: tasks.id });
-      
+
       // Fire events for each task
       for (const task of result) {
         eventBus.emit('task.statusChanged', { taskId: task.id, newStatus: input.status });
       }
-      
+
       return { updated: result.length };
     }),
 });
@@ -296,6 +294,7 @@ GET    /api/v1/search?q=...              // Global search
 ## Common API Patterns
 
 ### Pagination (Cursor-Based)
+
 ```typescript
 // Request
 GET /api/v1/tasks?cursor=abc123&limit=50&status=in_progress
@@ -312,6 +311,7 @@ GET /api/v1/tasks?cursor=abc123&limit=50&status=in_progress
 ```
 
 ### Filtering
+
 ```typescript
 // Filter syntax
 GET /api/v1/tasks?filters=status:in_progress,priority:high&search=login page
@@ -327,6 +327,7 @@ GET /api/v1/tasks?filters=status:in_progress,priority:high&search=login page
 ```
 
 ### Error Response Format
+
 ```typescript
 {
   "error": {
@@ -342,6 +343,7 @@ GET /api/v1/tasks?filters=status:in_progress,priority:high&search=login page
 ```
 
 ### Rate Limiting Headers
+
 ```http
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 87
@@ -374,6 +376,7 @@ X-Webhook-Signature: sha256=...
 ```
 
 Webhook events:
+
 - `task.created`, `task.updated`, `task.status_changed`, `task.assigned`
 - `task.completed`, `task.closed`, `task.reopened`
 - `comment.created`, `attachment.uploaded`

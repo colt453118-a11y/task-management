@@ -36,34 +36,26 @@ describe('task:view permission check', () => {
     const permissions: PermissionMap = {
       'user-1': ['task:view'],
     };
-    expect(() =>
-      simulateRequirePermission('user-1', 'task:view', permissions),
-    ).not.toThrow();
+    expect(() => simulateRequirePermission('user-1', 'task:view', permissions)).not.toThrow();
   });
 
   it('throws 403 when user lacks task:view permission', () => {
     const permissions: PermissionMap = {
       'user-1': ['team:view'],
     };
-    expect(() =>
-      simulateRequirePermission('user-1', 'task:view', permissions),
-    ).toThrow();
+    expect(() => simulateRequirePermission('user-1', 'task:view', permissions)).toThrow();
   });
 
   it('throws 403 when user has no permissions at all', () => {
     const permissions: PermissionMap = {};
-    expect(() =>
-      simulateRequirePermission('user-2', 'task:view', permissions),
-    ).toThrow();
+    expect(() => simulateRequirePermission('user-2', 'task:view', permissions)).toThrow();
   });
 
   it('allows access with multiple permissions including task:view', () => {
     const permissions: PermissionMap = {
       'user-1': ['task:view', 'project:view', 'team:view'],
     };
-    expect(() =>
-      simulateRequirePermission('user-1', 'task:view', permissions),
-    ).not.toThrow();
+    expect(() => simulateRequirePermission('user-1', 'task:view', permissions)).not.toThrow();
   });
 });
 
@@ -86,14 +78,13 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
     assignedTo?: string | null;
     priority?: string | null;
   }): string[] {
-    const conditions: string[] = [
-      'deletedAt IS NULL',
-      `organizationId = ${params.orgId}`,
-    ];
+    const conditions: string[] = ['deletedAt IS NULL', `organizationId = ${params.orgId}`];
 
     // Role-aware scoping: without task:view_all, see assigned, created, or mentioned tasks
     if (!params.canViewAll) {
-      conditions.push(`(assignedTo = ${params.userId} OR createdBy = ${params.userId} OR ${params.userId} = ANY(mentionedUserIds))`);
+      conditions.push(
+        `(assignedTo = ${params.userId} OR createdBy = ${params.userId} OR ${params.userId} = ANY(mentionedUserIds))`,
+      );
     }
 
     if (params.projectId) conditions.push(`projectId = ${params.projectId}`);
@@ -114,7 +105,9 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
 
     expect(conditions).toContain('deletedAt IS NULL');
     expect(conditions).toContain('organizationId = org-1');
-    expect(conditions).toContain('(assignedTo = user-1 OR createdBy = user-1 OR user-1 = ANY(mentionedUserIds))');
+    expect(conditions).toContain(
+      '(assignedTo = user-1 OR createdBy = user-1 OR user-1 = ANY(mentionedUserIds))',
+    );
     expect(conditions.length).toBe(3); // base 2 + 1 scope filter
   });
 
@@ -156,7 +149,9 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
       priority: 'high',
     });
 
-    expect(conditions).toContain('(assignedTo = user-1 OR createdBy = user-1 OR user-1 = ANY(mentionedUserIds))');
+    expect(conditions).toContain(
+      '(assignedTo = user-1 OR createdBy = user-1 OR user-1 = ANY(mentionedUserIds))',
+    );
     expect(conditions).toContain('projectId = proj-1');
     expect(conditions).toContain('status = in_progress');
     expect(conditions).toContain('priority = high');
@@ -177,7 +172,9 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
     });
 
     expect(conditionsA.length).toBe(2); // no user-scoping
-    expect(conditionsB).toContain('(assignedTo = user-member OR createdBy = user-member OR user-member = ANY(mentionedUserIds))');
+    expect(conditionsB).toContain(
+      '(assignedTo = user-member OR createdBy = user-member OR user-member = ANY(mentionedUserIds))',
+    );
     expect(conditionsB.length).toBe(3); // includes user-scoping
   });
 
@@ -189,7 +186,9 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
       orgId: 'org-1',
     });
 
-    expect(conditions).toContain('(assignedTo = creator-1 OR createdBy = creator-1 OR creator-1 = ANY(mentionedUserIds))');
+    expect(conditions).toContain(
+      '(assignedTo = creator-1 OR createdBy = creator-1 OR creator-1 = ANY(mentionedUserIds))',
+    );
     // The OR condition means any of the three matches works
   });
 
@@ -201,7 +200,9 @@ describe('task visibility scoping (task:view vs task:view_all)', () => {
       orgId: 'org-1',
     });
 
-    expect(conditions).toContain('(assignedTo = mentioned-1 OR createdBy = mentioned-1 OR mentioned-1 = ANY(mentionedUserIds))');
+    expect(conditions).toContain(
+      '(assignedTo = mentioned-1 OR createdBy = mentioned-1 OR mentioned-1 = ANY(mentionedUserIds))',
+    );
   });
 });
 
@@ -223,7 +224,11 @@ describe('task GET handler access control flow', () => {
     orgId: string;
     permissions: PermissionMap;
     explicitAssignedTo?: string | null;
-  }): { allowed: boolean; canViewAll: boolean; scoping: 'none' | 'assigned_or_created_or_mentioned' } {
+  }): {
+    allowed: boolean;
+    canViewAll: boolean;
+    scoping: 'none' | 'assigned_or_created_or_mentioned';
+  } {
     // Step 1: Check basic task:view permission
     const userPerms = params.permissions[params.userId];
     const hasTaskView = userPerms?.includes('task:view') ?? false;
@@ -368,7 +373,11 @@ describe('database query scope structure', () => {
 
     if (scopedToUser) {
       // OR condition: assignedTo OR createdBy OR mentionedUserIds
-      clauses.push({ field: 'assignedTo OR createdBy OR mentionedUserIds', operator: 'MATCHES', value: userId });
+      clauses.push({
+        field: 'assignedTo OR createdBy OR mentionedUserIds',
+        operator: 'MATCHES',
+        value: userId,
+      });
     }
 
     return clauses;
@@ -379,7 +388,11 @@ describe('database query scope structure', () => {
     expect(clauses).toEqual([
       { field: 'deletedAt', operator: 'IS NULL' },
       { field: 'organizationId', operator: '=', value: 'org-1' },
-      { field: 'assignedTo OR createdBy OR mentionedUserIds', operator: 'MATCHES', value: 'user-1' },
+      {
+        field: 'assignedTo OR createdBy OR mentionedUserIds',
+        operator: 'MATCHES',
+        value: 'user-1',
+      },
     ]);
   });
 
@@ -427,5 +440,4 @@ describe('database query scope structure', () => {
     expect(scoped.length).toBe(3);
     expect(unscoped.length).toBe(2);
   });
-
 });

@@ -74,6 +74,11 @@ async function seed() {
     { code: 'task:close', name: 'Close Tasks', module: 'task' },
     { code: 'task:reopen', name: 'Reopen Tasks', module: 'task' },
     { code: 'task:archive', name: 'Archive Tasks', module: 'task' },
+    // Task template permissions
+    { code: 'task_template:view', name: 'View Task Templates', module: 'task' },
+    { code: 'task_template:create', name: 'Create Task Templates', module: 'task' },
+    { code: 'task_template:edit', name: 'Edit Task Templates', module: 'task' },
+    { code: 'task_template:delete', name: 'Delete Task Templates', module: 'task' },
     // Report permissions
     { code: 'report:view', name: 'View Reports', module: 'report' },
     { code: 'report:generate', name: 'Generate Reports', module: 'report' },
@@ -89,24 +94,25 @@ async function seed() {
   ];
 
   // Insert permissions that don't exist yet
-  const existingPerms = await db
-    .select({ code: schema.permissions.code })
-    .from(schema.permissions);
+  const existingPerms = await db.select({ code: schema.permissions.code }).from(schema.permissions);
 
   const existingCodes = new Set(existingPerms.map((p) => p.code));
   const newPerms = allPermissions.filter((p) => !existingCodes.has(p.code));
 
   if (newPerms.length > 0) {
-    await db.insert(schema.permissions).values(
-      newPerms.map((p) => ({ ...p, isSystem: true })),
-    );
+    await db.insert(schema.permissions).values(newPerms.map((p) => ({ ...p, isSystem: true })));
   }
 
   // Fetch all permissions to get their IDs
   const allPermRecords = await db
     .select()
     .from(schema.permissions)
-    .where(inArray(schema.permissions.code, allPermissions.map((p) => p.code)));
+    .where(
+      inArray(
+        schema.permissions.code,
+        allPermissions.map((p) => p.code),
+      ),
+    );
 
   const permByCode = new Map(allPermRecords.map((p) => [p.code, p]));
   console.log(`  ✓ ${allPermRecords.length} permissions available`);
@@ -178,12 +184,29 @@ async function seed() {
     description: 'Department/team management access',
     priority: 80,
     permissionCodes: [
-      'user:view', 'role:view', 'department:view', 'department:create', 'department:edit',
-      'team:view', 'team:create', 'team:edit',
-      'project:view', 'project:create', 'project:edit',
-      'task:view', 'task:create', 'task:edit', 'task:assign', 'task:comment',
-      'task:change_status', 'task:complete', 'task:review', 'task:close',
-      'report:view', 'report:generate', 'report:export',
+      'user:view',
+      'role:view',
+      'department:view',
+      'department:create',
+      'department:edit',
+      'team:view',
+      'team:create',
+      'team:edit',
+      'project:view',
+      'project:create',
+      'project:edit',
+      'task:view',
+      'task:create',
+      'task:edit',
+      'task:assign',
+      'task:comment',
+      'task:change_status',
+      'task:complete',
+      'task:review',
+      'task:close',
+      'report:view',
+      'report:generate',
+      'report:export',
       'setting:view',
     ],
   });
@@ -195,10 +218,17 @@ async function seed() {
     description: 'Team-level task management access',
     priority: 60,
     permissionCodes: [
-      'user:view', 'team:view',
+      'user:view',
+      'team:view',
       'project:view',
-      'task:view', 'task:create', 'task:edit', 'task:assign', 'task:comment',
-      'task:change_status', 'task:complete', 'task:review',
+      'task:view',
+      'task:create',
+      'task:edit',
+      'task:assign',
+      'task:comment',
+      'task:change_status',
+      'task:complete',
+      'task:review',
       'report:view',
     ],
   });
@@ -210,10 +240,15 @@ async function seed() {
     description: 'Standard team member',
     priority: 40,
     permissionCodes: [
-      'user:view', 'team:view',
+      'user:view',
+      'team:view',
       'project:view',
-      'task:view', 'task:create', 'task:edit', 'task:comment',
-      'task:change_status', 'task:complete',
+      'task:view',
+      'task:create',
+      'task:edit',
+      'task:comment',
+      'task:change_status',
+      'task:complete',
       'report:view',
     ],
   });
@@ -224,9 +259,7 @@ async function seed() {
     name: 'Viewer',
     description: 'Read-only access',
     priority: 20,
-    permissionCodes: [
-      'user:view', 'team:view', 'project:view', 'task:view', 'report:view',
-    ],
+    permissionCodes: ['user:view', 'team:view', 'project:view', 'task:view', 'report:view'],
   });
   console.log('  ✓ Role: Viewer');
 

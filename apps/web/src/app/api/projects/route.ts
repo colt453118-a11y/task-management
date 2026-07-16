@@ -55,7 +55,8 @@ export const POST = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { name, code, description, ownerId, departmentId, teamId, startDate, endDate } = parsed.data;
+      const { name, code, description, ownerId, departmentId, teamId, startDate, endDate } =
+        parsed.data;
 
       // Validate owner is in same org
       const [owner] = await db()

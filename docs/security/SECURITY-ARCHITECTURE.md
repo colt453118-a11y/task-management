@@ -65,14 +65,14 @@ Layer 4: OPERATIONS
 
 ### Authentication Methods
 
-| Method | Implementation | Status |
-|--------|---------------|--------|
+| Method           | Implementation                         | Status     |
+| ---------------- | -------------------------------------- | ---------- |
 | Email & Password | Better Auth with bcrypt/scrypt hashing | ✅ Primary |
-| Google OAuth | Better Auth OAuth plugin | ✅ Phase 1 |
-| Microsoft OAuth | Better Auth OAuth plugin | ✅ Phase 1 |
-| Magic Link | Better Auth magic link plugin | ✅ Phase 2 |
-| SSO (SAML/OIDC) | Better Auth SSO plugin | 🔄 Phase 3 |
-| Two-Factor Auth | Better Auth 2FA plugin (TOTP) | ✅ Phase 2 |
+| Google OAuth     | Better Auth OAuth plugin               | ✅ Phase 1 |
+| Microsoft OAuth  | Better Auth OAuth plugin               | ✅ Phase 1 |
+| Magic Link       | Better Auth magic link plugin          | ✅ Phase 2 |
+| SSO (SAML/OIDC)  | Better Auth SSO plugin                 | 🔄 Phase 3 |
+| Two-Factor Auth  | Better Auth 2FA plugin (TOTP)          | ✅ Phase 2 |
 
 ### Session Security
 
@@ -83,7 +83,7 @@ Layer 4: OPERATIONS
     strategy: 'jwt' | 'database',     // JWT for stateless, DB for revocation
     maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
     updateAge: 24 * 60 * 60 * 1000,    // Refresh every 24 hours
-    
+
     cookie: {
       name: 'session_token',
       httpOnly: true,                   // Not accessible via JS
@@ -125,7 +125,7 @@ Layer 4: OPERATIONS
 export async function middleware(request: NextRequest) {
   const session = await getSession(request);
   if (!session) return redirect('/login');
-  
+
   // Check route-level permission
   const pathPermissions = getPathPermissions(request.nextUrl.pathname);
   if (pathPermissions && !hasPermission(session, pathPermissions)) {
@@ -167,9 +167,11 @@ CREATE POLICY task_access ON tasks
 ## 3. Input Validation & Sanitization
 
 ### Validation (Zod)
+
 Every API route validates input through Zod schemas with `.strict()` mass-assignment protection. Schemas exist for all entity types (tasks, projects, teams, departments, roles, users, comments, attachments, time entries). Update schemas use optional fields so clients can send partial updates.
 
 ### HTML Sanitization (DOMPurify)
+
 Rich text content (task descriptions) is sanitized using `isomorphic-dompurify` on both server (before storage) and client (before render).
 
 ```typescript
@@ -180,11 +182,37 @@ export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return '';
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [
-      'p', 'br', 'strong', 'em', 'u', 's',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'ul', 'ol', 'li', 'a', 'pre', 'code',
-      'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'img', 'figure', 'figcaption', 'hr', 'span', 'div',
+      'p',
+      'br',
+      'strong',
+      'em',
+      'u',
+      's',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'ul',
+      'ol',
+      'li',
+      'a',
+      'pre',
+      'code',
+      'blockquote',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
+      'img',
+      'figure',
+      'figcaption',
+      'hr',
+      'span',
+      'div',
     ],
     ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'colspan', 'rowspan'],
     ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
@@ -200,9 +228,11 @@ export function sanitizeRichText(content: string | null | undefined): string | n
 ```
 
 ### Application in API routes
+
 Task descriptions are sanitized before storage in both `POST /api/tasks` and `PATCH /api/tasks/[id]`. The update route preserves the `undefined` sentinel — only sanitizing when `description` is explicitly provided in the request body, so unrelated field updates don't inadvertently clear the description.
 
 ### Client-side defense-in-depth
+
 The `RichTextViewer` component also sanitizes before rendering with `dangerouslySetInnerHTML`, providing a second layer of protection if content bypasses server-side sanitization.
 
 ---
@@ -217,7 +247,7 @@ import { csrf } from '@/lib/csrf';
 export async function POST(request: Request) {
   // Validate CSRF token
   await csrf.validate(request);
-  
+
   // Proceed with request
 }
 ```
@@ -227,24 +257,27 @@ export async function POST(request: Request) {
 ## 5. Rate Limiting
 
 ### Implementation
+
 Redis-backed sliding-window rate limiting using `INCR` + `EXPIRE`. The rate limit module is at `lib/api/rate-limit.ts` and is integrated into:
+
 - **`withAuth` middleware** — accepts optional rate limit config per route (user-based key by default)
 - **`withRateLimit` wrapper** — for unauthenticated endpoints (login, register) — IP-based key
 - **Standalone `checkRateLimit`** — for the public health endpoint (IP-based, 60 req/min)
 
 ### Presets
 
-| Preset | Rate | Window | Key Strategy |
-|--------|------|--------|-------------|
-| `login` | 5 req | 60s | IP |
-| `create` | 30 req | 60s | User |
-| `mutate` | 60 req | 60s | User |
-| `comment` | 20 req | 60s | User |
-| `read` | 100 req | 60s | User |
-| `sensitive` | 20 req | 60s | User |
-| `health` | 60 req | 60s | IP |
+| Preset      | Rate    | Window | Key Strategy |
+| ----------- | ------- | ------ | ------------ |
+| `login`     | 5 req   | 60s    | IP           |
+| `create`    | 30 req  | 60s    | User         |
+| `mutate`    | 60 req  | 60s    | User         |
+| `comment`   | 20 req  | 60s    | User         |
+| `read`      | 100 req | 60s    | User         |
+| `sensitive` | 20 req  | 60s    | User         |
+| `health`    | 60 req  | 60s    | IP           |
 
 ### Design decisions
+
 - **Fail-open**: Requests proceed if Redis is unavailable (availability > strict rate limiting)
 - **Auto-reconnecting Redis client**: Built-in reconnection loop (redis@4) — logged but not nulled
 - **Rate limit headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After` on 429 responses
@@ -282,26 +315,37 @@ Every security-relevant action is logged:
 ```typescript
 // Audit events
 AUTH_EVENTS = [
-  'auth.login.success', 'auth.login.failure',
-  'auth.logout', 'auth.token.refresh',
-  'auth.mfa.enabled', 'auth.mfa.disabled',
-  'auth.password.changed', 'auth.password.reset',
+  'auth.login.success',
+  'auth.login.failure',
+  'auth.logout',
+  'auth.token.refresh',
+  'auth.mfa.enabled',
+  'auth.mfa.disabled',
+  'auth.password.changed',
+  'auth.password.reset',
   'auth.session.revoked',
 ];
 
 ADMIN_EVENTS = [
-  'admin.user.created', 'admin.user.deactivated',
-  'admin.user.suspended', 'admin.user.archived',
+  'admin.user.created',
+  'admin.user.deactivated',
+  'admin.user.suspended',
+  'admin.user.archived',
   'admin.user.role.changed',
-  'admin.role.created', 'admin.role.modified',
+  'admin.role.created',
+  'admin.role.modified',
   'admin.settings.changed',
 ];
 
 DATA_EVENTS = [
-  'task.created', 'task.deleted',
-  'project.created', 'project.deleted',
-  'task.assigned', 'task.status.changed',
-  'task.closed', 'task.reopened',
+  'task.created',
+  'task.deleted',
+  'project.created',
+  'project.deleted',
+  'task.assigned',
+  'task.status.changed',
+  'task.closed',
+  'task.reopened',
 ];
 ```
 
@@ -336,7 +380,7 @@ Authorization: Bearer whsec_xxxxxxxxxxxxx
       {
         source: '/(.*)',
         headers: [
-          { key: 'Content-Security-Policy', 
+          { key: 'Content-Security-Policy',
             value: "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; connect-src 'self' https://api.openai.com;" },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
@@ -396,18 +440,18 @@ SENTRY_DSN=""
 
 ## 11. OWASP Top 10 Compliance
 
-| OWASP Category | Mitigation |
-|----------------|------------|
-| **A01: Broken Access Control** | RBAC + RLS + permission middleware |
-| **A02: Cryptographic Failures** | TLS 1.3, bcrypt for passwords, AES-256 for data at rest |
-| **A03: Injection** | Parameterized queries (Drizzle), Zod input validation, HTML sanitization |
-| **A04: Insecure Design** | Rate limiting, audit logs, secure defaults |
-| **A05: Security Misconfiguration** | Security headers, CSP, automated config scanning |
-| **A06: Vulnerable Components** | Dependabot, `npm audit`, Snyk scanning in CI |
-| **A07: Auth Failures** | Better Auth with MFA, session management, password policies |
-| **A08: Data Integrity Failures** | Signed webhooks, checksums for files, audit trail |
-| **A09: Logging Failures** | Comprehensive audit logging, Sentry alerts |
-| **A10: SSRF** | Outbound request allowlisting, URL validation |
+| OWASP Category                     | Mitigation                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| **A01: Broken Access Control**     | RBAC + RLS + permission middleware                                       |
+| **A02: Cryptographic Failures**    | TLS 1.3, bcrypt for passwords, AES-256 for data at rest                  |
+| **A03: Injection**                 | Parameterized queries (Drizzle), Zod input validation, HTML sanitization |
+| **A04: Insecure Design**           | Rate limiting, audit logs, secure defaults                               |
+| **A05: Security Misconfiguration** | Security headers, CSP, automated config scanning                         |
+| **A06: Vulnerable Components**     | Dependabot, `npm audit`, Snyk scanning in CI                             |
+| **A07: Auth Failures**             | Better Auth with MFA, session management, password policies              |
+| **A08: Data Integrity Failures**   | Signed webhooks, checksums for files, audit trail                        |
+| **A09: Logging Failures**          | Comprehensive audit logging, Sentry alerts                               |
+| **A10: SSRF**                      | Outbound request allowlisting, URL validation                            |
 
 ---
 
@@ -421,11 +465,11 @@ database:
   type: pg_dump + WAL archiving
   encryption: AES-256-GCM
   storage: S3 (separate region)
-  
+
 files:
   schedule: Continuous (S3 versioning)
   retention: 90 days
-  
+
 recovery:
   rpo: 6 hours (point-in-time recovery)
   rto: 2 hours (database restore)

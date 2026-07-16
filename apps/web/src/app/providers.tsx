@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Toaster } from '@/components/ui/toaster';
+import { ShortcutsProvider } from '@/components/ui/shortcuts-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,13 +25,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        {children}
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true}>
+        <ShortcutsProvider>{children}</ShortcutsProvider>
         <Toaster />
       </ThemeProvider>
     </QueryClientProvider>

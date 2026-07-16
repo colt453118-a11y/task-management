@@ -23,7 +23,7 @@ export function middleware(request: NextRequest) {
   // Allow public paths
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     if (pathname === '/auth/login' && sessionToken) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
     return NextResponse.next();
   }
@@ -49,7 +49,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

@@ -2,19 +2,45 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ChevronRight as ArrowRight } from 'lucide-react';
 
 type Task = { id: string; title: string; dueDate: string | null; status: string; priority: string };
 
-
-
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const statusColors: Record<string, string> = {
+  draft: '#6b7280',
+  open: '#60a5fa',
+  in_progress: '#fbbf24',
+  blocked: '#f87171',
+  under_review: '#22d3ee',
+  completed: '#34d399',
+  closed: '#818cf8',
+  cancelled: '#9ca3af',
+};
 
 export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -33,6 +59,7 @@ export default function CalendarPage() {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const goToday = () => setCurrentDate(new Date());
 
   const tasksByDate: Record<string, Task[]> = {};
   tasks.forEach((t) => {
@@ -45,45 +72,66 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      <div className="animate-fade-in space-y-6">
+        <div className="space-y-1">
+          <div className="shimmer h-8 w-32 rounded-xl" />
+          <div className="shimmer mt-2 h-4 w-48 rounded-lg" />
+        </div>
+        <div className="border-surface-300/20 bg-surface-100/80 rounded-2xl border p-5">
+          <div className="shimmer h-64 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-surface-900 dark:text-surface-50">Calendar</h1>
-          <p className="text-sm text-surface-500 mt-1">Task deadlines and milestones</p>
+          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Calendar</h1>
+          <p className="text-surface-500 mt-1 text-sm">Task deadlines and milestones</p>
         </div>
       </div>
 
       <Card>
         <CardContent className="p-5">
-          {/* Month navigation */}
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={prevMonth} className="rounded-md p-2 hover:bg-surface-100">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <h2 className="text-base font-semibold">{MONTHS[month]} {year}</h2>
-            <button onClick={nextMonth} className="rounded-md p-2 hover:bg-surface-100">
-              <ChevronRight className="h-4 w-4" />
-            </button>
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={prevMonth}
+                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-xl p-2 transition-all"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <Button variant="outline" size="sm" onClick={goToday}>
+                Today
+              </Button>
+              <button
+                onClick={nextMonth}
+                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-xl p-2 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <h2 className="text-surface-900 text-base font-semibold">
+              {MONTHS[month]} {year}
+            </h2>
           </div>
 
-          {/* Day headers */}
-          <div className="grid grid-cols-7 mb-1">
+          <div className="mb-1 grid grid-cols-7">
             {DAYS.map((d) => (
-              <div key={d} className="py-2 text-center text-xs font-medium text-surface-400">{d}</div>
+              <div key={d} className="text-surface-500 py-2 text-center text-xs font-medium">
+                {d}
+              </div>
             ))}
           </div>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 border-t border-l border-surface-200 dark:border-surface-700">
+          <div className="border-surface-300/20 dark:border-surface-700/30 grid grid-cols-7 border-l border-t">
             {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="border-r border-b border-surface-200 dark:border-surface-700 min-h-[90px] p-1 bg-surface-50/50 dark:bg-surface-900/50" />
+              <div
+                key={`empty-${i}`}
+                className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/30 dark:bg-surface-950/30 min-h-[100px] border-b border-r p-1"
+              />
             ))}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
@@ -95,24 +143,34 @@ export default function CalendarPage() {
               return (
                 <div
                   key={day}
-                  className={`border-r border-b border-surface-200 dark:border-surface-700 min-h-[90px] p-1 transition-colors hover:bg-surface-50 dark:hover:bg-surface-800/50 ${isToday ? 'bg-brand-50 dark:bg-brand-950/30' : ''}`}
+                  className={`border-surface-300/20 dark:border-surface-700/30 hover:bg-surface-200/30 dark:hover:bg-surface-800/30 min-h-[100px] border-b border-r p-1.5 transition-all duration-150 ${isToday ? 'bg-brand-500/5 dark:bg-brand-500/10' : ''}`}
                 >
-                  <p className={`text-xs font-medium mb-1 ${isToday ? 'text-brand-600' : 'text-surface-500'}`}>
+                  <p
+                    className={`mb-1 text-xs font-medium ${isToday ? 'text-brand-500 font-bold' : 'text-surface-500'}`}
+                  >
                     {day}
                   </p>
                   <div className="space-y-0.5">
                     {dayTasks.slice(0, 3).map((t) => (
-                      <div
+                      <button
                         key={t.id}
-                        className="flex items-center gap-1 rounded bg-brand-100 px-1.5 py-0.5 dark:bg-brand-900/50"
+                        onClick={() => setSelectedTask(selectedTask?.id === t.id ? null : t)}
+                        className="flex w-full items-center gap-1 rounded-lg px-1.5 py-0.5 text-left transition-all hover:opacity-80"
+                        style={{ backgroundColor: `${statusColors[t.status] ?? '#6b7280'}20` }}
                       >
-                        <span className="text-[10px] leading-tight truncate text-brand-700 dark:text-brand-300">
+                        <span
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: statusColors[t.status] ?? '#6b7280' }}
+                        />
+                        <span className="text-surface-700 dark:text-surface-300 truncate text-[10px] leading-tight">
                           {t.title}
                         </span>
-                      </div>
+                      </button>
                     ))}
                     {dayTasks.length > 3 && (
-                      <p className="text-[10px] text-surface-400 px-1">+{dayTasks.length - 3} more</p>
+                      <p className="text-surface-500 px-1 text-[10px]">
+                        +{dayTasks.length - 3} more
+                      </p>
                     )}
                   </div>
                 </div>
@@ -121,6 +179,46 @@ export default function CalendarPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Task popover */}
+      {selectedTask && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 rounded-2xl border p-4 shadow-lg backdrop-blur-xl"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-surface-900 text-sm font-semibold">{selectedTask.title}</h3>
+              <div className="mt-1.5 flex items-center gap-2">
+                <Badge variant="primary" size="sm">
+                  {selectedTask.status.replace(/_/g, ' ')}
+                </Badge>
+                <span className="text-surface-500 text-xs capitalize">
+                  {selectedTask.priority} priority
+                </span>
+                {selectedTask.dueDate && (
+                  <span className="text-surface-500 text-xs">
+                    Due: {new Date(selectedTask.dueDate).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => (window.location.href = `/tasks/${selectedTask.id}`)}
+                >
+                  View Task
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedTask(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

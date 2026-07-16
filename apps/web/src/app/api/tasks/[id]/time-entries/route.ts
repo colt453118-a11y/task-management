@@ -5,20 +5,17 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, isNotNull } from 'drizzle-orm';
 import { TimeEntryCreateSchema, validationError } from '@/lib/api/validation';
+import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 
 export const runtime = 'nodejs';
 
-function getIdsFromPath(request: NextRequest): { taskId: string } {
-  const segments = request.nextUrl.pathname.split('/');
-  const idIndex = segments.indexOf('tasks');
-  return { taskId: segments[idIndex + 1]! };
-}
-
 // GET /api/tasks/[id]/time-entries — List time entries for a task
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
+
+      await requirePermission(user.id, 'task:view');
 
       const entries = await db()
         .select({
@@ -40,12 +37,7 @@ export const GET = withAuth(
         .from(schema.timeEntries)
         .innerJoin(schema.tasks, eq(schema.timeEntries.taskId, schema.tasks.id))
         .leftJoin(schema.users, eq(schema.timeEntries.userId, schema.users.id))
-        .where(
-          and(
-            eq(schema.timeEntries.taskId, taskId),
-            eq(schema.tasks.organizationId, orgId!),
-          ),
-        )
+        .where(and(eq(schema.timeEntries.taskId, taskId), eq(schema.tasks.organizationId, orgId!)))
         .orderBy(desc(schema.timeEntries.startTime));
 
       return NextResponse.json({ entries });
@@ -61,7 +53,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       await requirePermission(user.id, 'task:edit');
 
       const body = await request.json();
@@ -84,24 +76,19 @@ export const POST = withAuth(
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
         .limit(1);
 
-      if (!task) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Task not found' } },
-          { status: 404 },
-        );
-      }
-
-      if (task.organizationId !== orgId) {
-        return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
-          { status: 403 },
-        );
-      }
+      // Shared helper checks task existence + org scope
+      const accessError = checkTaskAccessOrRespond(task, orgId);
+      if (accessError) return accessError;
 
       // Block time entries on archived/closed tasks
-      if (task.status === 'archived' || task.status === 'closed') {
+      if (task!.status === 'archived' || task!.status === 'closed') {
         return NextResponse.json(
-          { error: { code: 'INVALID_STATE', message: 'Cannot log time on archived or closed tasks' } },
+          {
+            error: {
+              code: 'INVALID_STATE',
+              message: 'Cannot log time on archived or closed tasks',
+            },
+          },
           { status: 422 },
         );
       }
@@ -111,17 +98,17 @@ export const POST = withAuth(
         const [existing] = await db()
           .select({ id: schema.timeEntries.id })
           .from(schema.timeEntries)
-          .where(
-            and(
-              eq(schema.timeEntries.userId, user.id),
-              isNull(schema.timeEntries.endTime),
-            ),
-          )
+          .where(and(eq(schema.timeEntries.userId, user.id), isNull(schema.timeEntries.endTime)))
           .limit(1);
 
         if (existing) {
           return NextResponse.json(
-            { error: { code: 'CONFLICT', message: 'You already have a running timer. Stop it first.' } },
+            {
+              error: {
+                code: 'CONFLICT',
+                message: 'You already have a running timer. Stop it first.',
+              },
+            },
             { status: 409 },
           );
         }
@@ -133,8 +120,8 @@ export const POST = withAuth(
         .values({
           taskId,
           userId: user.id,
-          startTime: entryType === 'timer' ? now : (body.startTime ? new Date(body.startTime) : now),
-          endTime: entryType === 'timer' ? null : (body.startTime ? now : null),
+          startTime: entryType === 'timer' ? now : body.startTime ? new Date(body.startTime) : now,
+          endTime: entryType === 'timer' ? null : body.startTime ? now : null,
           durationMinutes: entryType === 'timer' ? null : (durationMinutes ?? null),
           entryType,
           description: description ?? null,
@@ -196,7 +183,7 @@ export const POST = withAuth(
 export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       const entryId = request.nextUrl.searchParams.get('entryId');
       const body = await request.json().catch(() => ({}));
 
@@ -321,7 +308,7 @@ export const PATCH = withAuth(
 export const DELETE = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
-      const { taskId } = getIdsFromPath(request);
+      const taskId = getTaskIdFromPath(request);
       const entryId = request.nextUrl.searchParams.get('entryId');
 
       if (!entryId) {
@@ -362,9 +349,7 @@ export const DELETE = withAuth(
         );
       }
 
-      await db()
-        .delete(schema.timeEntries)
-        .where(eq(schema.timeEntries.id, entryId));
+      await db().delete(schema.timeEntries).where(eq(schema.timeEntries.id, entryId));
 
       await createAuditEntry({
         organizationId: orgId,
@@ -395,16 +380,10 @@ async function recalcTaskHours(taskId: string) {
       .select({ durationMinutes: schema.timeEntries.durationMinutes })
       .from(schema.timeEntries)
       .where(
-        and(
-          eq(schema.timeEntries.taskId, taskId),
-          isNotNull(schema.timeEntries.durationMinutes),
-        ),
+        and(eq(schema.timeEntries.taskId, taskId), isNotNull(schema.timeEntries.durationMinutes)),
       );
 
-    const totalMinutes = allEntries.reduce(
-      (sum, e) => sum + (e.durationMinutes ?? 0),
-      0,
-    );
+    const totalMinutes = allEntries.reduce((sum, e) => sum + (e.durationMinutes ?? 0), 0);
     const totalHours = (totalMinutes / 60).toFixed(2);
 
     await db()

@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
@@ -25,15 +21,9 @@
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@workmanagement/shared": [
-        "../../packages/shared/src"
-      ],
-      "@workmanagement/database": [
-        "../../packages/database/src"
-      ]
+      "@/*": ["./src/*"],
+      "@workmanagement/shared": ["../../packages/shared/src"],
+      "@workmanagement/database": ["../../packages/database/src"]
     },
     "plugins": [
       {
@@ -49,7 +39,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

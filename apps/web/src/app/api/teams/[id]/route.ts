@@ -14,9 +14,11 @@ function getIdFromPath(request: NextRequest): string {
 
 // GET /api/teams/[id] - Get team with members, department info, and task stats (rate limited: 100 req/min per user)
 export const GET = withAuth(
-  async (request: NextRequest, { orgId }) => {
+  async (request: NextRequest, { user, orgId }) => {
     try {
       const id = getIdFromPath(request);
+
+      await requirePermission(user.id, 'team:view');
 
       const [team] = await db()
         .select({
@@ -82,12 +84,7 @@ export const GET = withAuth(
           count: sql<number>`COUNT(*)`.as('count'),
         })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.teamId, id),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.tasks.teamId, id), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.status);
 
       // Get member task counts
@@ -97,18 +94,14 @@ export const GET = withAuth(
           count: sql<number>`COUNT(*)`.as('count'),
         })
         .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.teamId, id),
-            isNull(schema.tasks.deletedAt),
-          ),
-        )
+        .where(and(eq(schema.tasks.teamId, id), isNull(schema.tasks.deletedAt)))
         .groupBy(schema.tasks.assignedTo);
 
       const totalTasks = taskCounts.reduce((sum, t) => sum + t.count, 0);
       const completedTasks = taskCounts.find((t) => t.status === 'completed')?.count ?? 0;
       const inProgressTasks = taskCounts.find((t) => t.status === 'in_progress')?.count ?? 0;
-      const openTasks = taskCounts.find((t) => t.status === 'open' || t.status === 'draft')?.count ?? 0;
+      const openTasks =
+        taskCounts.find((t) => t.status === 'open' || t.status === 'draft')?.count ?? 0;
 
       return NextResponse.json({
         team,
@@ -164,11 +157,26 @@ export const PATCH = withAuth(
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 
-      if (name !== undefined) { oldValues.name = existing.name; newValues.name = name; }
-      if (description !== undefined) { oldValues.description = existing.description; newValues.description = description; }
-      if (departmentId !== undefined) { oldValues.departmentId = existing.departmentId; newValues.departmentId = departmentId; }
-      if (leadUserId !== undefined) { oldValues.leadUserId = existing.leadUserId; newValues.leadUserId = leadUserId; }
-      if (isActive !== undefined) { oldValues.isActive = existing.isActive; newValues.isActive = isActive; }
+      if (name !== undefined) {
+        oldValues.name = existing.name;
+        newValues.name = name;
+      }
+      if (description !== undefined) {
+        oldValues.description = existing.description;
+        newValues.description = description;
+      }
+      if (departmentId !== undefined) {
+        oldValues.departmentId = existing.departmentId;
+        newValues.departmentId = departmentId;
+      }
+      if (leadUserId !== undefined) {
+        oldValues.leadUserId = existing.leadUserId;
+        newValues.leadUserId = leadUserId;
+      }
+      if (isActive !== undefined) {
+        oldValues.isActive = existing.isActive;
+        newValues.isActive = isActive;
+      }
 
       if (Object.keys(newValues).length > 0) {
         await db()

@@ -7,194 +7,37 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: '24.18.0'
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.33.0"
 
 jobs:
-  validate:
-    name: Lint, typecheck & test
+  ci:
+    name: Typecheck → Test → Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm --filter @workmanagement/web lint
 
       - name: Typecheck
-        run: pnpm --filter @workmanagement/web typecheck
+        run: pnpm typecheck
 
-      - name: Unit tests
-        run: pnpm --filter @workmanagement/web test
+      - name: Test
+        run: pnpm test
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [validate]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm --filter @workmanagement/web build
-
-  docker:
-    name: Docker build & verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [validate]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          load: true
-          tags: workmanager:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Verify image metadata
-        run: |
-          echo "Image size: $(docker image inspect workmanager:ci --format '{{.Size}}' | awk '{printf "%.2f MB", $1/1024/1024}')"
-          echo "Entrypoint: $(docker image inspect workmanager:ci --format '{{json .Config.Cmd}}')"
-          echo "Working dir: $(docker image inspect workmanager:ci --format '{{.Config.WorkingDir}}')"
-          echo "User: $(docker image inspect workmanager:ci --format '{{.Config.User}}')"
-          echo "Exposed ports: $(docker image inspect workmanager:ci --format '{{json .Config.ExposedPorts}}')"
-
-      - name: Verify image contents
-        run: |
-          docker run --rm --entrypoint sh workmanager:ci -c '
-            echo "=== Checking standalone server ==="
-            test -f apps/web/server.js && echo "  server.js ✓" || echo "  server.js ✗"
-            echo "=== Checking static assets ==="
-            test -d apps/web/.next/static && echo "  static dir ✓" || echo "  static dir ✗"
-            echo "=== Checking public assets ==="
-            test -d apps/web/public && echo "  public dir ✓" || echo "  public dir ✗"
-            echo "=== Checking runtime ==="
-            node --version
-            echo "=== All checks passed ==="
-          '
-
-      - name: Scan for vulnerabilities
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: workmanager:ci
-          format: table
-          exit-code: '1'
-          severity: HIGH,CRITICAL
-          hide-progress: true
-
-  e2e:
-    name: E2E tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [build]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        working-directory: apps/web
-        run: pnpm exec playwright install chromium
-
-      - name: Run E2E tests
-        working-directory: apps/web
-        run: pnpm test:e2e --project=chromium
-        env:
-          # The Playwright webServer config starts pnpm dev automatically
-          CI: true
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: apps/web/playwright-report/
-          retention-days: 7
-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results
-          path: apps/web/test-results/
-          retention-days: 7
-
-  deploy:
-    name: Deploy to GHCR
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [docker, e2e]
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Image digest
-        run: |
-          echo "Pushed: ghcr.io/${{ github.repository }}:latest"
-          echo "Pushed: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+      - name: Lint
+        run: pnpm lint

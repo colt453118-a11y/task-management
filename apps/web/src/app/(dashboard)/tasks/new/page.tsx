@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import {
   Flag,
   FileText,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { TaskTemplatePicker } from '@/components/tasks/task-template-picker';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -33,12 +35,32 @@ type Project = {
 // ─── Constants ──────────────────────────────────────────────
 
 const priorityOptions = [
-  { value: 'none', label: 'None' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-  { value: 'critical', label: 'Critical' },
+  { value: 'none', label: 'None', color: 'bg-surface-100 text-surface-600' },
+  {
+    value: 'low',
+    label: 'Low',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  },
+  {
+    value: 'medium',
+    label: 'Medium',
+    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  },
+  {
+    value: 'high',
+    label: 'High',
+    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  },
+  {
+    value: 'urgent',
+    label: 'Urgent',
+    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  },
+  {
+    value: 'critical',
+    label: 'Critical',
+    color: 'bg-red-200 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+  },
 ];
 
 // ─── Page Component ─────────────────────────────────────────
@@ -60,6 +82,19 @@ export default function NewTaskPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // ── Template handler ────────────────────────────────────
+
+  const handleApplyTemplate = useCallback(
+    (templateData: { title?: string; description?: string; priority?: string }) => {
+      if (templateData.title) setTitle(templateData.title);
+      if (templateData.description) setDescription(templateData.description);
+      if (templateData.priority) setPriority(templateData.priority);
+    },
+    [],
+  );
+
   // ── Fetch form data ────────────────────────────────────
 
   useEffect(() => {
@@ -78,7 +113,7 @@ export default function NewTaskPage() {
           setProjects(data.projects ?? []);
         }
       } catch {
-        // Non-critical - dropdowns will just be empty
+        // Non-critical
       } finally {
         setLoading(false);
       }
@@ -90,13 +125,11 @@ export default function NewTaskPage() {
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-
     if (!title.trim()) {
       errors.title = 'Title is required';
     } else if (title.trim().length > 500) {
       errors.title = 'Title must be 500 characters or less';
     }
-
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -141,132 +174,153 @@ export default function NewTaskPage() {
     }
   };
 
+  const getInputClasses = (fieldName: string, hasError = false) =>
+    cn(
+      'h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200',
+      'dark:bg-surface-900 dark:text-surface-100',
+      focusedField === fieldName
+        ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-glow'
+        : hasError
+          ? 'border-red-300 ring-1 ring-red-500/20'
+          : 'border-surface-300 hover:border-surface-400 dark:border-surface-600 dark:hover:border-surface-500',
+      'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',
+    );
+
   // ── Render ─────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      <div className="animate-fade-in max-w-2xl space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="shimmer h-9 w-9 rounded-lg" />
+          <div className="space-y-2">
+            <div className="shimmer h-6 w-36 rounded-md" />
+            <div className="shimmer h-4 w-56 rounded-md" />
+          </div>
+        </div>
+        <div className="border-surface-200 dark:border-surface-700 dark:bg-surface-900 rounded-xl border bg-white p-6">
+          <div className="space-y-5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="shimmer h-10 rounded-lg" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="animate-fade-in max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={() => router.back()}
-          className="shrink-0"
+          className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 flex h-9 w-9 items-center justify-center rounded-xl border transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
-        </Button>
+        </button>
         <div>
-          <h1 className="text-xl font-semibold text-surface-900 dark:text-surface-50">New Task</h1>
-          <p className="text-sm text-surface-500 mt-0.5">Create a new task for your team</p>
+          <h1 className="text-surface-900 dark:text-surface-50 text-xl font-bold tracking-tight">
+            New Task
+          </h1>
+          <p className="text-surface-500 mt-0.5 text-sm">Create a new task for your team</p>
         </div>
       </div>
 
+      {/* Template Picker */}
+      <TaskTemplatePicker onApplyTemplate={handleApplyTemplate} />
+
       <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4 text-surface-400" />
+        <Card className="overflow-hidden">
+          <CardHeader className="border-surface-300/10 border-b pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="text-surface-400 h-4 w-4" />
               Task Details
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 pt-5">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={title}
-                onChange={(e) => { setTitle(e.target.value); setFieldErrors((prev) => ({ ...prev, title: '' })); }}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, title: '' }));
+                }}
+                onFocus={() => setFocusedField('title')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="Enter task title"
-                className={`w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm transition-colors
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-                  dark:bg-surface-900 dark:text-surface-100
-                  ${fieldErrors.title
-                    ? 'border-red-500 focus-visible:ring-red-500'
-                    : 'border-surface-300 focus-visible:ring-brand-500 dark:border-surface-600'
-                  }`}
+                className={getInputClasses('title', !!fieldErrors.title)}
                 autoFocus
               />
               {fieldErrors.title && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>
+                <p className="animate-slide-up mt-1 text-xs font-medium text-red-500">
+                  {fieldErrors.title}
+                </p>
               )}
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
                 Description
               </label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe what needs to be done..."
-                className="min-h-[120px]"
+                className="border-surface-300/30 dark:border-surface-600/30 focus:border-brand-500 focus:ring-brand-500/20 min-h-[120px] rounded-xl transition-all duration-200 focus:ring-2"
               />
             </div>
 
             {/* Two-column row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Priority */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  <Flag className="h-3.5 w-3.5 inline mr-1 -mt-0.5 text-surface-400" />
+                <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
+                  <Flag className="text-surface-400 -mt-0.5 mr-1 inline h-3.5 w-3.5" />
                   Priority
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm shadow-sm
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
-                    dark:bg-surface-900 dark:text-surface-100 dark:border-surface-600"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   {priorityOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
-
-              {/* Due Date */}
               <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  <Calendar className="h-3.5 w-3.5 inline mr-1 -mt-0.5 text-surface-400" />
+                <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
+                  <Calendar className="text-surface-400 -mt-0.5 mr-1 inline h-3.5 w-3.5" />
                   Due Date
                 </label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm shadow-sm
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
-                    dark:bg-surface-900 dark:text-surface-100 dark:border-surface-600"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
 
             {/* Two-column row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Assignee */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  <User className="h-3.5 w-3.5 inline mr-1 -mt-0.5 text-surface-400" />
+                <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
+                  <User className="text-surface-400 -mt-0.5 mr-1 inline h-3.5 w-3.5" />
                   Assignee
                 </label>
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm shadow-sm
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
-                    dark:bg-surface-900 dark:text-surface-100 dark:border-surface-600"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   <option value="">Unassigned</option>
                   {users.map((u) => (
@@ -276,19 +330,15 @@ export default function NewTaskPage() {
                   ))}
                 </select>
               </div>
-
-              {/* Project */}
               <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  <FileText className="h-3.5 w-3.5 inline mr-1 -mt-0.5 text-surface-400" />
+                <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
+                  <FileText className="text-surface-400 -mt-0.5 mr-1 inline h-3.5 w-3.5" />
                   Project
                 </label>
                 <select
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="h-9 w-full rounded-md border border-surface-300 bg-white px-3 text-sm shadow-sm
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
-                    dark:bg-surface-900 dark:text-surface-100 dark:border-surface-600"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   <option value="">No project</option>
                   {projects.map((p) => (
@@ -302,26 +352,22 @@ export default function NewTaskPage() {
 
             {/* Error */}
             {error && (
-              <div className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2.5 text-sm text-red-600 dark:bg-red-900/20">
+              <div className="border-error/20 bg-error/5 text-error animate-slide-up flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-surface-200 dark:border-surface-700">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
+            <div className="border-surface-300/20 flex items-center justify-end gap-3 border-t pt-4">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4 mr-1.5" />
+                  <Send className="mr-1.5 h-4 w-4" />
                 )}
                 Create Task
               </Button>
