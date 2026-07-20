@@ -26,6 +26,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Loader2, Plus, Trash2, Check, X, Edit3, GripVertical } from 'lucide-react';
+import { CHECKLIST } from '@/lib/test-ids';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -95,6 +96,7 @@ function SortableChecklistItem({
     <div
       ref={setNodeRef}
       style={style}
+      data-testid={CHECKLIST.item(item.id)}
       className={cn(
         'group flex items-center gap-1 rounded-xl px-1.5 py-2 transition-all duration-150',
         item.isChecked
@@ -121,6 +123,7 @@ function SortableChecklistItem({
         checked={item.isChecked}
         onCheckedChange={() => onToggle(item)}
         disabled={!!updating || isReadonly}
+        data-testid={CHECKLIST.checkbox(item.id)}
         className={cn(
           'h-4 w-4 shrink-0 transition-all duration-200',
           item.isChecked && 'border-green-500 bg-green-500 text-white',
@@ -139,12 +142,14 @@ function SortableChecklistItem({
             onChange={(e) => onEditContentChange(e.target.value)}
             onKeyDown={onEditKeyDown}
             autoFocus
+            data-testid={CHECKLIST.editInput(item.id)}
             className="border-surface-300/30 bg-surface-100/80 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-7 flex-1 rounded-lg px-2 text-xs focus:ring-1"
           />
           <button
             onClick={onSaveEdit}
             disabled={!editContent.trim() || updating === item.id}
             className="rounded-lg p-1 text-green-500 transition-colors hover:bg-green-500/10 disabled:opacity-40"
+            data-testid={CHECKLIST.saveEditBtn(item.id)}
           >
             {updating === item.id ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -155,6 +160,7 @@ function SortableChecklistItem({
           <button
             onClick={onCancelEdit}
             className="text-surface-500 hover:bg-surface-200/70 rounded-lg p-1 transition-colors"
+            data-testid={CHECKLIST.cancelEditBtn(item.id)}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -163,6 +169,7 @@ function SortableChecklistItem({
         /* Display mode */
         <>
           <span
+            data-testid={CHECKLIST.text(item.id)}
             className={cn(
               'flex-1 text-sm leading-snug transition-all duration-200',
               item.isChecked
@@ -180,6 +187,7 @@ function SortableChecklistItem({
                 onClick={() => onStartEdit(item)}
                 className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 rounded-lg p-1 transition-colors"
                 title="Edit item"
+                data-testid={CHECKLIST.editBtn(item.id)}
               >
                 <Edit3 className="h-3.5 w-3.5" />
               </button>
@@ -188,6 +196,7 @@ function SortableChecklistItem({
                 disabled={deleting === item.id}
                 className="text-surface-400 hover:text-error hover:bg-error/5 rounded-lg p-1 transition-colors disabled:opacity-40"
                 title="Delete item"
+                data-testid={CHECKLIST.deleteBtn(item.id)}
               >
                 {deleting === item.id ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -455,14 +464,14 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
   // ── Render ──────────────────────────────────────────────
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid={CHECKLIST.root}>
       {/* Header with progress */}
       <div className="flex items-center justify-between">
-        <span className="text-surface-500 text-xs font-medium">
+        <span className="text-surface-500 text-xs font-medium" data-testid={CHECKLIST.progress}>
           {totalCount > 0 ? `${checkedCount} of ${totalCount} done` : 'No items'}
         </span>
         {totalCount > 0 && (
-          <span className="text-surface-500 text-xs font-semibold tabular-nums">{progress}%</span>
+          <span className="text-surface-500 text-xs font-semibold tabular-nums" data-testid={CHECKLIST.percent}>{progress}%</span>
         )}
       </div>
 
@@ -470,6 +479,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
       {totalCount > 0 && (
         <Progress
           value={progress}
+          data-testid={CHECKLIST.progressBar}
           className={cn(
             'bg-surface-200/60 dark:bg-surface-700/60 h-1.5',
             progress === 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-brand-500',
@@ -485,13 +495,14 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-0.5">
+          <div className="space-y-0.5" data-testid={CHECKLIST.items}>
             <AnimatePresence initial={false}>
               {items.length === 0 && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="text-surface-400 py-3 text-center text-xs"
+                  data-testid={CHECKLIST.empty}
                 >
                   No checklist items yet. Add one below.
                 </motion.p>
@@ -529,7 +540,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         {/* Drag overlay */}
         <DragOverlay dropAnimation={null}>
           {activeDragItem ? (
-            <div className="border-brand-500/30 bg-surface-50/95 dark:bg-surface-900/95 flex items-center gap-1 rounded-xl border px-1.5 py-2 shadow-lg backdrop-blur-sm">
+            <div className="border-brand-500/30 bg-surface-50/95 dark:bg-surface-900/95 flex items-center gap-1 rounded-xl border px-1.5 py-2 shadow-lg backdrop-blur-sm" data-testid={CHECKLIST.dragOverlay}>
               <GripVertical className="text-brand-500 h-3.5 w-3.5" />
               <Checkbox checked={activeDragItem.isChecked} className="h-4 w-4 shrink-0" />
               <span
@@ -568,6 +579,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
               value={newItemContent}
               onChange={(e) => setNewItemContent(e.target.value)}
               onKeyDown={handleKeyDown}
+              data-testid={CHECKLIST.addInput}
               className="border-surface-400/30 placeholder:text-surface-400 hover:border-surface-400/50 focus:border-brand-500 focus:bg-surface-100/50 focus:ring-brand-500/20 dark:focus:bg-surface-800/50 h-8 w-full rounded-lg border border-dashed bg-transparent px-2.5 pr-8 text-xs transition-all duration-200 focus:border-solid focus:outline-none focus:ring-2"
             />
           </div>
@@ -576,6 +588,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
             variant="ghost"
             onClick={addItem}
             disabled={!newItemContent.trim() || adding}
+            data-testid={CHECKLIST.addBtn}
             className="h-8 w-8 shrink-0 rounded-lg p-0"
           >
             {adding ? (
@@ -593,6 +606,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           className="pt-1 text-center text-xs font-medium text-green-500"
+          data-testid={CHECKLIST.celebration}
         >
           ✓ All done!
         </motion.p>

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { createNotification } from '@/lib/notifications';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { VALID_PRIORITIES, READONLY_STATUSES } from '@/lib/api/validation';
@@ -60,6 +61,9 @@ export const POST = withAuth(
           id: schema.tasks.id,
           organizationId: schema.tasks.organizationId,
           status: schema.tasks.status,
+          title: schema.tasks.title,
+          taskIdDisplay: schema.tasks.taskIdDisplay,
+          assignedTo: schema.tasks.assignedTo,
         })
         .from(schema.tasks)
         .where(and(inArray(schema.tasks.id, taskIds), deletedCondition));
@@ -201,6 +205,23 @@ export const POST = withAuth(
             updatedAt: new Date(),
           })
           .where(inArray(schema.tasks.id, taskIds));
+
+        // Notify the assignee about each newly assigned task
+        for (const task of tasks) {
+          if (task.assignedTo !== value) {
+            await createNotification({
+              organizationId: orgId!,
+              userId: value,
+              type: 'task.assigned',
+              title: `You've been assigned: ${task.title}`,
+              message: `Task #${task.taskIdDisplay} was assigned to you (batch)`,
+              link: `/tasks/${task.id}`,
+              actorId: user.id,
+              entityType: 'task',
+              entityId: task.id,
+            });
+          }
+        }
 
         updatedCount = taskIds.length;
       }

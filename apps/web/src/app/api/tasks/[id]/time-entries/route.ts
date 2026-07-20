@@ -179,7 +179,7 @@ export const POST = withAuth(
   { windowMs: 60_000, max: 30, namespace: 'time-entries:create' },
 );
 
-// PATCH /api/tasks/[id]/time-entries — Stop a running timer
+// PATCH /api/tasks/[id]/time-entries — Stop a running timer or update an existing entry
 export const PATCH = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
@@ -201,6 +201,7 @@ export const PATCH = withAuth(
           userId: schema.timeEntries.userId,
           endTime: schema.timeEntries.endTime,
           startTime: schema.timeEntries.startTime,
+          durationMinutes: schema.timeEntries.durationMinutes,
         })
         .from(schema.timeEntries)
         .innerJoin(schema.tasks, eq(schema.timeEntries.taskId, schema.tasks.id))
@@ -220,14 +221,60 @@ export const PATCH = withAuth(
         );
       }
 
-      // Only the owner can stop their timer
+      // Only the owner can modify their entries
       if (existing.userId !== user.id) {
         return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'You can only stop your own timer' } },
+          { error: { code: 'FORBIDDEN', message: 'You can only modify your own time entries' } },
           { status: 403 },
         );
       }
 
+      const now = new Date();
+
+      // If entry is stopped and body has durationMinutes, update the duration (drag-to-resize)
+      if (existing.endTime && body.durationMinutes !== undefined) {
+        const durationMinutes = Math.max(1, Math.round(Number(body.durationMinutes)));
+        if (isNaN(durationMinutes)) {
+          return NextResponse.json(
+            { error: { code: 'VALIDATION_ERROR', message: 'Invalid durationMinutes' } },
+            { status: 400 },
+          );
+        }
+
+        const [updated] = await db()
+          .update(schema.timeEntries)
+          .set({
+            durationMinutes,
+            updatedAt: now,
+          })
+          .where(eq(schema.timeEntries.id, entryId))
+          .returning();
+
+        if (!updated) {
+          return NextResponse.json(
+            { error: { code: 'INTERNAL_ERROR', message: 'Failed to update time entry' } },
+            { status: 500 },
+          );
+        }
+
+        // Update task actual hours
+        await recalcTaskHours(taskId);
+
+        return NextResponse.json({ entry: updated });
+      }
+
+      // If entry has endTime and no durationMinutes in body, allow description update
+      if (existing.endTime && body.description !== undefined) {
+        const [updated] = await db()
+          .update(schema.timeEntries)
+          .set({ description: body.description ?? null, updatedAt: now })
+          .where(eq(schema.timeEntries.id, entryId))
+          .returning();
+
+        return NextResponse.json({ entry: updated });
+      }
+
+      // Otherwise: stop a running timer (original behavior)
       if (existing.endTime) {
         return NextResponse.json(
           { error: { code: 'INVALID_STATE', message: 'Timer is already stopped' } },
@@ -235,11 +282,8 @@ export const PATCH = withAuth(
         );
       }
 
-      const now = new Date();
       const elapsedMs = now.getTime() - new Date(existing.startTime).getTime();
       const durationMinutes = Math.max(1, Math.round(elapsedMs / 60000));
-
-      // Allow passing a description when stopping
       const description = body.description ?? null;
 
       const [updated] = await db()
@@ -269,10 +313,8 @@ export const PATCH = withAuth(
         newValues: { entryId: updated.id, durationMinutes },
       });
 
-      // Update task actual hours
       await recalcTaskHours(taskId);
 
-      // Fetch with user info
       const [entryWithUser] = await db()
         .select({
           id: schema.timeEntries.id,
@@ -297,11 +339,11 @@ export const PATCH = withAuth(
 
       return NextResponse.json({ entry: entryWithUser });
     } catch (error) {
-      const { error: err, status } = handleApiError(error, 'Failed to stop timer');
+      const { error: err, status } = handleApiError(error, 'Failed to update time entry');
       return NextResponse.json(err, { status });
     }
   },
-  { windowMs: 60_000, max: 30, namespace: 'time-entries:stop' },
+  { windowMs: 60_000, max: 30, namespace: 'time-entries:update' },
 );
 
 // DELETE /api/tasks/[id]/time-entries — Delete a time entry

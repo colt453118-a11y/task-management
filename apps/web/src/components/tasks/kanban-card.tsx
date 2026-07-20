@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Calendar, User, GripVertical } from 'lucide-react';
+import { KANBAN } from '@/lib/test-ids';
 
 interface KanbanCardProps {
   task: {
@@ -93,6 +94,7 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
       role="button"
       tabIndex={0}
       aria-label={`Task ${task.taskIdDisplay}: ${task.title}`}
+      data-testid={KANBAN.card(task.id)}
       className={cn(
         // Base card styles
         'group relative rounded-lg border bg-white p-3 transition-all duration-200',
@@ -140,7 +142,10 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
       </div>
 
       {/* Title */}
-      <h4 className="text-surface-900 dark:text-surface-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 mb-2 line-clamp-2 text-sm font-medium leading-snug transition-colors duration-200">
+      <h4
+        data-testid={KANBAN.cardTitle(task.id)}
+        className="text-surface-900 dark:text-surface-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 mb-2 line-clamp-2 text-sm font-medium leading-snug transition-colors duration-200"
+      >
         {task.title}
       </h4>
 

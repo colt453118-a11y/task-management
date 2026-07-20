@@ -9,4 +9,7 @@ export default defineWorkspace([
 
   // Shared package — pure TypeScript utilities, types, and Zod schemas
   'packages/shared',
+
+  // Database package — Drizzle schema + Postgres integration tests
+  'packages/database',
 ]);

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { createNotification } from '@/lib/notifications';
 import { eq, and, isNull } from 'drizzle-orm';
 import {
   TaskUpdateSchema,
@@ -283,6 +284,48 @@ export const PATCH = withAuth(
               description: `Status changed from ${existing.status} to ${status}`,
             });
         }
+      }
+
+      // ── Create notifications for assignment changes ────────────
+      if (assignedTo !== undefined && assignedTo !== existing.assignedTo && assignedTo !== null) {
+        await createNotification({
+          organizationId: orgId!,
+          userId: assignedTo,
+          type: 'task.assigned',
+          title: `You've been assigned: ${existing.title}`,
+          message: `Task #${existing.taskIdDisplay} was assigned to you`,
+          link: `/tasks/${id}`,
+          actorId: user.id,
+          entityType: 'task',
+          entityId: id,
+        });
+      }
+
+      // ── Create notifications for status changes ───────────────
+      if (status !== undefined && status !== existing.status && existing.assignedTo && existing.assignedTo !== user.id) {
+        const statusLabels: Record<string, string> = {
+          todo: 'To Do',
+          'in_progress': 'In Progress',
+          'in_review': 'In Review',
+          completed: 'Completed',
+          closed: 'Closed',
+          reopened: 'Reopened',
+          archived: 'Archived',
+        };
+        const fromLabel = statusLabels[existing.status] ?? existing.status;
+        const toLabel = statusLabels[status] ?? status;
+
+        await createNotification({
+          organizationId: orgId!,
+          userId: existing.assignedTo,
+          type: status === 'completed' ? 'task.completed' : status === 'closed' ? 'task.closed' : status === 'reopened' ? 'task.reopened' : 'task.status_changed',
+          title: `${existing.title} moved to ${toLabel}`,
+          message: `Status changed from ${fromLabel} to ${toLabel}`,
+          link: `/tasks/${id}`,
+          actorId: user.id,
+          entityType: 'task',
+          entityId: id,
+        });
       }
 
       // Re-index in Meilisearch (non-blocking)

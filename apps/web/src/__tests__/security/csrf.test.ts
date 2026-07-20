@@ -7,27 +7,41 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
+// ─── Test helper ────────────────────────────────────────────────
+
+/**
+ * Create a minimal request-like object with custom headers.
+ * Avoids the Fetch API forbidden header restriction (Origin and Referer
+ * cannot be set via the Request constructor in spec-compliant runtimes
+ * like happy-dom, but jsdom was lenient about this).
+ */
+function mockRequest(origin?: string, referer?: string): Request {
+  return {
+    headers: {
+      get: (name: string) => {
+        if (name === 'origin') return origin ?? null;
+        if (name === 'referer') return referer ?? null;
+        return null;
+      },
+    },
+  } as unknown as Request;
+}
+
 // ─── validateOrigin ────────────────────────────────────────────
 
 describe('validateOrigin', () => {
   it('allows requests from allowed origins', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'https://app.example.com' },
-    });
+    const req = mockRequest('https://app.example.com');
     expect(validateOrigin(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('allows requests from localhost in allowed list', () => {
-    const req = new Request('http://localhost:3000/api/tasks', {
-      headers: { origin: 'http://localhost:3000' },
-    });
+    const req = mockRequest('http://localhost:3000');
     expect(validateOrigin(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('rejects requests from unknown origins', () => {
-    const req = new Request('https://evil.com/api/tasks', {
-      headers: { origin: 'https://evil.com' },
-    });
+    const req = mockRequest('https://evil.com');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('evil.com');
@@ -35,54 +49,42 @@ describe('validateOrigin', () => {
 
   it('rejects requests from null origin string', () => {
     // Some browsers send 'null' for file:// or data:// origins
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'null' },
-    });
+    const req = mockRequest('null');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
   });
 
   it('allows requests with no Origin header', () => {
     // Same-origin requests and non-browser clients may omit Origin
-    const req = new Request('https://app.example.com/api/tasks');
+    const req = mockRequest();
     expect(validateOrigin(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('is case-sensitive in origin matching', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'HTTPS://APP.EXAMPLE.COM' },
-    });
+    const req = mockRequest('HTTPS://APP.EXAMPLE.COM');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
   });
 
   it('handles trailing slashes in origin', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'https://app.example.com/' },
-    });
+    const req = mockRequest('https://app.example.com/');
     expect(validateOrigin(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('rejects origin with path components', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'https://app.example.com/evil-path' },
-    });
+    const req = mockRequest('https://app.example.com/evil-path');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
   });
 
   it('rejects origin with port mismatch', () => {
-    const req = new Request('http://localhost:3000/api/tasks', {
-      headers: { origin: 'http://localhost:8080' },
-    });
+    const req = mockRequest('http://localhost:8080');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
   });
 
   it('rejects subdomain attacks when subdomain not in allowed list', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'https://evil.app.example.com' },
-    });
+    const req = mockRequest('https://evil.app.example.com');
     const result = validateOrigin(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
   });
@@ -92,39 +94,31 @@ describe('validateOrigin', () => {
 
 describe('validateReferer', () => {
   it('allows requests with matching referer origin', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { referer: 'https://app.example.com/dashboard' },
-    });
+    const req = mockRequest(undefined, 'https://app.example.com/dashboard');
     expect(validateReferer(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('rejects requests with unknown referer origin', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { referer: 'https://evil.com/dashboard' },
-    });
+    const req = mockRequest(undefined, 'https://evil.com/dashboard');
     const result = validateReferer(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('evil.com');
   });
 
   it('allows requests with no Referer header', () => {
-    const req = new Request('https://app.example.com/api/tasks');
+    const req = mockRequest();
     expect(validateReferer(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 
   it('handles invalid Referer URL gracefully', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { referer: 'not-a-valid-url' },
-    });
+    const req = mockRequest(undefined, 'not-a-valid-url');
     const result = validateReferer(req, ALLOWED_ORIGINS);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('not-a-valid-url');
   });
 
   it('handles empty Referer header', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { referer: '' },
-    });
+    const req = mockRequest(undefined, '');
     expect(validateReferer(req, ALLOWED_ORIGINS)).toEqual({ valid: true });
   });
 });
@@ -162,9 +156,7 @@ describe('CSRF validation flow (Origin → Referer fallback)', () => {
 
   it('passes when Origin is missing but Referer matches', () => {
     // Some CDNs strip the Origin header but preserve Referer
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { referer: 'https://app.example.com/dashboard' },
-    });
+    const req = mockRequest(undefined, 'https://app.example.com/dashboard');
     // Origin check passes (missing Origin)
     expect(validateOrigin(req, allowed)).toEqual({ valid: true });
     // If we needed to fall back, Referer would also pass
@@ -172,20 +164,13 @@ describe('CSRF validation flow (Origin → Referer fallback)', () => {
   });
 
   it('fails when Origin and Referer both point to attacker', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: {
-        origin: 'https://evil.com',
-        referer: 'https://evil.com/dashboard',
-      },
-    });
+    const req = mockRequest('https://evil.com', 'https://evil.com/dashboard');
     expect(validateOrigin(req, allowed).valid).toBe(false);
     expect(validateReferer(req, allowed).valid).toBe(false);
   });
 
   it('fails when bad Origin is present but good Referer is absent', () => {
-    const req = new Request('https://app.example.com/api/tasks', {
-      headers: { origin: 'https://evil.com' },
-    });
+    const req = mockRequest('https://evil.com');
     expect(validateOrigin(req, allowed).valid).toBe(false);
   });
 });

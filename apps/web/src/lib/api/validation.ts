@@ -320,6 +320,40 @@ export const TimeEntryCreateSchema = z
   })
   .strict('Unexpected fields in time entry');
 
+// ─── Time Correction Schemas ────────────────────────────────
+
+export const TimeCorrectionCreateSchema = z
+  .object({
+    timeEntryId: z.string().uuid('Invalid time entry ID'),
+    requestedMinutes: z
+      .number()
+      .int('Must be a whole number')
+      .positive('Duration must be positive')
+      .max(1440, 'Duration cannot exceed 24 hours'),
+    reason: z
+      .string()
+      .min(1, 'Reason is required')
+      .max(1000, 'Reason too long')
+      .transform((s) => s.trim()),
+  })
+  .strict('Unexpected fields in time correction');
+
+export type TimeCorrectionCreateInput = z.infer<typeof TimeCorrectionCreateSchema>;
+
+export const TimeCorrectionReviewSchema = z
+  .object({
+    status: z.enum(['approved', 'rejected']),
+    reviewNote: z
+      .string()
+      .max(1000)
+      .transform((s) => s.trim())
+      .optional()
+      .nullable(),
+  })
+  .strict('Unexpected fields in time correction review');
+
+export type TimeCorrectionReviewInput = z.infer<typeof TimeCorrectionReviewSchema>;
+
 // Role schemas
 export const RoleCreateSchema = z
   .object({

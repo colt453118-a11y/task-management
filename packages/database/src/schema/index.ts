@@ -297,6 +297,8 @@ export * from './auth';
 export * from './audit';
 export * from './reports';
 export * from './task-templates';
+export * from './notifications';
+export * from './time-corrections';
 
 // ─── Import domain tables for relations ──────────────────────
 

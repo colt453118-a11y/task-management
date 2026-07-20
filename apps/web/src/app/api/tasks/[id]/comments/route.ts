@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { createNotification } from '@/lib/notifications';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { CommentCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
@@ -79,6 +80,9 @@ export const POST = withAuth(
           id: schema.tasks.id,
           organizationId: schema.tasks.organizationId,
           status: schema.tasks.status,
+          title: schema.tasks.title,
+          taskIdDisplay: schema.tasks.taskIdDisplay,
+          assignedTo: schema.tasks.assignedTo,
         })
         .from(schema.tasks)
         .where(and(eq(schema.tasks.id, taskId), isNull(schema.tasks.deletedAt)))
@@ -121,6 +125,21 @@ export const POST = withAuth(
         entityId: taskId,
         newValues: { commentId: comment.id },
       });
+
+      // ── Notify the task assignee about the new comment ─────────
+      if (task && task.assignedTo && task.assignedTo !== user.id) {
+        await createNotification({
+          organizationId: orgId!,
+          userId: task.assignedTo,
+          type: 'task.comment',
+          title: `New comment on: ${task.title}`,
+          message: content.substring(0, 200),
+          link: `/tasks/${taskId}`,
+          actorId: user.id,
+          entityType: 'task',
+          entityId: taskId,
+        });
+      }
 
       // Fetch the comment with user info
       const [commentWithUser] = await db()

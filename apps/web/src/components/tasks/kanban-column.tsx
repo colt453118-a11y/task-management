@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { KanbanCard } from './kanban-card';
 import { Plus } from 'lucide-react';
+import { KANBAN } from '@/lib/test-ids';
 
 interface Task {
   id: string;
@@ -75,6 +76,7 @@ export function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
+      data-testid={KANBAN.column(status)}
       className={cn(
         // Column container
         'flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col rounded-xl transition-all duration-300',
@@ -96,6 +98,7 @@ export function KanbanColumn({
     >
       {/* Column Header */}
       <div
+        data-testid={KANBAN.columnHeader(status)}
         className={cn(
           'border-surface-200/60 dark:border-surface-700/60 flex items-center justify-between rounded-t-xl border-b px-3 py-3',
           headerBg,
@@ -127,6 +130,7 @@ export function KanbanColumn({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => (window.location.href = `/tasks/new?status=${status}`)}
+          data-testid={KANBAN.columnAddBtn(status)}
           className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/60 dark:hover:bg-surface-700/60 rounded-md p-1 transition-colors"
           aria-label={`Create task in ${label}`}
         >
@@ -138,6 +142,7 @@ export function KanbanColumn({
       <div className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto p-3">
         {tasks.length === 0 ? (
           <motion.div
+            data-testid={KANBAN.columnEmpty(status)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-8 text-center"
@@ -147,6 +152,7 @@ export function KanbanColumn({
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 className="flex flex-col items-center"
+                data-testid={KANBAN.dropHere}
               >
                 <div className="bg-brand-500/10 mb-2 flex h-8 w-8 items-center justify-center rounded-full">
                   <Plus className="text-brand-400 h-4 w-4" />

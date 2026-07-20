@@ -120,6 +120,9 @@ export const PERMISSIONS = {
   AUDIT_VIEW: 'audit:view',
   AUDIT_EXPORT: 'audit:export',
 
+  // Time Tracking
+  TIME_MANAGE: 'time:manage',
+
   // Notifications
   NOTIFICATION_VIEW: 'notification:view',
   NOTIFICATION_MANAGE: 'notification:manage',

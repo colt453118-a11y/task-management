@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useGlobalShortcuts } from '../use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/components/ui/keyboard-shortcuts';
+import {
+  withSuppressionTarget,
+  cleanupSuppressionTargets,
+} from '@/test/suppression-target';
 
 // ─── Mock next/navigation useRouter ─────────────────────────
 
@@ -41,22 +45,7 @@ function dispatchKey(
   return event;
 }
 
-function createInputElement() {
-  const el = document.createElement('input');
-  document.body.appendChild(el);
-  return el;
-}
 
-function createContentEditable() {
-  const el = document.createElement('div');
-  el.contentEditable = 'true';
-  document.body.appendChild(el);
-  return el;
-}
-
-function cleanupElements() {
-  document.body.querySelectorAll('input, textarea, [contenteditable]').forEach((el) => el.remove());
-}
 
 // ═══════════════════════════════════════════════════════════════
 // ─── useGlobalShortcuts ───────────────────────────────────────
@@ -73,11 +62,11 @@ describe('useGlobalShortcuts', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    cleanupElements();
+    cleanupSuppressionTargets();
   });
 
   afterEach(() => {
-    cleanupElements();
+    cleanupSuppressionTargets();
   });
 
   function setup() {
@@ -186,9 +175,10 @@ describe('useGlobalShortcuts', () => {
 
     it('should suppress ? key when typing in an input', () => {
       setup();
-      const input = createInputElement();
-      dispatchKey('?', { target: input });
-      expect(actions.openShortcuts).not.toHaveBeenCalled();
+      withSuppressionTarget({ tagName: 'INPUT' }, (target) => {
+        dispatchKey('?', { target });
+        expect(actions.openShortcuts).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -197,28 +187,45 @@ describe('useGlobalShortcuts', () => {
   describe('input suppression', () => {
     it('should suppress meta shortcuts when typing in input', () => {
       setup();
-      const input = createInputElement();
-      dispatchKey('k', { metaKey: true, target: input });
-      expect(actions.openSearch).not.toHaveBeenCalled();
+      withSuppressionTarget({ tagName: 'INPUT' }, (target) => {
+        dispatchKey('k', { metaKey: true, target });
+        expect(actions.openSearch).not.toHaveBeenCalled();
+      });
     });
 
     it('should suppress meta shortcuts when typing in textarea', () => {
       setup();
-      const textarea = document.createElement('textarea');
-      document.body.appendChild(textarea);
-      dispatchKey('t', { metaKey: true, target: textarea });
-      expect(actions.openQuickCreate).not.toHaveBeenCalled();
-      textarea.remove();
+      withSuppressionTarget({ tagName: 'TEXTAREA' }, (target) => {
+        dispatchKey('t', { metaKey: true, target });
+        expect(actions.openQuickCreate).not.toHaveBeenCalled();
+      });
     });
 
-    // Note: jsdom doesn't reliably implement HTMLElement.isContentEditable,
-    // so contentEditable suppression can't be verified in this environment.
-    // The input and textarea tests above prove the isInput logic works.
-    it.skip('should suppress meta shortcuts in contentEditable elements (jsdom limitation)', () => {
+    it('should suppress meta shortcuts in contentEditable elements', () => {
       setup();
-      const editable = createContentEditable();
-      dispatchKey('1', { metaKey: true, target: editable });
-      expect(mockPush).not.toHaveBeenCalled();
+      withSuppressionTarget({ isContentEditable: true }, (target) => {
+        dispatchKey('1', { metaKey: true, target });
+        expect(mockPush).not.toHaveBeenCalled();
+      });
+    });
+
+    it('should NOT suppress meta shortcuts when contentEditable is explicitly disabled (false)', () => {
+      setup();
+      // contentEditable="false" means isContentEditable returns false,
+      // so shortcuts should fire normally.
+      withSuppressionTarget({ isContentEditable: false }, (target) => {
+        dispatchKey('1', { metaKey: true, target });
+        expect(mockPush).toHaveBeenCalledWith('/');
+      });
+    });
+
+    it('should suppress meta shortcuts on element with both INPUT tagName and contentEditable=true', () => {
+      setup();
+      // Both conditions in the isInput check are true — should still suppress.
+      withSuppressionTarget({ tagName: 'INPUT', isContentEditable: true }, (target) => {
+        dispatchKey('1', { metaKey: true, target });
+        expect(mockPush).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -300,11 +307,11 @@ describe('useGlobalShortcuts', () => {
 describe('useKeyboardShortcuts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    cleanupElements();
+    cleanupSuppressionTargets();
   });
 
   afterEach(() => {
-    cleanupElements();
+    cleanupSuppressionTargets();
   });
 
   it('should toggle setOpen(true) on ? when currently closed', () => {
@@ -327,21 +334,43 @@ describe('useKeyboardShortcuts', () => {
     const setOpen = vi.fn();
     renderHook(() => useKeyboardShortcuts(false, setOpen));
 
-    const input = createInputElement();
-    dispatchKey('?', { target: input });
-    expect(setOpen).not.toHaveBeenCalled();
+    withSuppressionTarget({ tagName: 'INPUT' }, (target) => {
+      dispatchKey('?', { target });
+      expect(setOpen).not.toHaveBeenCalled();
+    });
   });
 
-  // Note: jsdom doesn't reliably implement HTMLElement.isContentEditable,
-  // so contentEditable suppression can't be verified in this environment.
-  // The input suppression test above proves the isInput logic works.
-  it.skip('should suppress ? in contentEditable elements (jsdom limitation)', () => {
+  it('should suppress ? in contentEditable elements', () => {
     const setOpen = vi.fn();
     renderHook(() => useKeyboardShortcuts(false, setOpen));
 
-    const editable = createContentEditable();
-    dispatchKey('?', { target: editable });
-    expect(setOpen).not.toHaveBeenCalled();
+    withSuppressionTarget({ isContentEditable: true }, (target) => {
+      dispatchKey('?', { target });
+      expect(setOpen).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should NOT suppress ? when contentEditable is explicitly disabled (false)', () => {
+    const setOpen = vi.fn();
+    renderHook(() => useKeyboardShortcuts(false, setOpen));
+
+    // contentEditable="false" means isContentEditable returns false,
+    // so ? should trigger the shortcuts modal.
+    withSuppressionTarget({ isContentEditable: false }, (target) => {
+      dispatchKey('?', { target });
+      expect(setOpen).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it('should suppress ? on element with both INPUT tagName and contentEditable=true', () => {
+    const setOpen = vi.fn();
+    renderHook(() => useKeyboardShortcuts(false, setOpen));
+
+    // Both conditions in the isInput check are true — ? should be suppressed.
+    withSuppressionTarget({ tagName: 'INPUT', isContentEditable: true }, (target) => {
+      dispatchKey('?', { target });
+      expect(setOpen).not.toHaveBeenCalled();
+    });
   });
 
   it('should remove event listener on unmount', () => {

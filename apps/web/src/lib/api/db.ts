@@ -1,4 +1,5 @@
 import { getDb, schema } from '@workmanagement/database';
+import { eq, and, isNotNull } from 'drizzle-orm';
 
 export { schema };
 
@@ -44,4 +45,42 @@ export function handleApiError(
 ): { error: { code: string; message: string }; status: number } {
   console.error(message, error);
   return apiError(message, code, status);
+}
+
+/**
+ * Recalculate a task's `actualHours` based on all its time entries.
+ * Called after approving a time correction request.
+ *
+ * Returns the new total hours as a string, or `null` on failure.
+ * Failures are silent — hours are recalculated on the next update.
+ */
+export async function recalcTaskHours(
+  taskId: string,
+): Promise<string | null> {
+  try {
+    const allEntries = await db()
+      .select({ durationMinutes: schema.timeEntries.durationMinutes })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.taskId, taskId),
+          isNotNull(schema.timeEntries.durationMinutes),
+        ),
+      );
+
+    const totalMinutes = allEntries.reduce(
+      (sum, e) => sum + (e.durationMinutes ?? 0),
+      0,
+    );
+    const totalHours = (totalMinutes / 60).toFixed(2);
+
+    await db()
+      .update(schema.tasks)
+      .set({ actualHours: totalHours, updatedAt: new Date() })
+      .where(eq(schema.tasks.id, taskId));
+
+    return totalHours;
+  } catch {
+    return null;
+  }
 }
