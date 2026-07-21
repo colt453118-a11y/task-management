@@ -85,10 +85,13 @@ async function setSessionCookie(page: import('@playwright/test').Page) {
     {
       name: 'better-auth.session_token',
       value: 'mock-session-token',
-      domain: 'localhost',
-      path: '/',
+      url: 'http://localhost:3000',
     },
   ]);
+
+  await page.addInitScript(() => {
+    document.cookie = 'better-auth.session_token=mock-session-token; path=/;';
+  });
 }
 
 /**
