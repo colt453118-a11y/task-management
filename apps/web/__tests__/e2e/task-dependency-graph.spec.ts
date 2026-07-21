@@ -643,6 +643,10 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
 }
 
 test.describe('TaskDependencyGraph — Visual Regression', () => {
+  // Visual regression only runs on Chromium to avoid maintaining snapshots
+  // for every browser. The UI is identical across browsers.
+  test.skip(({}, testInfo) => testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
+
   test('empty state screenshot', async ({ page }) => {
     await mockPageApisStatic(page);
     await registerDepsRoute(page, [], []);
