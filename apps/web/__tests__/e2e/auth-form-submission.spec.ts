@@ -77,17 +77,29 @@ test.describe('login page', () => {
   });
 
   test('redirects to dashboard on successful login', async ({ page }) => {
+    // Register mock BEFORE navigation so route handler is ready for any early API calls
+    await mockSignInSuccess(page);
     await page.goto('/auth/login');
 
-    // Mock the sign-in API to return success after navigation
-    await mockSignInSuccess(page);
+    // Wait for the page to fully hydrate before interacting with the form
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Register the response listener BEFORE clicking to avoid race conditions
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/auth/sign-in/email') && res.status() === 200,
+    );
 
     await page.getByLabel(/email/i).fill('test@example.com');
     await page.getByLabel(/password/i).fill('correctpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
+    // Wait for the sign-in API call to complete before checking the URL
+    await responsePromise;
+
     // The login page redirects to / (root) after successful sign-in
-    await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\//, { timeout: 10_000 });
   });
 
   test('provides a link to forgot-password', async ({ page }) => {
@@ -193,9 +205,14 @@ test.describe('register page', () => {
   });
 
   test('redirects to dashboard on successful registration', async ({ page }) => {
+    // Register mock BEFORE navigation so route handler is ready for any early API calls
+    await mockSignUpSuccess(page);
     await page.goto('/auth/register');
 
-    await mockSignUpSuccess(page);
+    // Wait for the page to fully hydrate before interacting with the form
+    await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Remove minLength so browser validation doesn't block submit
     await page.evaluate(() => {
@@ -203,14 +220,22 @@ test.describe('register page', () => {
       if (pw) pw.removeAttribute('minLength');
     });
 
+    // Register the response listener BEFORE clicking to avoid race conditions
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/auth/sign-up/email') && res.status() === 200,
+    );
+
     await page.getByLabel(/first name/i).fill('Jane');
     await page.getByLabel(/last name/i).fill('Doe');
     await page.getByLabel(/email/i).fill('new@example.com');
     await page.getByLabel(/password/i).fill('SecurePass123');
     await page.getByRole('button', { name: /create account/i }).click();
 
+    // Wait for the sign-up API call to complete before checking the URL
+    await responsePromise;
+
     // The register page redirects to / (root) after successful sign-up
-    await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\//, { timeout: 10_000 });
   });
 
   test('provides a link to sign in', async ({ page }) => {

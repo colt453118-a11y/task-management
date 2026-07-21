@@ -126,14 +126,21 @@ export const HISTORY_ENTRIES = [
  * API endpoints are mocked via route interception.
  */
 export async function setSessionCookie(page: Page) {
+  // Primary method: addCookies with explicit URL (more reliable than domain + path in CI)
   await page.context().addCookies([
     {
       name: 'better-auth.session_token',
       value: 'mock-session-token',
-      domain: 'localhost',
-      path: '/',
+      url: 'http://localhost:3000',
     },
   ]);
+
+  // Fallback: set cookie via addInitScript so it's available before any page JS runs.
+  // Playwright's route interception handles API calls, but the middleware checks
+  // the cookie synchronously on first load — addInitScript ensures it's present.
+  await page.addInitScript(() => {
+    document.cookie = 'better-auth.session_token=mock-session-token; path=/;';
+  });
 }
 
 /**
