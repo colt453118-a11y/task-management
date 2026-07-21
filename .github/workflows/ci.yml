@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Regenerate Playwright visual regression screenshots (chromium only)'
+        type: boolean
+        default: false
 
 env:
   NODE_VERSION: "22"
@@ -76,6 +82,9 @@ jobs:
           - browser: mobile-chrome
             project: Mobile Chrome
             install: chromium
+    # When regenerating screenshots, only run chromium
+    # Note: GitHub Actions passes boolean inputs as strings ('true'/'false')
+    if: ${{ github.event.inputs.update_snapshots != 'true' || matrix.browser == 'chromium' }}
 
     services:
       postgres:
@@ -114,7 +123,11 @@ jobs:
         run: pnpm --filter @workmanagement/web exec playwright install --with-deps ${{ matrix.install }}
 
       - name: Run E2E tests
-        run: pnpm --filter @workmanagement/web exec playwright test --project="${{ matrix.project }}" --reporter=list
+        run: >
+          pnpm --filter @workmanagement/web exec playwright test
+          --project="${{ matrix.project }}"
+          --reporter=list
+          ${{ github.event.inputs.update_snapshots == 'true' && '--update-snapshots' || '' }}
         env:
           DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
           CI_SKIP_DOCKER_SETUP: "true"
@@ -125,4 +138,12 @@ jobs:
         with:
           name: playwright-report-${{ matrix.browser }}
           path: apps/web/playwright-report/
+          retention-days: 7
+
+      - name: Upload updated screenshots
+        if: ${{ github.event.inputs.update_snapshots == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-screenshots-chromium-linux
+          path: apps/web/__tests__/e2e/task-dependency-graph.spec.ts-snapshots/
           retention-days: 7
