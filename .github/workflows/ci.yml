@@ -84,7 +84,7 @@ jobs:
             install: chromium
     # When regenerating screenshots, only run chromium
     # Note: GitHub Actions passes boolean inputs as strings ('true'/'false')
-    if: ${{ github.event.inputs.update_snapshots != 'true' || matrix.browser == 'chromium' }}
+    if: github.event.inputs.update_snapshots != 'true' || matrix.browser == 'chromium'
 
     services:
       postgres:
