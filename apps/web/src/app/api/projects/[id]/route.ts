@@ -5,6 +5,7 @@ import { withAuth, enforceOrgScope, requirePermission } from '@/lib/auth/api-aut
 import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { ProjectUpdateSchema, validationError } from '@/lib/api/validation';
+import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 
 export const runtime = 'nodejs';
 
@@ -223,6 +224,18 @@ export const PATCH = withAuth(
           oldValues,
           newValues,
         });
+
+        // Fire-and-forget webhook dispatch — never block the API response
+        dispatchWebhookEvent('project.updated', orgId!, {
+          projectId: id,
+          name: existing.name,
+          code: existing.code,
+          status: existing.status,
+          updatedBy: user.id,
+          changes: Object.keys(newValues).filter(
+            (k) => k !== 'updatedBy' && k !== 'updatedAt',
+          ),
+        });
       }
 
       return NextResponse.json({ success: true });
@@ -268,6 +281,15 @@ export const DELETE = withAuth(
         entityType: 'project',
         entityId: id,
         oldValues: { name: existing.name, status: existing.status },
+      });
+
+      // Fire-and-forget webhook dispatch — never block the API response
+      dispatchWebhookEvent('project.deleted', orgId!, {
+        projectId: id,
+        name: existing.name,
+        code: existing.code,
+        status: existing.status,
+        deletedBy: user.id,
       });
 
       return NextResponse.json({ success: true });

@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask, removeTaskFromIndex } from '@/lib/search';
+import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 
 export const runtime = 'nodejs';
 
@@ -345,6 +346,38 @@ export const PATCH = withAuth(
         updatedAt: (task.updatedAt as Date).toISOString(),
       });
 
+      // Fire-and-forget webhook dispatch
+      dispatchWebhookEvent(
+        status !== undefined && status !== existing.status
+          ? 'task.status_changed'
+          : 'task.updated',
+        orgId!,
+        {
+          taskId: task.id,
+          title: task.title,
+          taskIdDisplay: task.taskIdDisplay,
+          status: task.status,
+          priority: task.priority ?? 'medium',
+          assignedTo: task.assignedTo ?? null,
+          projectId: task.projectId ?? null,
+          updatedBy: user.id,
+          previousStatus: status !== undefined && status !== existing.status ? existing.status : undefined,
+          newStatus: status !== undefined && status !== existing.status ? status : undefined,
+        },
+      );
+
+      // Dispatch separate task.assigned event if assignment changed
+      if (assignedTo !== undefined && assignedTo !== existing.assignedTo) {
+        dispatchWebhookEvent('task.assigned', orgId!, {
+          taskId: task.id,
+          title: task.title,
+          taskIdDisplay: task.taskIdDisplay,
+          assignedTo: assignedTo,
+          previousAssignee: existing.assignedTo,
+          assignedBy: user.id,
+        });
+      }
+
       return NextResponse.json({ task });
     } catch (error) {
       const { error: err, status } = handleApiError(error, 'Failed to update task');
@@ -392,6 +425,15 @@ export const DELETE = withAuth(
 
       // Remove from Meilisearch index (non-blocking)
       removeTaskFromIndex(id);
+
+      // Fire-and-forget webhook dispatch
+      dispatchWebhookEvent('task.deleted', orgId!, {
+        taskId: id,
+        title: existing.title,
+        taskIdDisplay: existing.taskIdDisplay,
+        status: existing.status,
+        deletedBy: user.id,
+      });
 
       return NextResponse.json({ success: true });
     } catch (error) {

@@ -7,6 +7,7 @@ import { eq, desc, and, isNull, like, or, sql, inArray } from 'drizzle-orm';
 import { TaskCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask } from '@/lib/search';
+import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 
 export const runtime = 'nodejs';
 
@@ -278,6 +279,18 @@ export const POST = withAuth(
         tags: (task.tags as string[] | null) ?? null,
         createdAt: (task.createdAt as Date).toISOString(),
         updatedAt: (task.updatedAt as Date).toISOString(),
+      });
+
+      // Fire-and-forget webhook dispatch — never block the API response
+      dispatchWebhookEvent('task.created', orgId!, {
+        taskId: task.id,
+        title: task.title,
+        taskIdDisplay: task.taskIdDisplay,
+        status: task.status,
+        priority: task.priority ?? 'medium',
+        assignedTo: task.assignedTo ?? null,
+        projectId: task.projectId ?? null,
+        createdBy: user.id,
       });
 
       return NextResponse.json({ task }, { status: 201 });

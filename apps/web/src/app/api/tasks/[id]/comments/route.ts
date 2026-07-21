@@ -8,6 +8,7 @@ import { eq, desc, and, isNull } from 'drizzle-orm';
 import { CommentCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
+import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 
 export const runtime = 'nodejs';
 
@@ -140,6 +141,16 @@ export const POST = withAuth(
           entityId: taskId,
         });
       }
+
+      // Fire-and-forget webhook dispatch — never block the API response
+      dispatchWebhookEvent('task.comment_added', orgId!, {
+        taskId,
+        commentId: comment.id,
+        taskTitle: task!.title,
+        taskIdDisplay: task!.taskIdDisplay,
+        commentPreview: content.substring(0, 200),
+        createdBy: user.id,
+      });
 
       // Fetch the comment with user info
       const [commentWithUser] = await db()
