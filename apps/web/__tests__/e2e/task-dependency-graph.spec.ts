@@ -1,4 +1,4 @@
-import { test, expect, type TestInfo } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DEP_GRAPH } from '@/lib/test-ids';
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -96,15 +96,28 @@ const MOCK_SEARCH_RESULTS = [
 
 // ─── Helpers ────────────────────────────────────────────────────
 
+/**
+ * Set the session cookie that Next.js middleware checks.
+ *
+ * Uses `url` instead of `domain` + `path` for more reliable matching,
+ * and also sets the cookie via `addInitScript` as a fallback so it's
+ * guaranteed to be available on the very first navigation request.
+ *
+ * Without this, the middleware redirects to /auth/login and the test
+ * page never loads.
+ */
 async function setSessionCookie(page: import('@playwright/test').Page) {
-  await page.context().addCookies([
-    {
-      name: 'better-auth.session_token',
-      value: 'mock-session-token',
-      domain: 'localhost',
-      path: '/',
-    },
-  ]);
+  // Primary: add cookies via the context API (available for all pages)
+  await page.context().addCookies([{
+    name: 'better-auth.session_token',
+    value: 'mock-session-token',
+    url: 'http://localhost:3000',
+  }]);
+
+  // Fallback: inject a script that sets the cookie before any page JS runs
+  await page.addInitScript(() => {
+    document.cookie = 'better-auth.session_token=mock-session-token; path=/;';
+  });
 }
 
 async function mockPageApis(page: import('@playwright/test').Page) {
@@ -134,6 +147,19 @@ async function mockPageApis(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
   });
+  // Mock checklist mutations to prevent "Failed to add/delete/update checklist item" errors
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-new', content: 'Test item', isChecked: false, sortOrder: 0 } }) });
+    } else if (method === 'PATCH') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-item', content: 'Updated', isChecked: true, sortOrder: 0 } }) });
+    } else if (method === 'DELETE') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    }
+  });
 }
 
 async function registerDepsRoute(page: import('@playwright/test').Page, blockedBy: typeof BLOCKED_BY_DEPS, blocking: typeof BLOCKING_DEPS) {
@@ -160,19 +186,6 @@ interface DepsData {
   blocking: readonly { id: string; taskId: string; dependsOnTaskId: string; dependencyType: string; createdAt: string; dependsOnTask?: unknown; blockingTask?: unknown }[];
 }
 
-/**
- * Registers a route for `/api/tasks/${TASK_ID}/dependencies` that sequences
- * GET responses based on whether a mutation (DELETE/POST) has occurred.
- *
- * Before mutation: GET returns `beforeData`.
- * After mutation: GET returns `afterData`.
- *
- * If `onMutation` is provided, it handles the non-GET response (for custom
- * status codes or response bodies). Otherwise defaults to 200 (DELETE) or
- * 201 (POST) with `{ success: true }`.
- *
- * Returns `{ wasMutated }` so tests can assert the mutation occurred.
- */
 function createDepsMutationRoute(
   page: import('@playwright/test').Page,
   beforeData: DepsData,
@@ -634,7 +647,7 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/watchers`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
   });
-  await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
   });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
@@ -645,7 +658,7 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
 test.describe('TaskDependencyGraph — Visual Regression', () => {
   // Visual regression only runs on Chromium to avoid maintaining snapshots
   // for every browser. The UI is identical across browsers.
-  test.beforeEach(function ({}, testInfo: TestInfo) {
+  test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
   });
 
@@ -759,7 +772,7 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(STATIC_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Switch to list view while empty — view toggle shows "List" active
+    // Switch to list view while empty — view toggle shows \"List\" active
     // but content shows empty state since there are no deps
     await page.getByTestId(DEP_GRAPH.toggleList).click();
     await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-500/);
