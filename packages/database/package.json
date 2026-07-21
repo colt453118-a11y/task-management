@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint ok'",
-    "test": "echo 'no tests'",
+    "test": "vitest run",
     "clean": "rm -rf node_modules"
   },
   "dependencies": {

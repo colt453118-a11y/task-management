@@ -1,6 +1,5 @@
 'use client';
-
-import { useEffect, useState, useCallback, startTransition } from 'react';
+import { useEffect, useState, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,8 +28,6 @@ import {
   AlertCircle,
   FileText,
   Upload,
-  Link2,
-  Plus,
   X,
   Edit3,
   Check,
@@ -40,6 +37,7 @@ import {
   History,
   Copy,
 } from 'lucide-react';
+import { TaskDependencySection } from '@/components/tasks/task-dependency-section';
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -138,8 +136,7 @@ export default function TaskDetailPage() {
   const storeComments = useTaskStore((s) => s.comments);
   const storeAttachments = useTaskStore((s) => s.attachments);
   const storeTimeEntries = useTaskStore((s) => s.timeEntries);
-  const storeBlockedBy = useTaskStore((s) => s.blockedBy);
-  const storeBlocking = useTaskStore((s) => s.blocking);
+
   const storeError = useTaskStore((s) => s.detailError);
   const fetchTaskDetail = useTaskStore((s) => s.fetchTaskDetail);
   const updateCurrentTask = useTaskStore((s) => s.updateCurrentTask);
@@ -148,8 +145,7 @@ export default function TaskDetailPage() {
   const addAttachment = useTaskStore((s) => s.addAttachment);
   const removeAttachment = useTaskStore((s) => s.removeAttachment);
   const removeTimeEntryAction = useTaskStore((s) => s.removeTimeEntry);
-  const setDependencies = useTaskStore((s) => s.setDependencies);
-  const removeDependency = useTaskStore((s) => s.removeDependency);
+
   const setTimeEntries = useTaskStore((s) => s.setTimeEntries);
 
   const [notFound, setNotFound] = useState(false);
@@ -159,11 +155,6 @@ export default function TaskDetailPage() {
   // Comment form
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-
-  // Dependencies
-  const [depTaskId, setDepTaskId] = useState('');
-  const [addingDep, setAddingDep] = useState(false);
-  const [depError, setDepError] = useState<string | null>(null);
 
   // Description editing
   const [editingDescription, setEditingDescription] = useState(false);
@@ -180,8 +171,7 @@ export default function TaskDetailPage() {
   const comments = storeComments;
   const attachments = storeAttachments;
   const timeEntries = storeTimeEntries;
-  const blockedBy = storeBlockedBy;
-  const blocking = storeBlocking;
+
 
   const [elapsed, setElapsed] = useState('00:00:00');
 
@@ -200,7 +190,6 @@ export default function TaskDetailPage() {
 
   useEffect(() => {
     // store action is async, no cascading render
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     startTransition(() => {
       fetchTaskDetail(taskId).finally(() => setLoading(false));
     });
@@ -404,56 +393,6 @@ export default function TaskDetailPage() {
     }
   };
 
-  // ── Add dependency ────────────────────────────────────
-
-  const refetchDependencies = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/dependencies`);
-      if (res.ok) {
-        const data = await res.json();
-        setDependencies(data.blockedBy ?? [], data.blocking ?? []);
-      }
-    } catch {}
-  }, [taskId, setDependencies]);
-
-  const addDependency = async () => {
-    const targetId = depTaskId.trim();
-    if (!targetId) return;
-    setAddingDep(true);
-    setDepError(null);
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/dependencies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dependsOnTaskId: targetId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error?.message ?? 'Failed to add dependency');
-      }
-      setDepTaskId('');
-      refetchDependencies();
-    } catch (err) {
-      setDepError(err instanceof Error ? err.message : 'Failed to add dependency');
-    } finally {
-      setAddingDep(false);
-    }
-  };
-
-  // ── Remove dependency ──────────────────────────────────
-
-  const handleRemoveDependency = async (dependencyId: string) => {
-    removeDependency(dependencyId); // Optimistic from store
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/dependencies?dependencyId=${dependencyId}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('Failed to remove dependency');
-    } catch (err) {
-      console.error('Failed to remove dependency:', err);
-      refetchDependencies(); // Refetch on failure
-    }
-  };
 
   // ── Save description ──────────────────────────────────
 
@@ -1114,168 +1053,7 @@ export default function TaskDetailPage() {
           </motion.div>
 
           {/* Dependencies */}
-          <motion.div
-            variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
-          >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <Link2 className="text-surface-500 h-4 w-4" />
-                Dependencies
-              </h2>
-            </div>
-            <div className="space-y-4 px-5 py-4">
-              {/* Blocked by */}
-              <AnimatePresence>
-                {blockedBy.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                  >
-                    <p className="text-surface-500 mb-2 flex items-center gap-1 text-xs font-medium">
-                      <motion.span
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="inline-block h-2 w-2 rounded-full bg-amber-500"
-                      />
-                      Blocked by
-                    </p>
-                    <div className="space-y-1.5">
-                      {blockedBy.map((dep) => (
-                        <motion.div
-                          key={dep.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="border-surface-300/10 group flex items-center justify-between rounded-xl border bg-amber-500/5 px-2.5 py-1.5 transition-all hover:border-amber-500/20 hover:bg-amber-500/10"
-                        >
-                          <a
-                            href={`/tasks/${dep.dependsOnTaskId}`}
-                            className="text-surface-900 hover:text-brand-500 min-w-0 truncate text-sm transition-colors"
-                          >
-                            <span className="text-surface-500 font-mono text-xs">
-                              {dep.dependsOnTask?.taskIdDisplay ?? ''}
-                            </span>{' '}
-                            {dep.dependsOnTask?.title ?? dep.dependsOnTaskId.substring(0, 8)}
-                          </a>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            onClick={() => handleRemoveDependency(dep.id)}
-                            className="text-surface-500 hover:text-error ml-2 shrink-0 rounded p-0.5 opacity-0 transition-all duration-200 group-hover:opacity-100"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </motion.button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Blocking */}
-              <AnimatePresence>
-                {blocking.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                  >
-                    <p className="text-surface-500 mb-2 flex items-center gap-1 text-xs font-medium">
-                      <motion.span
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="bg-error inline-block h-2 w-2 rounded-full"
-                      />
-                      Blocking
-                    </p>
-                    <div className="space-y-1.5">
-                      {blocking.map((dep) => (
-                        <motion.div
-                          key={dep.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="border-surface-300/10 bg-error/5 hover:bg-error/10 hover:border-error/20 group flex items-center justify-between rounded-xl border px-2.5 py-1.5 transition-all"
-                        >
-                          <a
-                            href={`/tasks/${dep.taskId}`}
-                            className="text-surface-900 hover:text-brand-500 min-w-0 truncate text-sm transition-colors"
-                          >
-                            <span className="text-surface-500 font-mono text-xs">
-                              {dep.blockingTask?.taskIdDisplay ?? ''}
-                            </span>{' '}
-                            {dep.blockingTask?.title ?? dep.taskId.substring(0, 8)}
-                          </a>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            onClick={() => handleRemoveDependency(dep.id)}
-                            className="text-surface-500 hover:text-error ml-2 shrink-0 rounded p-0.5 opacity-0 transition-all duration-200 group-hover:opacity-100"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </motion.button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {blockedBy.length === 0 && blocking.length === 0 && (
-                <EmptyState
-                  variant="compact"
-                  animated={false}
-                  icon={<Link2 className="h-7 w-7" />}
-                  title="No dependencies"
-                  className="border-0 bg-transparent py-4"
-                />
-              )}
-
-              {/* Add dependency */}
-              <div className="border-surface-300/20 border-t pt-1">
-                <AnimatePresence>
-                  {depError && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      className="text-error mb-2 text-xs"
-                    >
-                      {depError}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Paste task UUID to link..."
-                    value={depTaskId}
-                    onChange={(e) => setDepTaskId(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !addingDep) {
-                        e.preventDefault();
-                        addDependency();
-                      }
-                    }}
-                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-500 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 flex-1 rounded-xl border px-2.5 py-1.5 text-xs transition-all duration-200 focus:outline-none focus:ring-2"
-                  />
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={addDependency}
-                      disabled={!depTaskId.trim() || addingDep}
-                      className="shrink-0 rounded-xl"
-                    >
-                      {addingDep ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Plus className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          <TaskDependencySection taskId={taskId} variants={itemVariants} />
 
           {/* Time Tracking */}
           <motion.div

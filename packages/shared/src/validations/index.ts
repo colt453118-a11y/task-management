@@ -91,3 +91,12 @@ export type {
   UserStatusUpdateInput,
   PasswordUpdateInput,
 } from './user';
+
+export {
+  TIME_CORRECTION_CREATE_SCHEMA,
+  TIME_CORRECTION_REVIEW_SCHEMA,
+} from './time-correction';
+export type {
+  TimeCorrectionCreateInput,
+  TimeCorrectionReviewInput,
+} from './time-correction';

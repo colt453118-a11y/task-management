@@ -5,6 +5,7 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { ProjectCreateSchema, validationError } from '@/lib/api/validation';
+import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 
 export const runtime = 'nodejs';
 
@@ -111,6 +112,16 @@ export const POST = withAuth(
         entityType: 'project',
         entityId: project.id,
         newValues: { name, code, status: 'active', ownerId },
+      });
+
+      // Fire-and-forget webhook dispatch — never block the API response
+      dispatchWebhookEvent('project.created', orgId!, {
+        projectId: project.id,
+        name: project.name,
+        code: project.code,
+        status: project.status,
+        ownerId: project.ownerId,
+        createdBy: user.id,
       });
 
       return NextResponse.json({ project }, { status: 201 });

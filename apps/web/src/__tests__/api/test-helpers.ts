@@ -46,6 +46,7 @@ export function createChain(resultsQueue: TerminalResult[]): QueryChain {
     leftJoin: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
+    offset: vi.fn(() => chain),
     values: vi.fn(() => chain),
     returning: vi.fn(() => chain),
     insert: vi.fn(() => chain),

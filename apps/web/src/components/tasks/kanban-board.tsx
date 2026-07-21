@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
 import { isValidTransition } from '@/lib/api/validation';
+import { KANBAN } from '@/lib/test-ids';
 
 // ─── Workflow Columns ──────────────────────────────────────────
 
@@ -223,6 +224,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <motion.div
+        data-testid={KANBAN.container}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -253,7 +255,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
       {/* Drag Overlay — shows the card being dragged */}
       <DragOverlay dropAnimation={null}>
         {activeTask ? (
-          <div className="w-[280px]">
+          <div className="w-[280px]" data-testid={KANBAN.dragOverlay}>
             <KanbanCard task={activeTask} isDragOverlay />
           </div>
         ) : null}

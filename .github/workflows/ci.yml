@@ -15,6 +15,21 @@ jobs:
     name: Typecheck → Test → Lint
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17.10-alpine
+        env:
+          POSTGRES_DB: workmanagement
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: devpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dev -d workmanagement"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,8 +51,78 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
+      - name: Test (with Postgres)
         run: pnpm test
+        env:
+          DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
 
       - name: Lint
         run: pnpm lint
+
+  e2e:
+    name: E2E (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chromium
+            project: chromium
+            install: chromium
+          - browser: firefox
+            project: firefox
+            install: firefox
+          - browser: mobile-chrome
+            project: Mobile Chrome
+            install: chromium
+
+    services:
+      postgres:
+        image: postgres:17.10-alpine
+        env:
+          POSTGRES_DB: workmanagement
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: devpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dev -d workmanagement"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm --filter @workmanagement/web exec playwright install --with-deps ${{ matrix.install }}
+
+      - name: Run E2E tests
+        run: pnpm --filter @workmanagement/web exec playwright test --project="${{ matrix.project }}" --reporter=list
+        env:
+          DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
+          CI_SKIP_DOCKER_SETUP: "true"
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: apps/web/playwright-report/
+          retention-days: 7

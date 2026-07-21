@@ -79,6 +79,9 @@ async function seed() {
     { code: 'task_template:create', name: 'Create Task Templates', module: 'task' },
     { code: 'task_template:edit', name: 'Edit Task Templates', module: 'task' },
     { code: 'task_template:delete', name: 'Delete Task Templates', module: 'task' },
+    // Time tracking permissions
+    { code: 'time:manage', name: 'Manage Time Corrections', module: 'time' },
+
     // Report permissions
     { code: 'report:view', name: 'View Reports', module: 'report' },
     { code: 'report:generate', name: 'Generate Reports', module: 'report' },
@@ -207,6 +210,7 @@ async function seed() {
       'report:view',
       'report:generate',
       'report:export',
+      'time:manage',
       'setting:view',
     ],
   });

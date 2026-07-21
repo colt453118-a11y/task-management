@@ -17,6 +17,8 @@ import {
   Sparkles,
   Menu,
   X,
+  Clock,
+  FileEdit,
 } from 'lucide-react';
 import { useState, useEffect, startTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +29,8 @@ const navItems = [
   { label: 'Projects', href: '/projects', icon: FolderKanban },
   { label: 'Teams', href: '/teams', icon: Users },
   { label: 'People', href: '/users', icon: UserRoundCog },
+  { label: 'Time Tracking', href: '/timer', icon: Clock },
+  { label: 'Corrections', href: '/corrections', icon: FileEdit },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Calendar', href: '/calendar', icon: Calendar },
   { label: 'Settings', href: '/settings', icon: Settings },
