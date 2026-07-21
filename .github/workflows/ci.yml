@@ -82,10 +82,6 @@ jobs:
           - browser: mobile-chrome
             project: Mobile Chrome
             install: chromium
-    # When regenerating screenshots, only run chromium
-    # Note: GitHub Actions passes boolean inputs as strings ('true'/'false')
-    if: github.event.inputs.update_snapshots != 'true' || matrix.browser == 'chromium'
-
     services:
       postgres:
         image: postgres:17.10-alpine
@@ -123,6 +119,7 @@ jobs:
         run: pnpm --filter @workmanagement/web exec playwright install --with-deps ${{ matrix.install }}
 
       - name: Run E2E tests
+        if: github.event.inputs.update_snapshots != 'true' || matrix.browser == 'chromium'
         run: >
           pnpm --filter @workmanagement/web exec playwright test
           --project="${{ matrix.project }}"
@@ -141,7 +138,7 @@ jobs:
           retention-days: 7
 
       - name: Upload updated screenshots
-        if: ${{ github.event.inputs.update_snapshots == 'true' }}
+        if: github.event.inputs.update_snapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-screenshots-chromium-linux
