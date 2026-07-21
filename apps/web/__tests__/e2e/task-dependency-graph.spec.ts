@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type TestInfo } from '@playwright/test';
 import { DEP_GRAPH } from '@/lib/test-ids';
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -645,7 +645,7 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
 test.describe('TaskDependencyGraph — Visual Regression', () => {
   // Visual regression only runs on Chromium to avoid maintaining snapshots
   // for every browser. The UI is identical across browsers.
-  test.skip(({}, testInfo) => testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
+  test.skip(({}, testInfo: TestInfo) => testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
 
   test('empty state screenshot', async ({ page }) => {
     await mockPageApisStatic(page);
