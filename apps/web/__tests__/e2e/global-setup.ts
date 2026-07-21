@@ -32,7 +32,7 @@ async function globalSetup() {
   // ── 2. Check if Postgres is already running ──────────────────
   try {
     const running = execSync(
-      `docker ps --filter name=wm-postgres --format "{{.Names}}"`,
+      'docker ps --filter name=wm-postgres --format "{{.Names}}"',
       { encoding: 'utf8', timeout: 5_000 },
     ).trim();
 

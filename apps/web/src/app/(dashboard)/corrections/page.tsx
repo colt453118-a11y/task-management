@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -133,7 +133,9 @@ export default function CorrectionsPage() {
   }, []);
 
   useEffect(() => {
-    fetchCorrections();
+    startTransition(() => {
+      fetchCorrections();
+    });
   }, [fetchCorrections]);
 
   // ── Compute stats ────────────────────────────────────────

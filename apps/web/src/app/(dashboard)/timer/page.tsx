@@ -828,7 +828,7 @@ export default function TimeTrackingPage() {
                             <Moon className="h-2.5 w-2.5" />
                             {idleSeconds > 60
                               ? `${Math.floor(idleSeconds / 60)}m`
-                              : `${idleSeconds}s`}{" "}
+                              : `${idleSeconds}s`}{' '}
                             idle
                           </Badge>
                         </motion.div>

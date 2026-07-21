@@ -299,6 +299,7 @@ export * from './reports';
 export * from './task-templates';
 export * from './notifications';
 export * from './time-corrections';
+export * from './webhooks';
 
 // ─── Import domain tables for relations ──────────────────────
 

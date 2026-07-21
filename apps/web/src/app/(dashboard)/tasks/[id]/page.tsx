@@ -1,5 +1,4 @@
 'use client';
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState, startTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -191,7 +190,6 @@ export default function TaskDetailPage() {
 
   useEffect(() => {
     // store action is async, no cascading render
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     startTransition(() => {
       fetchTaskDetail(taskId).finally(() => setLoading(false));
     });

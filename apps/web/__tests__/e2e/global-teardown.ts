@@ -19,7 +19,7 @@ async function globalTeardown() {
   // Check if any wm-* containers are running
   try {
     const running = execSync(
-      `docker ps --filter name=wm- --format "{{.Names}}"`,
+      'docker ps --filter name=wm- --format "{{.Names}}"',
       { encoding: 'utf8', timeout: 5_000 },
     ).trim();
 
@@ -35,6 +35,7 @@ async function globalTeardown() {
       stdio: 'pipe',
       timeout: 30_000,
     });
+    console.log('Docker services stopped');
     console.log('✓ Docker services stopped');
   } catch {
     // Best-effort cleanup
