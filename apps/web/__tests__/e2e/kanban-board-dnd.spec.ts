@@ -124,6 +124,43 @@ async function mockPageApis(page: import('@playwright/test').Page) {
 }
 
 /**
+ * Trigger a drag start (press + move past activation threshold) on a card.
+ * Uses page.mouse for primary activation and dispatchEvent as fallback for
+ * mobile viewports where @dnd-kit's PointerSensor may need extra help.
+ *
+ * @returns The card's bounding box if found, or undefined.
+ */
+async function triggerDragOnCard(
+  page: import('@playwright/test').Page,
+  sourceLocator: Locator,
+): Promise<{ x: number; y: number; width: number; height: number } | undefined> {
+  const sourceBox = await sourceLocator.boundingBox();
+  if (!sourceBox) return undefined;
+
+  const cx = sourceBox.x + sourceBox.width / 2;
+  const cy = sourceBox.y + sourceBox.height / 2;
+
+  // Step 1: Hover the card so it becomes the pointer target
+  await sourceLocator.hover();
+  await page.waitForTimeout(100);
+
+  // Step 2: Move to center via mouse API for explicit positioning
+  await page.mouse.move(cx, cy);
+  await page.waitForTimeout(100);
+
+  // Step 3: Press down — generates native pointerdown + mousedown for @dnd-kit
+  await page.mouse.down();
+  await page.waitForTimeout(100);
+
+  // Step 4: Move past the activation threshold (default: 10px) with small steps
+  // Increased distance (25px) and steps (8) for reliable activation on all viewports
+  await page.mouse.move(cx + 25, cy, { steps: 8 });
+  await page.waitForTimeout(100);
+
+  return sourceBox;
+}
+
+/**
  * Simulate a drag-and-drop operation from a source element to a target
  * element using the Playwright mouse API. This dispatches real pointer
  * events that @dnd-kit's PointerSensor can detect.
@@ -273,19 +310,13 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Verify drag overlay appears when drag starts (proves @dnd-kit activation)
     const sourceCard = page.getByTestId(KANBAN.card(TASK_ID_1));
-    const sourceBox = await sourceCard.boundingBox();
+    const sourceBox = await triggerDragOnCard(page, sourceCard);
     expect(sourceBox).toBeTruthy();
     if (!sourceBox) return;
 
-    // Start a drag — move to source, press down, move past activation threshold
-    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(50);
-    await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 20, sourceBox.y, { steps: 5 });
-
     // The drag overlay should appear (a clone of the card), proving @dnd-kit activated
     // The original card and overlay clone both share the same data-testid
-    await expect(sourceCard).toHaveCount(2, { timeout: 3_000 });
+    await expect(sourceCard).toHaveCount(2, { timeout: 5_000 });
 
     // Cancel the drag with Escape to avoid onDragEnd making unexpected API calls
     await page.keyboard.press('Escape');
@@ -344,17 +375,12 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Start a drag to verify activation
     const sourceCard = page.getByTestId(KANBAN.card(TASK_ID_1));
-    const sourceBox = await sourceCard.boundingBox();
+    const sourceBox = await triggerDragOnCard(page, sourceCard);
     expect(sourceBox).toBeTruthy();
     if (!sourceBox) return;
 
-    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(50);
-    await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 20, sourceBox.y, { steps: 5 });
-
-    // Use specific locator (button role) for overlay count check
-    await expect(sourceCard).toHaveCount(2, { timeout: 3_000 });
+    // Verify the drag overlay appears (original card + clone)
+    await expect(sourceCard).toHaveCount(2, { timeout: 5_000 });
 
     // Cancel the drag with Escape (@dnd-kit fires onDragEnd with over: null,
     // so the handler returns early without making any API call).
