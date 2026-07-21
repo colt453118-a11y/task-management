@@ -1,4 +1,4 @@
-import { test, expect, type TestInfo } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DEP_GRAPH } from '@/lib/test-ids';
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -101,10 +101,13 @@ async function setSessionCookie(page: import('@playwright/test').Page) {
     {
       name: 'better-auth.session_token',
       value: 'mock-session-token',
-      domain: 'localhost',
-      path: '/',
+      url: 'http://localhost:3000',
     },
   ]);
+
+  await page.addInitScript(() => {
+    document.cookie = 'better-auth.session_token=mock-session-token; path=/;';
+  });
 }
 
 async function mockPageApis(page: import('@playwright/test').Page) {
@@ -128,8 +131,13 @@ async function mockPageApis(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/watchers`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
   });
-  await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    } else {
+      await route.fulfill({ status: 405, body: 'Method not allowed' });
+    }
   });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
@@ -634,8 +642,13 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/watchers`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
   });
-  await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    } else {
+      await route.fulfill({ status: 405, body: 'Method not allowed' });
+    }
   });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
@@ -645,7 +658,7 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
 test.describe('TaskDependencyGraph — Visual Regression', () => {
   // Visual regression only runs on Chromium to avoid maintaining snapshots
   // for every browser. The UI is identical across browsers.
-  test.beforeEach(function ({}, testInfo: TestInfo) {
+  test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
   });
 
