@@ -96,6 +96,16 @@ const MOCK_SEARCH_RESULTS = [
 
 // ─── Helpers ────────────────────────────────────────────────────
 
+/**
+ * Set the session cookie that Next.js middleware checks.
+ *
+ * Uses `url` instead of `domain` + `path` for more reliable matching,
+ * and also sets the cookie via `addInitScript` as a fallback so it's
+ * guaranteed to be available on the very first navigation request.
+ *
+ * Without this, the middleware redirects to /auth/login and the test
+ * page never loads.
+ */
 async function setSessionCookie(page: import('@playwright/test').Page) {
   await page.context().addCookies([
     {
@@ -142,6 +152,19 @@ async function mockPageApis(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
   });
+  // Mock checklist mutations to prevent "Failed to add/delete/update checklist item" errors
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-new', content: 'Test item', isChecked: false, sortOrder: 0 } }) });
+    } else if (method === 'PATCH') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-item', content: 'Updated', isChecked: true, sortOrder: 0 } }) });
+    } else if (method === 'DELETE') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    }
+  });
 }
 
 async function registerDepsRoute(page: import('@playwright/test').Page, blockedBy: typeof BLOCKED_BY_DEPS, blocking: typeof BLOCKING_DEPS) {
@@ -168,19 +191,6 @@ interface DepsData {
   blocking: readonly { id: string; taskId: string; dependsOnTaskId: string; dependencyType: string; createdAt: string; dependsOnTask?: unknown; blockingTask?: unknown }[];
 }
 
-/**
- * Registers a route for `/api/tasks/${TASK_ID}/dependencies` that sequences
- * GET responses based on whether a mutation (DELETE/POST) has occurred.
- *
- * Before mutation: GET returns `beforeData`.
- * After mutation: GET returns `afterData`.
- *
- * If `onMutation` is provided, it handles the non-GET response (for custom
- * status codes or response bodies). Otherwise defaults to 200 (DELETE) or
- * 201 (POST) with `{ success: true }`.
- *
- * Returns `{ wasMutated }` so tests can assert the mutation occurred.
- */
 function createDepsMutationRoute(
   page: import('@playwright/test').Page,
   beforeData: DepsData,
@@ -650,6 +660,19 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
       await route.fulfill({ status: 405, body: 'Method not allowed' });
     }
   });
+  // Mock checklist mutations to prevent "Failed to add/delete/update checklist item" errors
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-new', content: 'Test item', isChecked: false, sortOrder: 0 } }) });
+    } else if (method === 'PATCH') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-item', content: 'Updated', isChecked: true, sortOrder: 0 } }) });
+    } else if (method === 'DELETE') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    }
+  });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
   });
@@ -772,7 +795,7 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(STATIC_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Switch to list view while empty — view toggle shows "List" active
+    // Switch to list view while empty — view toggle shows \"List\" active
     // but content shows empty state since there are no deps
     await page.getByTestId(DEP_GRAPH.toggleList).click();
     await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-500/);
