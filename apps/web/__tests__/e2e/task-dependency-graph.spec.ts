@@ -316,8 +316,8 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search
     await searchInput.fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText('Write documentation')).toBeVisible();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-2'))).toBeVisible();
     await expect(page.getByText('TASK-005')).toBeVisible();
     await expect(page.getByText('TASK-006')).toBeVisible();
   });
@@ -359,11 +359,11 @@ test.describe('TaskDependencyGraph', () => {
     // Open dialog, search, select
     await page.getByTestId(DEP_GRAPH.addBtn).click();
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
+    // After add, dialog closes and dep appears (dep item uses id 'dep-new')
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('Blocked by').first()).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
@@ -394,11 +394,11 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search and select
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
+    // After add, dialog closes and dep appears (dep item uses id 'dep-empty-add')
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('Blocked by').first()).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
@@ -424,8 +424,8 @@ test.describe('TaskDependencyGraph', () => {
     // Open dialog, search, try to add
     await page.getByTestId(DEP_GRAPH.addBtn).click();
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
     // Error message appears in dialog
     await expect(page.getByText('Circular dependency detected')).toBeVisible({ timeout: 3_000 });
