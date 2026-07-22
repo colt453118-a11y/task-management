@@ -93,6 +93,7 @@ test.describe('login page', () => {
 
     await page.getByLabel(/email/i).fill('test@example.com');
     await page.getByLabel(/password/i).fill('correctpassword');
+    await page.getByRole('button', { name: /sign in/i }).click();
 
     // Wait for the sign-in API call to complete before checking the URL
     await responsePromise;
@@ -228,6 +229,7 @@ test.describe('register page', () => {
     await page.getByLabel(/last name/i).fill('Doe');
     await page.getByLabel(/email/i).fill('new@example.com');
     await page.getByLabel(/password/i).fill('SecurePass123');
+    await page.getByRole('button', { name: /create account/i }).click();
 
     // Wait for the sign-up API call to complete before checking the URL
     await responsePromise;

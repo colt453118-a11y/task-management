@@ -195,7 +195,7 @@ pnpm db:studio    # Open Drizzle Studio
 - File attachments (MinIO integration)
 - Full-text search (Meilisearch)
 - Email notifications
-- RBAC permission enforcement
+- ~~RBAC permission enforcement~~ ✅ *(Fully implemented — 45 API routes protected)*
 - Webhooks & integrations
 - Mobile responsive design
 - Performance monitoring (Sentry)
