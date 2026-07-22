@@ -334,6 +334,153 @@ export async function registerWatcherRoute(
   });
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  Attachment Mock Data
+// ═══════════════════════════════════════════════════════════════
+
+export const MOCK_ATTACHMENTS = [
+  {
+    id: 'att-1',
+    taskId: TASK_ID,
+    userId: 'user-123',
+    fileName: 'design-spec.pdf',
+    fileSize: 245_760,
+    mimeType: 'application/pdf',
+    storageKey: `tasks/${TASK_ID}/1700000000000-design-spec.pdf`,
+    downloadUrl: 'https://minio.local/workmanagement-files/tasks/...',
+    createdAt: new Date().toISOString(),
+    user: { id: 'user-123', name: 'Alice Johnson' },
+  },
+  {
+    id: 'att-2',
+    taskId: TASK_ID,
+    userId: 'user-123',
+    fileName: 'screenshot.png',
+    fileSize: 1_048_576,
+    mimeType: 'image/png',
+    storageKey: `tasks/${TASK_ID}/1700000001000-screenshot.png`,
+    downloadUrl: 'https://minio.local/workmanagement-files/tasks/...',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+    user: { id: 'user-123', name: 'Alice Johnson' },
+  },
+] as const;
+
+// ═══════════════════════════════════════════════════════════════
+//  Attachment Route Helper
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Register the attachments API route with GET returning the given
+ * attachments and optional handlers for POST (upload) and DELETE (remove).
+ *
+ * Uses `attachments*` glob to match DELETE URLs with `?attachmentId=` query params.
+ *
+ * @example
+ *   // Empty
+ *   await registerAttachmentsRoute(page);
+ *
+ *   // With attachments
+ *   await registerAttachmentsRoute(page, { attachments: MOCK_ATTACHMENTS });
+ *
+ *   // With POST handler
+ *   await registerAttachmentsRoute(page, {
+ *     attachments: [],
+ *     onPost: { status: 201, body: { attachment: newAttachment } },
+ *   });
+ *
+ *   // Simulate upload failure
+ *   await registerAttachmentsRoute(page, {
+ *     attachments: [],
+ *     onPost: async (route) => {
+ *       await route.fulfill({
+ *         status: 400,
+ *         body: JSON.stringify({ error: { message: 'File too large' } }),
+ *       });
+ *     },
+ *   });
+ */
+export async function registerAttachmentsRoute(
+  page: Page,
+  options: {
+    /** Attachments returned by GET. Default: []. */
+    attachments?: readonly Record<string, unknown>[];
+    /** Custom POST handler. If absent, returns 201 with a mock attachment. */
+    onPost?: ((route: Route) => Promise<void>) | { status?: number; body: Record<string, unknown> };
+    /** Custom DELETE handler. If absent, DELETE returns 200. */
+    onDelete?: ((route: Route) => Promise<void>) | { status?: number; body: Record<string, unknown> };
+  } = {},
+) {
+  const {
+    attachments = [],
+    onPost,
+    onDelete,
+  } = options;
+
+  // Must use `attachments*` to match DELETE URLs with ?attachmentId= query params
+  await page.route(`**/api/tasks/${TASK_ID}/attachments*`, async (route) => {
+    const method = route.request().method();
+
+    if (method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ attachments }),
+      });
+      return;
+    }
+
+    const handler = method === 'POST' ? onPost : method === 'DELETE' ? onDelete : undefined;
+
+    if (!handler) {
+      // Default POST: return a mock attachment
+      if (method === 'POST') {
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            attachment: {
+              id: 'att-new',
+              taskId: TASK_ID,
+              userId: 'user-123',
+              fileName: 'uploaded-file.txt',
+              fileSize: 1_024,
+              mimeType: 'text/plain',
+              storageKey: `tasks/${TASK_ID}/new-uploaded-file.txt`,
+              downloadUrl: 'https://minio.local/workmanagement-files/tasks/...',
+              createdAt: new Date().toISOString(),
+              user: { id: 'user-123', name: 'Alice Johnson' },
+            },
+          }),
+        });
+        return;
+      }
+
+      // Default DELETE: return success
+      if (method === 'DELETE') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true }),
+        });
+        return;
+      }
+
+      await route.fulfill({ status: 405, body: 'Method not allowed' });
+      return;
+    }
+
+    if (typeof handler === 'function') {
+      await handler(route);
+    } else {
+      await route.fulfill({
+        status: handler.status ?? 200,
+        contentType: 'application/json',
+        body: JSON.stringify(handler.body),
+      });
+    }
+  });
+}
+
 /**
  * Register the comments API route with GET returning the given comments
  * and optional handlers for POST (add) and DELETE (delete).
