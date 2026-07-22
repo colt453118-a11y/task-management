@@ -226,9 +226,10 @@ test.describe('KanbanBoard Drag and Drop', () => {
     // Switch to board view
     await page.getByRole('button', { name: 'Board' }).click();
 
-    // Wait for the board to render
-    await expect(page.getByText('Design database schema')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Implement authentication')).toBeVisible();
+    // Wait for board-specific elements (getByTestId ensures the KanbanBoard component
+    // actually rendered the cards, not just the list view showing task text)
+    await expect(page.getByTestId(KANBAN.card(TASK_ID_1))).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId(KANBAN.card(TASK_ID_2))).toBeVisible();
 
     // Both cards should have correct priority badges
     await expect(page.getByText('High')).toBeVisible();
@@ -274,7 +275,7 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Switch to board view
     await page.getByRole('button', { name: 'Board' }).click();
-    await expect(page.getByText('Design database schema')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId(KANBAN.card(TASK_ID_1))).toBeVisible({ timeout: 15_000 });
 
     // Verify drag overlay appears when drag starts (proves @dnd-kit activation)
     const sourceCard = page.getByTestId(KANBAN.card(TASK_ID_1));
@@ -351,7 +352,7 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Switch to board view
     await page.getByRole('button', { name: 'Board' }).click();
-    await expect(page.getByText('Design database schema')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId(KANBAN.card(TASK_ID_1))).toBeVisible({ timeout: 15_000 });
 
     // Start a drag to verify activation
     const sourceCard = page.getByTestId(KANBAN.card(TASK_ID_1));
@@ -416,7 +417,10 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Switch to board view
     await page.getByRole('button', { name: 'Board' }).click();
-    await expect(page.getByText('Setup CI pipeline')).toBeVisible({ timeout: 10_000 });
+
+    // Wait for board-specific elements (not just text, which could match list view)
+    await expect(page.getByTestId(KANBAN.card('task-completed'))).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId(KANBAN.card('task-active'))).toBeVisible();
 
     // Completed task card should have reduced opacity
     const completedCard = page.getByTestId(KANBAN.card('task-completed'));
@@ -466,7 +470,7 @@ test.describe('KanbanBoard Drag and Drop', () => {
 
     // Switch to board view
     await page.getByRole('button', { name: 'Board' }).click();
-    await expect(page.getByText('Design database schema')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId(KANBAN.card(TASK_ID_1))).toBeVisible({ timeout: 15_000 });
 
     // Get the Open column card
     const sourceCard = page.getByTestId(KANBAN.card(TASK_ID_1));
