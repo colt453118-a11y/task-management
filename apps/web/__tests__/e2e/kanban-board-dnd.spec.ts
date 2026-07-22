@@ -192,6 +192,11 @@ test.beforeEach(async ({ page }) => {
 // ─── Board View Tests ───────────────────────────────────────────
 
 test.describe('KanbanBoard Drag and Drop', () => {
+  // Firefox is slower for kanban board rendering + drag simulation.
+  // These tests consistently take 25-33s in Firefox, just over the
+  // default 30s test timeout. Marking as slow triples the timeout
+  // (30s → 90s) so Firefox has enough runway.
+  test.slow();
   test('renders board view with task cards in correct columns', async ({ page }) => {
     // Use function matcher so PATCH/DELETE paths with task IDs are also intercepted
     // (the glob '**/api/tasks*' doesn't match /api/tasks/:id because * excludes '/')
