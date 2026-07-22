@@ -261,10 +261,10 @@ test.describe('Task Attachments', () => {
     });
 
     // An error message should appear. When the fetch is aborted via
-    // route.abort('connectionrefused'), the browser throws a TypeError
-    // with message "Failed to fetch", which the catch handler sets as
-    // the upload error.
-    await expect(page.getByText(/failed/i)).toBeVisible({ timeout: 5_000 });
+    // route.abort('connectionrefused'), browsers throw different errors:
+    // - Chromium: "Failed to fetch"
+    // - Firefox: "NetworkError when attempting to fetch resource"
+    await expect(page.getByText(/error|failed/i)).toBeVisible({ timeout: 5_000 });
 
     // Page should not crash — task details should still be visible
     await expect(page.getByText(MOCK_TASK.title)).toBeVisible();
