@@ -48,7 +48,7 @@ const sidebarItemVariants = {
       delay: i * 0.03,
     },
   }),
-};
+} as const;
 
 export function Sidebar() {
   const pathname = usePathname();

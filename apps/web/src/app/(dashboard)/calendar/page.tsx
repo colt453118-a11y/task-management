@@ -143,7 +143,7 @@ const slideVariants = {
     x: direction < 0 ? 120 : -120,
     opacity: 0,
   }),
-};
+} as const;
 
 const popoverVariants = {
   hidden: { opacity: 0, scale: 0.95, y: -4 },
@@ -159,7 +159,7 @@ const popoverVariants = {
     y: -4,
     transition: { duration: 0.12 },
   },
-};
+} as const;
 
 // ─── Task Badge & Popover ───────────────────────────────────
 

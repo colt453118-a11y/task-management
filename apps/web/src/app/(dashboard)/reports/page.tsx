@@ -113,7 +113,7 @@ const TABS: { key: ReportTab; label: string; icon: typeof Eye }[] = [
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -123,14 +123,14 @@ const itemVariants = {
     scale: 1,
     transition: { type: 'spring', stiffness: 100, damping: 15 },
   },
-};
+} as const;
 
 const slideVariants = {
   enter: { x: 20, opacity: 0 },
   center: { x: 0, opacity: 1 },
   exit: { x: -20, opacity: 0 },
   transition: { type: 'spring', stiffness: 200, damping: 24 },
-};
+} as const;
 
 // ─── KPI Card Colors ───────────────────────────────────────
 
@@ -173,7 +173,7 @@ const KPI_CARD_STYLES: Record<
     gradient: 'from-purple-500 to-violet-400',
     iconBg: 'bg-purple-500/10 text-purple-400',
   },
-};
+} as const;
 
 // ─── Main Page ──────────────────────────────────────────────
 

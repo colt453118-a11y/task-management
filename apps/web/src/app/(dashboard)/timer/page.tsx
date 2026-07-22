@@ -126,21 +126,22 @@ function getEntryColor(index: number): string {
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
-};
+} as const;
 
 const entryVariants = {
   hidden: { opacity: 0, x: -12 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: i * 0.03, type: 'spring', stiffness: 120, damping: 16 },
-  }),
-};
+  visible: (i: number) =>
+    ({
+      opacity: 1,
+      x: 0,
+      transition: { delay: i * 0.03, type: 'spring', stiffness: 120, damping: 16 },
+    } as const),
+} as const;
 
 // ═══════════════════════════════════════════════════════════════
 //  TIMELINE VIEW — Drag-to-resize component

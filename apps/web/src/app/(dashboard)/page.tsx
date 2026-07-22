@@ -54,7 +54,7 @@ interface MetricProject {
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -64,7 +64,7 @@ const itemVariants = {
     scale: 1,
     transition: { type: 'spring', stiffness: 100, damping: 15 },
   },
-};
+} as const;
 
 const statusDotColors: Record<string, string> = {
   draft: 'bg-surface-400',
@@ -77,7 +77,7 @@ const statusDotColors: Record<string, string> = {
   closed: 'bg-indigo-500',
   cancelled: 'bg-surface-400',
   archived: 'bg-surface-500',
-};
+} as const;
 const statusColors: Record<
   string,
   'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'
