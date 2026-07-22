@@ -27,7 +27,7 @@ test.describe('Projects Page', () => {
     await expect(page.locator('.shimmer').first()).toBeVisible({ timeout: 5_000 });
 
     // Title should appear
-    await expect(page.getByRole('heading', { name: /projects/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
   });
 
   test('shows error state with retry button when API fails', async ({ page }) => {
@@ -143,7 +143,7 @@ test.describe('Projects Page', () => {
     await searchInput.fill('Redesign');
 
     // Should show matching project
-    await expect(page.getByText(/Website Redesign/i)).toBeVisible();
+    await expect(page.getByText(/Website Redesign/i).first()).toBeVisible();
 
     // Non-matching projects should not be visible (note: the page filters but may
     // still render hidden items in the motion layout — check the search results text)
@@ -185,7 +185,7 @@ test.describe('Projects Page', () => {
     await expect(page.getByRole('heading', { name: /new project/i })).toBeVisible();
 
     // Click create with empty name
-    await page.getByRole('button', { name: /create/i }).click();
+    await page.getByRole('button', { name: /create$/i }).first().click();
 
     // Validation error should appear
     await expect(page.getByText(/project name is required/i)).toBeVisible();
@@ -216,10 +216,12 @@ test.describe('Projects Page', () => {
     await descInput.fill('Coordinate Q4 product launch across all teams');
 
     // Submit
-    await page.getByRole('button', { name: /create$/i }).click();
+    // On mobile, sidebar may add extra Create-like buttons, so use first()
+    await page.getByRole('button', { name: /create$/i }).first().click();
 
     // Wait for modal to close and new project to appear in the list
-    await expect(page.getByText('Q4 Product Launch')).toBeVisible({ timeout: 5_000 });
+    // Note: text also appears in the closed modal's input value, use .first()
+    await expect(page.getByText('Q4 Product Launch').first()).toBeVisible({ timeout: 5_000 });
 
     // Modal should be closed
     await expect(page.getByRole('heading', { name: /new project/i })).not.toBeVisible();
@@ -244,7 +246,7 @@ test.describe('Projects Page', () => {
     // Fill the form and submit
     const nameInput = page.getByPlaceholder(/e\.g\. Q4 Product Launch/i);
     await nameInput.fill('Some Project');
-    await page.getByRole('button', { name: /create$/i }).click();
+    await page.getByRole('button', { name: /create$/i }).first().click();
 
     // Error should appear in the modal
     await expect(page.getByText(/Name is required/i)).toBeVisible({ timeout: 5_000 });
