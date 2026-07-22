@@ -85,11 +85,13 @@ test.describe('Dashboard', () => {
     await expect(page.getByText('5').first()).toBeVisible();
 
     // Overdue = 1 (task-4 has past due date)
-    await expect(page.getByText('Overdue')).toBeVisible();
+    // Note: 'Overdue' also appears in task title 'Overdue database migration' in deadlines + activity
+    await expect(page.getByText('Overdue').first()).toBeVisible();
     await expect(page.getByText('1').first()).toBeVisible();
 
     // Blocked = 1 (task-5)
-    await expect(page.getByText('Blocked')).toBeVisible();
+    // Note: 'Blocked' also appears in task title 'Blocked by third-party API' in deadlines + activity
+    await expect(page.getByText('Blocked').first()).toBeVisible();
 
     // Active Projects = 2 (proj-1, proj-2)
     await expect(page.getByText('Active Projects')).toBeVisible();
@@ -140,7 +142,8 @@ test.describe('Dashboard', () => {
     // task-5 (Blocked by third-party API) — due tomorrow, blocked
     // Note: task-4 is overdue (past due), so it should also appear if not completed/closed
     await expect(page.getByText(/Implement user authentication/i).first()).toBeVisible();
-    await expect(page.getByText(/Fix login page CSS/i)).toBeVisible();
+    // Note: task titles appear in both deadlines AND recent activity sections
+    await expect(page.getByText(/Fix login page CSS/i).first()).toBeVisible();
     await expect(page.getByText(/Blocked by third-party API/i).first()).toBeVisible();
 
     // Overdue task should have urgent styling (highlighted with red border)
@@ -162,7 +165,8 @@ test.describe('Dashboard', () => {
     // Most recently updated tasks should be visible (sorted by updatedAt descending)
     // task-4 (updated 30m ago), task-1 (updated 1h ago), task-5 (updated 1h ago)
     await expect(page.getByText(/Overdue database migration/i).first()).toBeVisible();
-    await expect(page.getByText(/Implement user authentication/i)).toBeVisible();
+    // Note: task titles appear in both deadlines AND recent activity sections
+    await expect(page.getByText(/Implement user authentication/i).first()).toBeVisible();
     await expect(page.getByText(/Blocked by third-party API/i).first()).toBeVisible();
   });
 
@@ -218,6 +222,6 @@ test.describe('Dashboard', () => {
 
     // Should now show dashboard content, not error
     await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/Implement user authentication/i)).toBeVisible();
+    await expect(page.getByText(/Implement user authentication/i).first()).toBeVisible();
   });
 });
