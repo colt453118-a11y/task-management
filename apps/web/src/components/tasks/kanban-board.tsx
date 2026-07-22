@@ -210,7 +210,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
       opacity: 1,
       transition: { staggerChildren: 0.04 },
     },
-  };
+  } as const;
 
   const columnVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -219,7 +219,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
       y: 0,
       transition: { type: 'spring', stiffness: 100, damping: 15 },
     },
-  };
+  } as const;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

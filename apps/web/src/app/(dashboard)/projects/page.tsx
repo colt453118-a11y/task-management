@@ -33,11 +33,11 @@ const statusBadge: Record<string, 'default' | 'primary' | 'success' | 'warning' 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
+} as const;
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
-};
+} as const;
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);

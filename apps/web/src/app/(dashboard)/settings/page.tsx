@@ -185,23 +185,23 @@ function getInitials(name: string | null | undefined): string {
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
-};
+} as const;
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
-};
+} as const;
 const tabContentVariants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
   exit: { opacity: 0, y: -8, transition: { duration: 0.15 } },
-};
+} as const;
 
 const CARD_GRADIENTS: Record<string, string> = {
   general: 'from-blue-500 to-blue-400',
   roles: 'from-amber-500 to-yellow-400',
   security: 'from-emerald-500 to-teal-400',
   notifications: 'from-purple-500 to-violet-400',
-};
+} as const;
 
 // ─── Tab Config ─────────────────────────────────────────────
 

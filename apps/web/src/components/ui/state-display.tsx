@@ -192,16 +192,17 @@ interface EmptyStateProps {
 
 const emptyStateItemVariants = {
   hidden: { opacity: 0, y: 12 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, type: 'spring', stiffness: 120, damping: 14 },
-  }),
-};
+  visible: (i: number) =>
+    ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, type: 'spring', stiffness: 120, damping: 14 },
+    } as const),
+} as const;
 
 const iconFloatAnimation = {
   y: [0, -4, 0],
-  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
 };
 
 export function EmptyState({
@@ -217,7 +218,7 @@ export function EmptyState({
     default: 'px-6 py-12',
     compact: 'px-4 py-8',
     bordered: 'px-6 py-12 border-2 border-dashed',
-  };
+  } as const;
 
   if (!animated) {
     return (
