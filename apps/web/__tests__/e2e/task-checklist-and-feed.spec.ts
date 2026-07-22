@@ -586,8 +586,9 @@ test.describe('TaskActivityFeed', () => {
     // Wait for page hydration
     await expect(page.getByText(MOCK_TASK.title)).toBeVisible({ timeout: 15_000 });
 
-    // Activity section header
-    await expect(page.getByText('Activity')).toBeVisible();
+    // Activity section header — use .first() to avoid strict mode violations
+    // ("Activity" text may appear in both the section heading and tab labels)
+    await expect(page.getByText('Activity').first()).toBeVisible();
 
     // Empty state
     await expect(page.getByText('No activity yet')).toBeVisible();

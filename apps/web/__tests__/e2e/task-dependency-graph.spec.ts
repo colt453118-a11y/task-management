@@ -107,14 +107,14 @@ const MOCK_SEARCH_RESULTS = [
  * page never loads.
  */
 async function setSessionCookie(page: import('@playwright/test').Page) {
-  // Primary: add cookies via the context API (available for all pages)
-  await page.context().addCookies([{
-    name: 'better-auth.session_token',
-    value: 'mock-session-token',
-    url: 'http://localhost:3000',
-  }]);
+  await page.context().addCookies([
+    {
+      name: 'better-auth.session_token',
+      value: 'mock-session-token',
+      url: 'http://localhost:3000',
+    },
+  ]);
 
-  // Fallback: inject a script that sets the cookie before any page JS runs
   await page.addInitScript(() => {
     document.cookie = 'better-auth.session_token=mock-session-token; path=/;';
   });
@@ -141,8 +141,13 @@ async function mockPageApis(page: import('@playwright/test').Page) {
   await page.route(`**/api/tasks/${TASK_ID}/watchers`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
   });
-  await page.route(`**/api/tasks/${TASK_ID}/checklist`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    } else {
+      await route.fulfill({ status: 405, body: 'Method not allowed' });
+    }
   });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
@@ -321,8 +326,8 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search
     await searchInput.fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText('Write documentation')).toBeVisible();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-2'))).toBeVisible();
     await expect(page.getByText('TASK-005')).toBeVisible();
     await expect(page.getByText('TASK-006')).toBeVisible();
   });
@@ -364,11 +369,11 @@ test.describe('TaskDependencyGraph', () => {
     // Open dialog, search, select
     await page.getByTestId(DEP_GRAPH.addBtn).click();
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
+    // After add, dialog closes and dep appears (dep item uses id 'dep-new')
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('Blocked by').first()).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
@@ -399,11 +404,11 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search and select
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
+    // After add, dialog closes and dep appears (dep item uses id 'dep-empty-add')
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('Blocked by').first()).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
@@ -429,8 +434,8 @@ test.describe('TaskDependencyGraph', () => {
     // Open dialog, search, try to add
     await page.getByTestId(DEP_GRAPH.addBtn).click();
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByText('Set up CI pipeline')).toBeVisible({ timeout: 5_000 });
-    await page.getByText('Set up CI pipeline').click();
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
     // Error message appears in dialog
     await expect(page.getByText('Circular dependency detected')).toBeVisible({ timeout: 3_000 });
@@ -648,7 +653,25 @@ async function mockPageApisStatic(page: import('@playwright/test').Page) {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isWatching: false, watcherCount: 0 }) });
   });
   await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    const method = route.request().method();
+    if (method === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    } else {
+      await route.fulfill({ status: 405, body: 'Method not allowed' });
+    }
+  });
+  // Mock checklist mutations to prevent "Failed to add/delete/update checklist item" errors
+  await page.route(`**/api/tasks/${TASK_ID}/checklist*`, async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-new', content: 'Test item', isChecked: false, sortOrder: 0 } }) });
+    } else if (method === 'PATCH') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ item: { id: 'checklist-item', content: 'Updated', isChecked: true, sortOrder: 0 } }) });
+    } else if (method === 'DELETE') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) });
+    }
   });
   await page.route(`**/api/tasks/${TASK_ID}/history`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) });
