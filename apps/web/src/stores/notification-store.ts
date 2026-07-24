@@ -38,6 +38,7 @@ interface NotificationStore {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   dismiss: (notificationId: string) => Promise<void>;
+  setUnreadCount: (count: number) => void;
   addOptimistic: (notification: Notification) => void;
   removeOptimistic: (notificationId: string) => void;
 }
@@ -64,11 +65,28 @@ export const useNotificationStore = create<NotificationStore>()(
           const res = await fetch(`/api/notifications?${query.toString()}`);
           if (!res.ok) throw new Error('Failed to fetch notifications');
           const data = await res.json();
-          set({
-            notifications: data.notifications ?? [],
-            totalCount: data.total ?? 0,
-            unreadCount: data.unreadCount ?? 0,
-            loading: false,
+          set((state) => {
+            // Merge REST response with any notifications already added via SSE.
+            // This prevents the REST fetch from overwriting notifications that
+            // arrived in real-time while the request was in-flight.
+            const existingIds = new Set(state.notifications.map((n) => n.id));
+            const merged = state.notifications.slice();
+            for (const n of data.notifications ?? []) {
+              if (!existingIds.has(n.id)) {
+                merged.push(n);
+              }
+            }
+            // Sort by createdAt descending
+            merged.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            );
+            return {
+              notifications: merged,
+              totalCount: data.total ?? 0,
+              unreadCount: data.unreadCount ?? 0,
+              loading: false,
+            };
           });
         } catch (err) {
           set({
@@ -131,6 +149,10 @@ export const useNotificationStore = create<NotificationStore>()(
         }
       },
 
+      setUnreadCount: (count) => {
+        set({ unreadCount: Math.max(0, count) });
+      },
+
       dismiss: async (notificationId) => {
         set((state) => ({
           notifications: state.notifications.filter((n) => n.id !== notificationId),
@@ -148,11 +170,18 @@ export const useNotificationStore = create<NotificationStore>()(
       },
 
       addOptimistic: (notification) => {
-        set((state) => ({
-          notifications: [notification, ...state.notifications],
-          totalCount: state.totalCount + 1,
-          unreadCount: state.unreadCount + 1,
-        }));
+        set((state) => {
+          // Prevent duplicates — SSE may re-deliver notifications that
+          // were already fetched via the REST API on initial load
+          if (state.notifications.some((n) => n.id === notification.id)) {
+            return state;
+          }
+          return {
+            notifications: [notification, ...state.notifications],
+            totalCount: state.totalCount + 1,
+            unreadCount: state.unreadCount + 1,
+          };
+        });
       },
 
       removeOptimistic: (notificationId) => {

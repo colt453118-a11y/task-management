@@ -101,11 +101,12 @@ interface TimeReport {
 
 // ─── View Tabs ──────────────────────────────────────────────
 
-type ReportTab = 'overview' | 'time';
+type ReportTab = 'overview' | 'time' | 'builder';
 
 const TABS: { key: ReportTab; label: string; icon: typeof Eye }[] = [
   { key: 'overview', label: 'Overview', icon: Eye },
   { key: 'time', label: 'Time Tracking', icon: Timer },
+  { key: 'builder', label: 'Report Builder', icon: FileText },
 ];
 
 // ─── Animation Variants ─────────────────────────────────────
@@ -646,6 +647,112 @@ export default function ReportsPage() {
                 <span>for snapshot</span>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {activeTab === 'builder' && (
+          <motion.div
+            key="builder"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="space-y-6"
+          >
+            {/* Template selection */}
+            <motion.div variants={itemVariants}>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <FileText className="text-surface-400 h-4 w-4" />
+                    Report Template
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {[
+                      { id: 'task-status', label: 'Task Status', icon: BarChart3, desc: 'Task distribution by status and priority' },
+                      { id: 'user-perf', label: 'User Performance', icon: UserCheck, desc: 'Completion rates per team member' },
+                      { id: 'project-progress', label: 'Project Progress', icon: FolderKanban, desc: 'Project milestones and completion' },
+                      { id: 'task-aging', label: 'Task Aging', icon: Clock, desc: 'Tasks by age and overdue status' },
+                    ].map((tmpl) => (
+                      <motion.button
+                        key={tmpl.id}
+                        whileHover={{ y: -2, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-surface-300/20 p-4 text-center transition-all duration-200 hover:border-brand-500/30 hover:shadow-sm"
+                      >
+                        <div className="bg-brand-500/10 text-brand-500 rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110">
+                          <tmpl.icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{tmpl.label}</span>
+                        <span className="text-surface-500 text-[10px]">{tmpl.desc}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Configuration & export */}
+            <motion.div variants={itemVariants}>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Download className="text-surface-400 h-4 w-4" />
+                    Generate Report
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center gap-4 py-6 text-center">
+                    <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 flex h-14 w-14 items-center justify-center rounded-2xl border">
+                      <FileText className="text-surface-400 h-7 w-7" />
+                    </div>
+                    <div>
+                      <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">
+                        Select a template and export format
+                      </p>
+                      <p className="text-surface-500 mt-1 text-xs">
+                        Choose from pre-built templates above, then export as CSV
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="default" size="sm" className="h-9 rounded-lg px-4 text-xs">
+                            <Download className="mr-1.5 h-4 w-4" />
+                            Export Report
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" sideOffset={6}>
+                          <DropdownMenuLabel>Choose format</DropdownMenuLabel>
+                          {['tasks', 'projects', 'users'].map((type) => (
+                            <DropdownMenuItem key={type} onClick={() => handleExport(type)}>
+                              <FileText className="h-4 w-4" />
+                              {type.charAt(0).toUpperCase() + type.slice(1)} — CSV
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateSnapshot}
+                        disabled={generating}
+                        className="h-9 rounded-lg px-4 text-xs"
+                      >
+                        {generating ? (
+                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Camera className="mr-1.5 h-4 w-4" />
+                        )}
+                        {generating ? 'Capturing...' : 'Take Snapshot'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         )}
 

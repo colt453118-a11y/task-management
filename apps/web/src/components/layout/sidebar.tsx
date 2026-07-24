@@ -19,20 +19,33 @@ import {
   X,
   Clock,
   FileEdit,
+  Bot,
+  TrendingUp,
+  Bell,
+  Search as SearchIcon,
+  Milestone,
+  Layers,
 } from 'lucide-react';
-import { useState, useEffect, startTransition } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
+import { motion, AnimatePresence, useTransform } from 'framer-motion';
+import { useScrollShadow } from '@/lib/hooks/use-scroll-shadow';
 
 const navItems = [
+  { label: 'Search', href: '/search', icon: SearchIcon },
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Milestones', href: '/milestones', icon: Milestone },
   { label: 'Tasks', href: '/tasks', icon: ListTodo },
+  { label: 'Task Templates', href: '/task-templates', icon: Layers },
   { label: 'Projects', href: '/projects', icon: FolderKanban },
   { label: 'Teams', href: '/teams', icon: Users },
   { label: 'People', href: '/users', icon: UserRoundCog },
   { label: 'Time Tracking', href: '/timer', icon: Clock },
   { label: 'Corrections', href: '/corrections', icon: FileEdit },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
+  { label: 'Analytics', href: '/analytics', icon: TrendingUp },
   { label: 'Calendar', href: '/calendar', icon: Calendar },
+  { label: 'Notifications', href: '/notifications', icon: Bell },
+  { label: 'Automation', href: '/automation', icon: Bot },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -50,12 +63,39 @@ const sidebarItemVariants = {
   }),
 } as const;
 
+/** FAB for mobile — scroll-driven shadow deepens as content scrolls behind it. */
+function MobileFabButton({ onClick }: { onClick: () => void }) {
+  const { shadowSpring } = useScrollShadow({ mobileOnly: true });
+  const fabShadow = useTransform(shadowSpring, [0, 1], [
+    '0 4px 12px rgba(99,102,241,0.25)',  // subtle at top
+    '0 6px 28px rgba(99,102,241,0.45)',  // deeper glow when content under it
+  ]);
+
+  return (
+    <motion.button
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0, opacity: 0 }}
+      whileHover={{ scale: 1.05, boxShadow: '0 8px 32px rgba(99,102,241,0.55)' }}
+      whileTap={{ scale: 0.9 }}
+      onClick={onClick}
+      style={{ boxShadow: fabShadow }}
+      className="bg-brand-500 fixed bottom-4 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-2xl text-white transition-shadow duration-200 md:hidden"
+      aria-label="Open menu"
+    >
+      <Menu className="h-5 w-5" />
+      <span className="animate-glow-pulse absolute inset-0 rounded-2xl" />
+    </motion.button>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // Assume mobile until proven otherwise — prevents flash
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const check = () => startTransition(() => setIsMobile(window.innerWidth < 768));
@@ -68,6 +108,41 @@ export function Sidebar() {
   useEffect(() => {
     if (isMobile) startTransition(() => setMobileOpen(false));
   }, [pathname, isMobile]);
+
+  // Handle browser back button to close sidebar
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handler = () => setMobileOpen(false);
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, [mobileOpen]);
+
+  // Listen for custom event to open sidebar from bottom nav
+  useEffect(() => {
+    const handler = () => setMobileOpen(true);
+    window.addEventListener('open-mobile-sidebar', handler);
+    return () => window.removeEventListener('open-mobile-sidebar', handler);
+  }, []);
+
+  // Touch swipe to close drawer
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const currentX = e.touches[0]?.clientX ?? 0;
+    const diff = currentX - touchStartX.current;
+    // If swiped left more than 80px, close the drawer
+    if (diff < -80) {
+      setMobileOpen(false);
+      touchStartX.current = null;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    touchStartX.current = null;
+  }, []);
 
   const sidebarContent = (
     <aside
@@ -222,21 +297,9 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button - with glow pulse */}
+      {/* Mobile menu button - with scroll-driven shadow glow */}
       {isMobile && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setMobileOpen(true)}
-          className="bg-brand-500 shadow-brand-500/30 hover:shadow-brand-500/40 fixed bottom-4 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg transition-shadow duration-200 hover:shadow-xl md:hidden"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-          <span className="animate-glow-pulse absolute inset-0 rounded-2xl" />
-        </motion.button>
+        <MobileFabButton onClick={() => setMobileOpen(true)} />
       )}
 
       {/* Desktop sidebar */}
@@ -268,6 +331,9 @@ export function Sidebar() {
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 z-50 w-60 md:hidden"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               {sidebarContent}
             </motion.div>

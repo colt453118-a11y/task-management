@@ -31,9 +31,14 @@ import {
   Monitor,
   BookOpen,
   Save,
+  Sparkles,
+  Webhook,
 } from 'lucide-react';
 
-type Tab = 'general' | 'roles' | 'security' | 'notifications';
+import { AISettings } from '@/components/settings/ai-settings';
+import { WebhookSettings } from '@/components/settings/webhook-settings';
+
+type Tab = 'general' | 'roles' | 'ai' | 'security' | 'notifications' | 'webhooks';
 type Organization = {
   id: string;
   name: string;
@@ -199,6 +204,8 @@ const tabContentVariants = {
 const CARD_GRADIENTS: Record<string, string> = {
   general: 'from-blue-500 to-blue-400',
   roles: 'from-amber-500 to-yellow-400',
+  ai: 'from-purple-500 to-pink-400',
+  webhooks: 'from-cyan-500 to-teal-400',
   security: 'from-emerald-500 to-teal-400',
   notifications: 'from-purple-500 to-violet-400',
 } as const;
@@ -208,6 +215,8 @@ const CARD_GRADIENTS: Record<string, string> = {
 const TABS: { id: Tab; label: string; gradient: string }[] = [
   { id: 'general', label: 'General', gradient: 'from-blue-500 to-blue-400' },
   { id: 'roles', label: 'Roles & Permissions', gradient: 'from-amber-500 to-yellow-400' },
+  { id: 'ai', label: 'AI', gradient: 'from-purple-500 to-pink-400' },
+  { id: 'webhooks', label: 'Webhooks', gradient: 'from-cyan-500 to-teal-400' },
   { id: 'security', label: 'Security', gradient: 'from-emerald-500 to-teal-400' },
   { id: 'notifications', label: 'Notifications', gradient: 'from-purple-500 to-violet-400' },
 ];
@@ -260,7 +269,9 @@ export default function SettingsPage() {
       if (e.key === '1') setTab('general');
       else if (e.key === '2') setTab('roles');
       else if (e.key === '3') setTab('security');
-      else if (e.key === '4') setTab('notifications');
+      else if (e.key === '4') setTab('webhooks');
+      else if (e.key === '5') setTab('ai');
+      else if (e.key === '6') setTab('notifications');
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -767,6 +778,54 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
+        {tab === 'ai' && (
+          <motion.div
+            key="ai"
+            variants={tabContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <SectionCard gradient={CARD_GRADIENTS.ai ?? 'from-purple-500 to-pink-400'}>
+              <div className="p-5">
+                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                  <Sparkles className="text-surface-400 h-4 w-4" />
+                  AI Provider Configuration
+                </h2>
+                <p className="text-surface-500 mb-6 text-sm">
+                  Configure your AI provider to enable smart features: task summaries, priority suggestions,
+                  deadline risk predictions, duplicate detection, and writing assistance.
+                </p>
+                <AISettings />
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
+
+        {tab === 'webhooks' && (
+          <motion.div
+            key="webhooks"
+            variants={tabContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <SectionCard gradient={CARD_GRADIENTS.webhooks ?? 'from-cyan-500 to-teal-400'}>
+              <div className="p-5">
+                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                  <Webhook className="text-surface-400 h-4 w-4" />
+                  Webhook Integrations
+                </h2>
+                <p className="text-surface-500 mb-6 text-sm">
+                  Configure webhooks to send real-time HTTP notifications to external services
+                  when events occur in your workspace.
+                </p>
+                <WebhookSettings />
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
+
         {tab === 'security' && (
           <motion.div
             key="security"
@@ -944,7 +1003,7 @@ export default function SettingsPage() {
             {/* Keyboard hint */}
             <div className="flex items-center justify-center gap-2 text-[10px] text-surface-400">
               <span>Tab shortcuts:</span>
-              {[1, 2, 3, 4].map((n) => (
+              {[1, 2, 3, 4, 5, 6].map((n) => (
                 <kbd key={n} className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">{n}</kbd>
               ))}
             </div>

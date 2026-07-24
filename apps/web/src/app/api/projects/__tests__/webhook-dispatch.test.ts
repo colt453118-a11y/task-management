@@ -86,6 +86,8 @@ vi.mock('@/lib/notifications', () => ({
 vi.mock('@/lib/search', () => ({
   indexTask: vi.fn().mockResolvedValue(undefined),
   removeTaskFromIndex: vi.fn().mockResolvedValue(undefined),
+  indexProject: vi.fn().mockResolvedValue(undefined),
+  removeProjectFromIndex: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('@/lib/sanitize', () => ({
   sanitizeRichText: vi.fn((content: string | null | undefined) => content ?? null),

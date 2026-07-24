@@ -6,6 +6,7 @@ import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { ProjectCreateSchema, validationError } from '@/lib/api/validation';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
+import { indexProject } from '@/lib/search';
 
 export const runtime = 'nodejs';
 
@@ -112,6 +113,20 @@ export const POST = withAuth(
         entityType: 'project',
         entityId: project.id,
         newValues: { name, code, status: 'active', ownerId },
+      });
+
+      // Index in Meilisearch (non-blocking)
+      indexProject({
+        id: project.id,
+        name: project.name,
+        code: project.code ?? null,
+        description: project.description ?? null,
+        status: project.status ?? 'active',
+        ownerId: project.ownerId,
+        organizationId: orgId!,
+        tags: (project.tags as string[] | null) ?? null,
+        createdAt: (project.createdAt as Date).toISOString(),
+        updatedAt: (project.updatedAt as Date).toISOString(),
       });
 
       // Fire-and-forget webhook dispatch — never block the API response

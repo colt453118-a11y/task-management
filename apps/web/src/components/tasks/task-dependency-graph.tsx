@@ -6,18 +6,17 @@ import Link from 'next/link';
 import {
   ArrowRight,
   ArrowLeft,
-  X,
   Plus,
   Search,
   Loader2,
   AlertCircle,
   GitBranch,
-  ExternalLink,
   Trash2,
+  Maximize2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { DEP_GRAPH } from '@/lib/test-ids';
+import { DependencyVisualizer } from '@/components/tasks/task-dependency-visualizer';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -47,17 +46,6 @@ interface TaskDependencyGraphProps {
 }
 
 // ─── Status helpers ─────────────────────────────────────────
-
-const statusColors: Record<string, string> = {
-  todo: 'border-l-blue-500 bg-blue-500/5',
-  in_progress: 'border-l-amber-500 bg-amber-500/5',
-  in_review: 'border-l-purple-500 bg-purple-500/5',
-  completed: 'border-l-green-500 bg-green-500/5',
-  closed: 'border-l-surface-500 bg-surface-500/5',
-  reopened: 'border-l-cyan-500 bg-cyan-500/5',
-  archived: 'border-l-slate-500 bg-slate-500/5',
-  blocked: 'border-l-red-500 bg-red-500/5',
-};
 
 const statusBadgeColors: Record<string, string> = {
   todo: 'bg-blue-500/10 text-blue-400',
@@ -100,7 +88,6 @@ export function TaskDependencyGraph({
 }: TaskDependencyGraphProps) {
   const [viewMode, setViewMode] = useState<'graph' | 'list'>('graph');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const hasDeps = blockedBy.length > 0 || blocking.length > 0;
@@ -161,6 +148,13 @@ export function TaskDependencyGraph({
               List
             </button>
           </div>
+          <Link
+            href={`/dependencies/${taskId}`}
+            className="text-surface-400 hover:text-brand-500 hover:bg-brand-500/5 rounded-lg p-1.5 transition-all"
+            title="Open full dependency graph"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Link>
           <button
             onClick={() => setAddDialogOpen(true)}
             className="text-surface-500 hover:text-brand-500 hover:bg-brand-500/5 rounded-lg p-1.5 transition-all"
@@ -189,14 +183,54 @@ export function TaskDependencyGraph({
           </button>
         </div>
       ) : viewMode === 'graph' ? (
-        <GraphView
-          blockedBy={blockedBy}
-          blocking={blocking}
+        <DependencyVisualizer
           taskId={taskId}
-          hoveredPath={hoveredPath}
-          setHoveredPath={setHoveredPath}
-          onRemove={handleRemove}
-          removingId={removingId}
+          nodes={[
+            // Root task placeholder — required so edges referencing it are included
+            { id: taskId, title: '', taskIdDisplay: '', status: 'todo', priority: 'medium' },
+            ...blockedBy
+              .filter((d) => d.dependsOnTask)
+              .map((d) => ({
+                id: d.dependsOnTaskId,
+                title: d.dependsOnTask?.title ?? '',
+                taskIdDisplay: d.dependsOnTask?.taskIdDisplay ?? '',
+                status: d.dependsOnTask?.status ?? 'todo',
+                priority: 'medium',
+              })),
+            ...blocking
+              .filter((d) => d.blockingTask)
+              .map((d) => ({
+                id: d.taskId,
+                title: d.blockingTask?.title ?? '',
+                taskIdDisplay: d.blockingTask?.taskIdDisplay ?? '',
+                status: d.blockingTask?.status ?? 'todo',
+                priority: 'medium',
+              })),
+          ]}
+          edges={[
+            ...blockedBy.map((d) => ({
+              id: d.id,
+              source: d.dependsOnTaskId,
+              target: d.taskId,
+              dependencyType: d.dependencyType,
+            })),
+            ...blocking.map((d) => ({
+              id: d.id,
+              source: d.dependsOnTaskId,
+              target: d.taskId,
+              dependencyType: d.dependencyType,
+            })),
+          ]}
+          stats={{
+            totalNodes: blockedBy.length + blocking.length + 1,
+            totalEdges: blockedBy.length + blocking.length,
+            maxDepth: 1,
+            cycles: false,
+          }}
+          loading={false}
+          error={null}
+          onRefresh={onDependencyAdded}
+          rootTaskId={taskId}
         />
       ) : (
         <ListView
@@ -223,227 +257,8 @@ export function TaskDependencyGraph({
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  GRAPH VIEW
+//  GRAPH VIEW — Replaced by DependencyVisualizer component
 // ═══════════════════════════════════════════════════════════════
-
-function GraphView({
-  blockedBy,
-  blocking,
-  taskId,
-  hoveredPath,
-  setHoveredPath,
-  onRemove,
-  removingId,
-}: {
-  blockedBy: Dependency[];
-  blocking: Dependency[];
-  taskId: string;
-  hoveredPath: string | null;
-  setHoveredPath: (id: string | null) => void;
-  onRemove: (id: string) => Promise<void>;
-  removingId: string | null;
-}) {
-  // Current task info
-  const [currentTaskInfo, setCurrentTaskInfo] = useState<{ title: string; taskIdDisplay: string; status: string } | null>(null);
-
-  useEffect(() => {
-    async function fetchCurrent() {
-      try {
-        const res = await fetch(`/api/tasks/${taskId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setCurrentTaskInfo(data.task ?? null);
-        }
-      } catch {
-        // Silent
-      }
-    }
-    if (!currentTaskInfo) fetchCurrent();
-  }, [taskId, currentTaskInfo]);
-
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-surface-300/20 bg-surface-100/30 p-3" data-testid={DEP_GRAPH.graphView}>
-      {/* Upstream (blocked by) */}
-      {blockedBy.length > 0 && (
-        <div className="mb-2" data-testid={DEP_GRAPH.blockedBy}>
-          <p className="text-surface-500 mb-1.5 text-[10px] font-semibold uppercase tracking-wider">
-            Blocked by
-          </p>
-          <div className="space-y-1.5">
-            {blockedBy.map((dep) => (
-              <motion.div
-                key={dep.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                onMouseEnter={() => setHoveredPath(dep.id)}
-                onMouseLeave={() => setHoveredPath(null)}
-                className={cn(
-                  'group relative flex items-center gap-2 rounded-lg border-l-4 p-2 transition-all duration-200',
-                  statusColors[dep.dependsOnTask?.status ?? 'todo'] ?? statusColors.todo,
-                  hoveredPath === dep.id ? 'shadow-md scale-[1.02]' : 'shadow-sm',
-                )}
-                data-testid={DEP_GRAPH.item(dep.id)}
-              >
-                <Link
-                  href={`/tasks/${dep.dependsOnTaskId}`}
-                  className="flex min-w-0 flex-1 items-center gap-2"
-                >
-                  <ArrowRight className="text-surface-400 h-3 w-3 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-surface-700 truncate text-xs font-medium leading-tight">
-                      {dep.dependsOnTask?.title ?? 'Unknown task'}
-                    </p>
-                    <span className="text-surface-500 text-[10px]">
-                      {dep.dependsOnTask?.taskIdDisplay ?? ''}
-                    </span>
-                  </div>
-                  {dep.dependsOnTask?.status && (
-                    <Badge
-                      variant="default"
-                      size="sm"
-                      className={`shrink-0 text-[9px] ${
-                        statusBadgeColors[dep.dependsOnTask.status] ?? 'bg-surface-200 text-surface-500'
-                      }`}
-                    >
-                      {statusLabels[dep.dependsOnTask.status] ?? dep.dependsOnTask.status}
-                    </Badge>
-                  )}
-                </Link>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRemove(dep.id); }}
-                  disabled={removingId === dep.id}
-                  className="text-surface-400 hover:text-error hover:bg-error/5 rounded p-0.5 opacity-0 transition-all group-hover:opacity-100"
-                  data-testid={DEP_GRAPH.remove(dep.id)}
-                >
-                  {removingId === dep.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <X className="h-3 w-3" />
-                  )}
-                </button>
-
-                {/* Hover glow */}
-                {hoveredPath === dep.id && (
-                  <motion.div
-                    layoutId="depGlow"
-                    className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-brand-500/5 to-transparent"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Current task (center node) */}
-      <motion.div
-        layout
-        className={cn(
-          'border-l-4 rounded-lg border p-2.5 shadow-sm',
-          statusColors[currentTaskInfo?.status ?? 'todo'] ?? statusColors.todo,
-          'bg-surface-50/80 dark:bg-surface-800/80 border border-surface-300/20',
-        )}
-        data-testid={DEP_GRAPH.currentTask}
-      >
-        <div className="flex items-center gap-2">
-          <div className="bg-brand-500/10 text-brand-500 flex h-6 w-6 items-center justify-center rounded-md">
-            <GitBranch className="h-3 w-3" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-surface-900 truncate text-sm font-medium">
-              {currentTaskInfo?.title ?? 'Current Task'}
-            </p>
-            {currentTaskInfo?.taskIdDisplay && (
-              <span className="text-surface-500 text-[10px]">{currentTaskInfo.taskIdDisplay}</span>
-            )}
-          </div>
-          <Link
-            href={`/tasks/${taskId}`}
-            className="text-surface-400 hover:text-surface-600 rounded p-1 transition-colors"
-          >
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-        </div>
-      </motion.div>
-
-      {/* Downstream (blocking) */}
-      {blocking.length > 0 && (
-        <div className="mt-2" data-testid={DEP_GRAPH.blocking}>
-          <p className="text-surface-500 mb-1.5 text-[10px] font-semibold uppercase tracking-wider">
-            Blocking
-          </p>
-          <div className="space-y-1.5">
-            {blocking.map((dep) => (
-              <motion.div
-                key={dep.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                onMouseEnter={() => setHoveredPath(dep.id)}
-                onMouseLeave={() => setHoveredPath(null)}
-                className={cn(
-                  'group relative flex items-center gap-2 rounded-lg border-l-4 p-2 transition-all duration-200',
-                  statusColors[dep.blockingTask?.status ?? 'todo'] ?? statusColors.todo,
-                  hoveredPath === dep.id ? 'shadow-md scale-[1.02]' : 'shadow-sm',
-                )}
-                data-testid={DEP_GRAPH.item(dep.id)}
-              >
-                <Link
-                  href={`/tasks/${dep.taskId}`}
-                  className="flex min-w-0 flex-1 items-center gap-2"
-                >
-                  <ArrowLeft className="text-surface-400 h-3 w-3 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-surface-700 truncate text-xs font-medium leading-tight">
-                      {dep.blockingTask?.title ?? 'Unknown task'}
-                    </p>
-                    <span className="text-surface-500 text-[10px]">
-                      {dep.blockingTask?.taskIdDisplay ?? ''}
-                    </span>
-                  </div>
-                  {dep.blockingTask?.status && (
-                    <Badge
-                      variant="default"
-                      size="sm"
-                      className={`shrink-0 text-[9px] ${
-                        statusBadgeColors[dep.blockingTask.status] ?? 'bg-surface-200 text-surface-500'
-                      }`}
-                    >
-                      {statusLabels[dep.blockingTask.status] ?? dep.blockingTask.status}
-                    </Badge>
-                  )}
-                </Link>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRemove(dep.id); }}
-                  disabled={removingId === dep.id}
-                  className="text-surface-400 hover:text-error hover:bg-error/5 rounded p-0.5 opacity-0 transition-all group-hover:opacity-100"
-                  data-testid={DEP_GRAPH.remove(dep.id)}
-                >
-                  {removingId === dep.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <X className="h-3 w-3" />
-                  )}
-                </button>
-
-                {/* Hover glow */}
-                {hoveredPath === dep.id && (
-                  <motion.div
-                    layoutId="depGlow"
-                    className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-brand-500/5 to-transparent"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════
 //  LIST VIEW

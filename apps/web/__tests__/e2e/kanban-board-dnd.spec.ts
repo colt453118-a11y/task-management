@@ -322,10 +322,9 @@ test.describe('KanbanBoard Drag and Drop', () => {
     let patchCallCount = 0;
 
     await page.route((url) => url.pathname.startsWith('/api/tasks'), async (route) => {
-      const urlStr = route.request().url();
       const method = route.request().method();
 
-      if (method === 'GET' && !urlStr.includes(`/${TASK_ID_1}`) && !urlStr.includes(`/${TASK_ID_2}`)) {
+      if (method === 'GET' && !route.request().url().includes('/batch')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -386,10 +385,9 @@ test.describe('KanbanBoard Drag and Drop', () => {
     let patchCallCount = 0;
 
     await page.route((url) => url.pathname.startsWith('/api/tasks'), async (route) => {
-      const urlStr = route.request().url();
       const method = route.request().method();
 
-      if (method === 'GET' && !urlStr.includes('/task-completed') && !urlStr.includes('/task-active')) {
+      if (method === 'GET' && !route.request().url().includes('/batch')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -444,12 +442,7 @@ test.describe('KanbanBoard Drag and Drop', () => {
     page,
   }) => {
     await page.route((url) => url.pathname.startsWith('/api/tasks'), async (route) => {
-      const urlStr = route.request().url();
-      if (
-        route.request().method() === 'GET' &&
-        !urlStr.includes(`/${TASK_ID_1}`) &&
-        !urlStr.includes(`/${TASK_ID_2}`)
-      ) {
+      if (route.request().method() === 'GET' && !route.request().url().includes('/batch')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',

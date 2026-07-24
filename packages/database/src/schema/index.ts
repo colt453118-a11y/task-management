@@ -300,6 +300,8 @@ export * from './task-templates';
 export * from './notifications';
 export * from './time-corrections';
 export * from './webhooks';
+export * from './automation';
+export * from './saved-searches';
 
 // ─── Import domain tables for relations ──────────────────────
 

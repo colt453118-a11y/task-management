@@ -133,6 +133,47 @@ export function taskDeletedTemplate(data: BaseTemplateData): string {
   );
 }
 
+// ─── Deadline Reminder Template ──────────────────────────────
+
+export function taskDeadlineTemplate(data: {
+  userName: string;
+  title: string;
+  message: string;
+  link: string;
+  deadlineType: 'due_soon' | 'overdue' | 'escalated';
+  dueDate?: string;
+  unsubscribeUrl: string;
+}): string {
+  const isOverdue = data.deadlineType === 'overdue' || data.deadlineType === 'escalated';
+  const icon = isOverdue ? '&#9888;' : '&#9200;';
+  const iconBg = isOverdue ? 'background-color:#fef2f2;color:#dc2626;' : 'background-color:#fffbeb;color:#d97706;';
+  const actionLabel = isOverdue ? 'View Overdue Task' : 'View Task';
+
+  return wrapLayout(
+    `<tr>
+      <td style="padding:24px 32px 0 32px;text-align:center;">
+        <span style="display:inline-block;width:48px;height:48px;line-height:48px;border-radius:50%;${iconBg}font-size:24px;">${icon}</span>
+      </td>
+    </tr>
+    ${buildHeaderSection({ ...data, actionLabel })}`,
+    data.unsubscribeUrl,
+  );
+}
+
+// ─── Mention Template ──────────────────────────────────────────
+
+export function taskMentionTemplate(data: BaseTemplateData): string {
+  return wrapLayout(
+    `<tr>
+      <td style="padding:24px 32px 0 32px;text-align:center;">
+        <span style="display:inline-block;width:48px;height:48px;line-height:48px;border-radius:50%;background-color:#f3e8ff;color:#9333ea;font-size:24px;">&#64;</span>
+      </td>
+    </tr>
+    ${buildHeaderSection({ ...data, actionLabel: 'View Task' })}`,
+    data.unsubscribeUrl,
+  );
+}
+
 export function welcomeTemplate(data: { userName: string; unsubscribeUrl: string }): string {
   return wrapLayout(
     `<tr>

@@ -6,6 +6,8 @@ import {
   taskStatusChangedTemplate,
   taskCompletedTemplate,
   taskDeletedTemplate,
+  taskMentionTemplate,
+  taskDeadlineTemplate,
   welcomeTemplate,
 } from './templates';
 
@@ -163,6 +165,53 @@ export async function sendNotificationEmail(notif: NotificationEmail): Promise<v
         title: safeTitle,
         message: safeMessage,
         link: notif.link,
+        unsubscribeUrl: UNSUBSCRIBE_URL,
+      });
+      break;
+
+    case 'task.mention':
+      subject = `[WorkManager] You were mentioned in: ${notif.title}`;
+      html = taskMentionTemplate({
+        userName: notif.userName,
+        title: safeTitle,
+        message: safeMessage,
+        link: notif.link,
+        unsubscribeUrl: UNSUBSCRIBE_URL,
+      });
+      break;
+
+    case 'task.due_soon':
+      subject = `[WorkManager] ⏰ Due soon: ${notif.title}`;
+      html = taskDeadlineTemplate({
+        userName: notif.userName,
+        title: safeTitle,
+        message: safeMessage,
+        link: notif.link,
+        deadlineType: 'due_soon',
+        unsubscribeUrl: UNSUBSCRIBE_URL,
+      });
+      break;
+
+    case 'task.overdue':
+      subject = `[WorkManager] ⚠ Overdue: ${notif.title}`;
+      html = taskDeadlineTemplate({
+        userName: notif.userName,
+        title: safeTitle,
+        message: safeMessage,
+        link: notif.link,
+        deadlineType: 'overdue',
+        unsubscribeUrl: UNSUBSCRIBE_URL,
+      });
+      break;
+
+    case 'task.escalated':
+      subject = `[WorkManager] 🚨 Escalated: ${notif.title}`;
+      html = taskDeadlineTemplate({
+        userName: notif.userName,
+        title: safeTitle,
+        message: safeMessage,
+        link: notif.link,
+        deadlineType: 'escalated',
         unsubscribeUrl: UNSUBSCRIBE_URL,
       });
       break;

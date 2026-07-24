@@ -26,6 +26,7 @@ function getSearchClient(): MeiliSearch {
 export const INDEXES = {
   TASKS: 'tasks',
   PROJECTS: 'projects',
+  USERS: 'users',
 } as const;
 
 // ─── Task Document Types ───────────────────────────────────────
@@ -41,6 +42,21 @@ export interface TaskSearchDocument {
   projectId: string | null;
   organizationId: string;
   labels: string[] | null;
+  tags: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Project Document Types ────────────────────────────────────
+
+export interface ProjectSearchDocument {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  status: string;
+  ownerId: string;
+  organizationId: string;
   tags: string[] | null;
   createdAt: string;
   updatedAt: string;
@@ -62,8 +78,15 @@ export async function initializeSearchIndexes(): Promise<void> {
 
   const projectIndex = client.index(INDEXES.PROJECTS);
   await projectIndex.updateSettings({
-    searchableAttributes: ['name', 'code', 'description'],
+    searchableAttributes: ['name', 'code', 'description', 'tags'],
     filterableAttributes: ['organizationId', 'status', 'ownerId'],
+    sortableAttributes: ['createdAt', 'name'],
+  });
+
+  const userIndex = client.index(INDEXES.USERS);
+  await userIndex.updateSettings({
+    searchableAttributes: ['name', 'email', 'displayName', 'designation'],
+    filterableAttributes: ['organizationId', 'employmentStatus', 'departmentId'],
     sortableAttributes: ['createdAt', 'name'],
   });
 }
@@ -134,7 +157,7 @@ export async function searchTasks(
 
   if (options.filter) {
     for (const [key, value] of Object.entries(options.filter)) {
-      filterParts.push(`${key} = ${value}`);
+      if (value) filterParts.push(`${key} = ${value}`);
     }
   }
 
@@ -146,6 +169,79 @@ export async function searchTasks(
 
   return {
     hits: result.hits as TaskSearchDocument[],
+    total: result.estimatedTotalHits ?? 0,
+    estimatedTotal: result.estimatedTotalHits ?? 0,
+    limit: result.limit ?? 20,
+    offset: result.offset ?? 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PROJECT INDEXING
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Index a Single Project ───────────────────────────────────
+
+export async function indexProject(project: ProjectSearchDocument): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).addDocuments([project]);
+  } catch (error) {
+    console.error('[search] Failed to index project:', error instanceof Error ? error.message : error);
+  }
+}
+
+// ─── Index Multiple Projects ───────────────────────────────────
+
+export async function indexProjects(projects: ProjectSearchDocument[]): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).addDocuments(projects);
+  } catch (error) {
+    console.error(
+      '[search] Failed to index projects:',
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+// ─── Remove Project from Index ─────────────────────────────────
+
+export async function removeProjectFromIndex(projectId: string): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).deleteDocument(projectId);
+  } catch (error) {
+    console.error(
+      '[search] Failed to remove project from index:',
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+// ─── Search Projects ──────────────────────────────────────────
+
+export async function searchProjects(
+  options: SearchOptions,
+): Promise<SearchResult<ProjectSearchDocument>> {
+  const client = getSearchClient();
+
+  const filterParts: string[] = [`organizationId = ${options.organizationId}`];
+
+  if (options.filter) {
+    for (const [key, value] of Object.entries(options.filter)) {
+      if (value) filterParts.push(`${key} = ${value}`);
+    }
+  }
+
+  const result = await client.index(INDEXES.PROJECTS).search(options.query, {
+    limit: options.limit ?? 20,
+    offset: options.offset ?? 0,
+    filter: filterParts,
+  });
+
+  return {
+    hits: result.hits as ProjectSearchDocument[],
     total: result.estimatedTotalHits ?? 0,
     estimatedTotal: result.estimatedTotalHits ?? 0,
     limit: result.limit ?? 20,

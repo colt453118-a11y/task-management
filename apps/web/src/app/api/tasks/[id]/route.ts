@@ -14,6 +14,7 @@ import {
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask, removeTaskFromIndex } from '@/lib/search';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
+import { extractAndResolveMentions } from '@/lib/mentions';
 
 export const runtime = 'nodejs';
 
@@ -287,6 +288,15 @@ export const PATCH = withAuth(
         }
       }
 
+      // ── Detect @mention changes in description ────────────────
+      let newMentionedIds: string[] = [];
+      if (description !== undefined) {
+        newMentionedIds = await extractAndResolveMentions(orgId!, description, user.id);
+        const currentMentioned = (existing.mentionedUserIds as string[] | null) ?? [];
+        const allMentioned = Array.from(new Set([...currentMentioned, ...newMentionedIds]));
+        updateData.mentionedUserIds = allMentioned;
+      }
+
       // ── Create notifications for assignment changes ────────────
       if (assignedTo !== undefined && assignedTo !== existing.assignedTo && assignedTo !== null) {
         await createNotification({
@@ -300,6 +310,28 @@ export const PATCH = withAuth(
           entityType: 'task',
           entityId: id,
         });
+      }
+
+      // ── Notify newly mentioned users ──────────────────────────
+      if (newMentionedIds.length > 0) {
+        const currentMentioned = (existing.mentionedUserIds as string[] | null) ?? [];
+        const newlyMentioned = newMentionedIds.filter((id) => !currentMentioned.includes(id));
+        for (const mentionedId of newlyMentioned) {
+          if (mentionedId === user.id) continue;
+          if (mentionedId === assignedTo && assignedTo === existing.assignedTo) continue;
+
+          await createNotification({
+            organizationId: orgId!,
+            userId: mentionedId,
+            type: 'task.mention',
+            title: `You were mentioned in: ${existing.title}`,
+            message: description?.substring(0, 200) ?? '',
+            link: `/tasks/${id}`,
+            actorId: user.id,
+            entityType: 'task',
+            entityId: id,
+          });
+        }
       }
 
       // ── Create notifications for status changes ───────────────
@@ -347,24 +379,80 @@ export const PATCH = withAuth(
       });
 
       // Fire-and-forget webhook dispatch
-      dispatchWebhookEvent(
+      const webhookEventType =
         status !== undefined && status !== existing.status
           ? 'task.status_changed'
-          : 'task.updated',
-        orgId!,
-        {
-          taskId: task.id,
+          : 'task.updated';
+      dispatchWebhookEvent(webhookEventType, orgId!, {
+        taskId: task.id,
+        title: task.title,
+        taskIdDisplay: task.taskIdDisplay,
+        status: task.status,
+        priority: task.priority ?? 'medium',
+        assignedTo: task.assignedTo ?? null,
+        projectId: task.projectId ?? null,
+        updatedBy: user.id,
+        previousStatus: status !== undefined && status !== existing.status ? existing.status : undefined,
+        newStatus: status !== undefined && status !== existing.status ? status : undefined,
+      });
+
+      // Fire-and-forget automation rule evaluation
+      import('@/lib/automation/engine').then(({ evaluateAutomationRules }) => {
+        const te = evaluateAutomationRules as (event: string, context: any) => Promise<any>;
+        const automationData = {
+          id: task.id,
           title: task.title,
           taskIdDisplay: task.taskIdDisplay,
           status: task.status,
           priority: task.priority ?? 'medium',
           assignedTo: task.assignedTo ?? null,
           projectId: task.projectId ?? null,
+          dueDate: task.dueDate,
           updatedBy: user.id,
-          previousStatus: status !== undefined && status !== existing.status ? existing.status : undefined,
-          newStatus: status !== undefined && status !== existing.status ? status : undefined,
-        },
-      );
+        };
+
+        // Evaluate the specific change event based on what changed
+        if (status !== undefined && status !== existing.status) {
+          // Status changed - determine the specific event
+          const statusEvent =
+            status === 'completed' ? 'task.completed' :
+            status === 'closed' ? 'task.closed' :
+            status === 'reopened' ? 'task.reopened' :
+            'task.status_changed';
+
+          te(statusEvent, {
+            organizationId: orgId!,
+            triggeredByUserId: user.id,
+            entityType: 'task',
+            entityId: task.id,
+            data: automationData,
+            previousValues: { status: existing.status },
+          });
+        }
+
+        if (assignedTo !== undefined && assignedTo !== existing.assignedTo) {
+          te('task.assigned', {
+            organizationId: orgId!,
+            triggeredByUserId: user.id,
+            entityType: 'task',
+            entityId: task.id,
+            data: { ...automationData, previousAssignee: existing.assignedTo, newAssignee: assignedTo },
+          });
+        }
+
+        // Always evaluate task.updated for any update
+        te('task.updated', {
+          organizationId: orgId!,
+          triggeredByUserId: user.id,
+          entityType: 'task',
+          entityId: task.id,
+          data: automationData,
+          previousValues: Object.keys(parsed.data).reduce((acc, key) => {
+            (acc as any)[key] = (existing as any)[key];
+            return acc;
+          }, {} as Record<string, unknown>),
+        });
+      }).catch(() => {});
 
       // Dispatch separate task.assigned event if assignment changed
       if (assignedTo !== undefined && assignedTo !== existing.assignedTo) {

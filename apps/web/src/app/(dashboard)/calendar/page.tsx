@@ -19,9 +19,23 @@ import {
   Plus,
   Diamond,
   Flag,
+  Loader2,
+  GripVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  type DragEndEvent,
+  type DragStartEvent,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { toast } from '@/hooks/use-toast';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -128,6 +142,10 @@ function getMilestoneColor(_milestone: Milestone, index: number): string {
   return MILESTONE_COLORS[index % MILESTONE_COLORS.length]!;
 }
 
+function formatDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 // ─── Animation Variants ─────────────────────────────────────
 
 const slideVariants = {
@@ -194,6 +212,108 @@ function MilestoneBadge({ milestone, index }: { milestone: Milestone; index: num
         {milestone.name}
       </span>
     </span>
+  );
+}
+
+// ─── Draggable Task Item ────────────────────────────────────
+
+function DraggableTaskItem({ task }: { task: Task }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `task-${task.id}`,
+    data: { type: 'task', task },
+  });
+
+  const style = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={cn('cursor-grab active:cursor-grabbing', isDragging && 'opacity-30')}
+    >
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className="w-full text-left"
+            onClick={(e) => {
+              if (isDragging) e.preventDefault();
+            }}
+          >
+            <TaskBadge task={task} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="right"
+          align="start"
+          sideOffset={8}
+          className="overflow-visible border-0 bg-transparent p-0 shadow-none"
+        >
+          <TaskPopoverContent task={task} onClose={() => {}} />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+// ─── Droppable Day Cell ─────────────────────────────────────
+
+function DroppableDayCell({
+  date,
+  isToday,
+  children,
+  compact,
+}: {
+  date: Date;
+  isToday: boolean;
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
+  const dateKey = formatDateKey(date);
+  const { setNodeRef, isOver } = useDroppable({
+    id: `day-${dateKey}`,
+    data: { type: 'day', date: date.toISOString() },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(          'border-surface-300/20 dark:border-surface-700/30 group border-b border-r p-1.5 transition-all duration-150',
+          compact ? 'min-h-[52px]' : 'min-h-[110px]',
+        isToday
+          ? 'bg-brand-500/5 dark:bg-brand-500/10'
+          : 'hover:bg-surface-100/40 dark:hover:bg-surface-800/30',
+        isOver && 'ring-2 ring-inset ring-brand-500/40 bg-brand-500/10',
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ─── Drag Overlay Task ──────────────────────────────────────
+
+function DragOverlayTask({ task }: { task: Task | null }) {
+  if (!task) return null;
+  const config = statusConfig[task.status] ?? statusConfig.draft!;
+  return (
+    <motion.div
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1.05, opacity: 1 }}
+      className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-xl ring-1 ring-black/5 dark:bg-surface-800"
+      style={{ borderLeft: `3px solid ${config.color}` }}
+    >
+      <GripVertical className="text-surface-300 h-3.5 w-3.5" />
+      <span className="text-surface-700 dark:text-surface-200 text-xs font-medium max-w-[200px] truncate">
+        {task.title}
+      </span>
+      <span className="text-surface-400 ml-auto text-[10px] font-medium uppercase tracking-wider">
+        {config.label}
+      </span>
+    </motion.div>
   );
 }
 
@@ -502,15 +622,7 @@ function MonthView({
         const totalItems = dayTasks.length + dayMilestones.length;
 
         return (
-          <div
-            key={day}
-            className={cn(
-              'border-surface-300/20 dark:border-surface-700/30 group min-h-[110px] border-b border-r p-1.5 transition-all duration-150',
-              isToday
-                ? 'bg-brand-500/5 dark:bg-brand-500/10'
-                : 'hover:bg-surface-100/40 dark:hover:bg-surface-800/30',
-            )}
-          >
+          <DroppableDayCell key={day} date={date} isToday={isToday}>
             <div className="mb-1 flex items-center justify-between">
               <span
                 className={cn(
@@ -559,24 +671,7 @@ function MonthView({
                 return (
                   <>
                     {visibleTasks.map((t) => (
-                      <Popover key={t.id}>
-                        <PopoverTrigger asChild>
-                          <button className="w-full text-left">
-                            <TaskBadge task={t} />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          side="right"
-                          align="start"
-                          sideOffset={8}
-                          className="overflow-visible border-0 bg-transparent p-0 shadow-none"
-                        >
-                          <TaskPopoverContent
-                            task={t}
-                            onClose={() => {}}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DraggableTaskItem key={t.id} task={t} />
                     ))}
                     {remaining > 0 && (
                       <p className="text-surface-400 px-1 text-[9px] font-medium">
@@ -587,7 +682,7 @@ function MonthView({
                 );
               })()}
             </div>
-          </div>
+          </DroppableDayCell>
         );
       })}
     </div>
@@ -656,14 +751,11 @@ function WeekView({
               const allItems = [...milestones, ...tasks];
               const item = allItems[rowIdx];
               return (
-                <div
+                <DroppableDayCell
                   key={`${rowIdx}-${dayIdx}`}
-                  className={cn(
-                    'border-surface-300/20 dark:border-surface-700/30 min-h-[52px] border-b border-r p-1',
-                    isSameDay(d, today)
-                      ? 'bg-brand-500/[0.02]'
-                      : 'hover:bg-surface-100/30 dark:hover:bg-surface-800/20',
-                  )}
+                  date={d}
+                  isToday={isSameDay(d, today)}
+                  compact
                 >
                   {item && 'projectName' in item ? (
                     <Popover key={`ms-${rowIdx}-${dayIdx}-${item.id}`}>
@@ -686,26 +778,9 @@ function WeekView({
                       </PopoverContent>
                     </Popover>
                   ) : item ? (
-                    <Popover key={`tk-${rowIdx}-${dayIdx}-${item.id}`}>
-                      <PopoverTrigger asChild>
-                        <button className="w-full text-left">
-                          <TaskBadge task={item as Task} />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        side="right"
-                        align="start"
-                        sideOffset={8}
-                        className="overflow-visible border-0 bg-transparent p-0 shadow-none"
-                      >
-                        <TaskPopoverContent
-                          task={item as Task}
-                          onClose={() => {}}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DraggableTaskItem task={item as Task} />
                   ) : null}
-                </div>
+                </DroppableDayCell>
               );
             })}
           </Fragment>
@@ -730,6 +805,16 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [direction, setDirection] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [activeDragTask, setActiveDragTask] = useState<Task | null>(null);
+  const [rescheduling, setRescheduling] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
 
   useEffect(() => {
     Promise.all([
@@ -831,6 +916,101 @@ export default function CalendarPage() {
     [milestones],
   );
 
+  // ── Drag-and-Drop Handlers ────────────────────────────────
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    const task = active.data.current?.task as Task | undefined;
+    if (task) setActiveDragTask(task);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveDragTask(null);
+
+      if (!over) return;
+
+      const task = active.data.current?.task as Task | undefined;
+      if (!task || task.status === 'completed' || task.status === 'closed') {
+        if (task && (task.status === 'completed' || task.status === 'closed')) {
+          toast({
+            title: 'Cannot reschedule',
+            description: `This task is ${task.status} and cannot be edited.`,
+            variant: 'warning',
+          });
+        }
+        return;
+      }
+
+      const targetDate = over.data.current?.date as string | undefined;
+      if (!targetDate) return;
+
+      const newDueDate = new Date(targetDate);
+      const oldDueDate = task.dueDate ? new Date(task.dueDate) : null;
+
+      // Skip if dropped on the same day
+      if (oldDueDate && isSameDay(newDueDate, oldDueDate)) return;
+
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === task.id ? { ...t, dueDate: newDueDate.toISOString() } : t,
+        ),
+      );
+      setRescheduling(true);
+
+      try {
+        const res = await fetch(`/api/tasks/${task.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dueDate: newDueDate.toISOString() }),
+        });
+
+        if (!res.ok) {
+          // Revert on failure
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === task.id ? { ...t, dueDate: oldDueDate?.toISOString() ?? null } : t,
+            ),
+          );
+          const data = await res.json();
+          toast({
+            title: 'Failed to reschedule',
+            description: data.error?.message ?? 'An error occurred',
+            variant: 'error',
+          });
+          return;
+        }
+
+        toast({
+          title: 'Task rescheduled',
+          description: `Moved to ${newDueDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`,
+          variant: 'success',
+        });
+      } catch {
+        // Revert on network error
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === task.id ? { ...t, dueDate: oldDueDate?.toISOString() ?? null } : t,
+          ),
+        );
+        toast({
+          title: 'Network error',
+          description: 'Could not reschedule the task. Please try again.',
+          variant: 'error',
+        });
+      } finally {
+        setRescheduling(false);
+      }
+    },
+    [],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragTask(null);
+  }, []);
+
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -862,6 +1042,13 @@ export default function CalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Rescheduling indicator */}
+          {rescheduling && (
+            <span className="flex items-center gap-1.5 text-[11px] text-surface-500">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Saving...
+            </span>
+          )}
           {/* View toggle */}
           <div
             className="bg-surface-200/50 dark:bg-surface-800/50 flex items-center gap-0.5 rounded-xl p-0.5"
@@ -979,41 +1166,53 @@ export default function CalendarPage() {
             <EmptyState />
           ) : (
             <div className="overflow-hidden">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={
-                    viewMode === 'month'
-                      ? `month-${year}-${month}`
-                      : `week-${weekDays[0]!.toDateString()}`
-                  }
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: 'spring', stiffness: 250, damping: 28 },
-                    opacity: { duration: 0.15 },
-                  }}
-                >
-                  {viewMode === 'month' ? (
-                    <MonthView
-                      year={year}
-                      month={month}
-                      today={today}
-                      tasksByDate={tasksByDate}
-                      milestonesByDate={milestonesByDate}
-                    />
-                  ) : (
-                    <WeekView
-                      weekDays={weekDays}
-                      today={today}
-                      tasksByDate={tasksByDate}
-                      milestonesByDate={milestonesByDate}
-                    />
-                  )}
-                </motion.div>
-              </AnimatePresence>
+              <DndContext
+                sensors={sensors}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
+                <AnimatePresence mode="wait" custom={direction}>
+                  <motion.div
+                    key={
+                      viewMode === 'month'
+                        ? `month-${year}-${month}`
+                        : `week-${weekDays[0]!.toDateString()}`
+                    }
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: 'spring', stiffness: 250, damping: 28 },
+                      opacity: { duration: 0.15 },
+                    }}
+                  >
+                    {viewMode === 'month' ? (
+                      <MonthView
+                        year={year}
+                        month={month}
+                        today={today}
+                        tasksByDate={tasksByDate}
+                        milestonesByDate={milestonesByDate}
+                      />
+                    ) : (
+                      <WeekView
+                        weekDays={weekDays}
+                        today={today}
+                        tasksByDate={tasksByDate}
+                        milestonesByDate={milestonesByDate}
+                      />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Drag overlay */}
+                <DragOverlay dropAnimation={null}>
+                  {activeDragTask && <DragOverlayTask task={activeDragTask} />}
+                </DragOverlay>
+              </DndContext>
             </div>
           )}
 
@@ -1048,6 +1247,14 @@ export default function CalendarPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Drag hint tooltip */}
+      {hasItemsOnCalendar && (
+        <div className="text-surface-400 flex items-center justify-center gap-2 text-[10px]">
+          <GripVertical className="h-3 w-3" />
+          <span>Drag tasks between days to reschedule</span>
+        </div>
+      )}
     </motion.div>
   );
 }

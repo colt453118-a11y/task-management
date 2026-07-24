@@ -6,6 +6,7 @@ import { createAuditEntry } from '@/lib/audit';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { ProjectUpdateSchema, validationError } from '@/lib/api/validation';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
+import { indexProject, removeProjectFromIndex } from '@/lib/search';
 
 export const runtime = 'nodejs';
 
@@ -212,6 +213,20 @@ export const PATCH = withAuth(
           .update(schema.projects)
           .set({ ...newValues, updatedBy: user.id, updatedAt: new Date() })
           .where(eq(schema.projects.id, id));
+
+        // Re-index in Meilisearch (non-blocking)
+        indexProject({
+          id: existing.id,
+          name: (newValues.name as string) ?? existing.name,
+          code: (newValues.code as string) ?? existing.code,
+          description: (newValues.description as string) ?? existing.description,
+          status: (newValues.status as string) ?? existing.status,
+          ownerId: (newValues.ownerId as string) ?? existing.ownerId,
+          organizationId: orgId!,
+          tags: (newValues.tags as string[] | null) ?? (existing.tags as string[] | null),
+          createdAt: (existing.createdAt as Date).toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
       }
 
       if (Object.keys(oldValues).length > 0) {
@@ -282,6 +297,9 @@ export const DELETE = withAuth(
         entityId: id,
         oldValues: { name: existing.name, status: existing.status },
       });
+
+      // Remove from Meilisearch index (non-blocking)
+      removeProjectFromIndex(id);
 
       // Fire-and-forget webhook dispatch — never block the API response
       dispatchWebhookEvent('project.deleted', orgId!, {
