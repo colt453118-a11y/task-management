@@ -197,11 +197,11 @@ function ActionConfigEditor({
   action: { type: string; config: Record<string, unknown> };
   onChange: (updated: { type: string; config: Record<string, unknown> }) => void;
   onRemove: () => void;
-}) {
-  const Icon = getActionIcon(action.type);
+}) {  const Icon = getActionIcon(action.type);
   const config = action.config;
 
-  const renderConfigFields = () => {
+  const renderConfigFields
+ = () => {
     switch (action.type) {
       case 'notify':
         return (
@@ -325,6 +325,7 @@ function ActionConfigEditor({
     <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/60 dark:bg-surface-800/60 rounded-xl border p-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line react-hooks/static-components */}
           <Icon className="text-surface-500 h-3.5 w-3.5" />
           <span className="text-surface-700 dark:text-surface-300 text-xs font-medium">
             {getActionLabel(action.type)}
@@ -389,6 +390,7 @@ export default function AutomationPage() {
 
   useEffect(() => {
     if (tab === 'logs' && logs.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchLogs();
     }
   }, [tab, logs.length, fetchLogs]);

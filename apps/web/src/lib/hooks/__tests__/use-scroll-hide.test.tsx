@@ -78,6 +78,7 @@ const TestComponent: FC<
 > = ({ hideOffset, mobileOnly, onValues }) => {
   const values = useScrollHide({ hideOffset, mobileOnly });
   const onValuesRef = useRef(onValues);
+  // eslint-disable-next-line react-hooks/refs
   onValuesRef.current = onValues;
 
   useEffect(() => {

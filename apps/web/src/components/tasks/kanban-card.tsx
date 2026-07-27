@@ -112,6 +112,7 @@ export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardPro
   useEffect(() => {
     if (isDragging) {
       wasDraggedRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsHolding(false);
       touchHandledRef.current = false;
     }

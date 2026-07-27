@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { requireAuth, AuthError } from './session';
-import { hasPermission } from '../permissions';
+import { hasPermission, permissionStorage } from '../permissions';
 import { getDb, schema } from '@workmanagement/database';
 import { eq, and, isNull } from 'drizzle-orm';
 import {
@@ -85,9 +85,9 @@ export function withAuth(
         }
       }
 
-      // Check if user is active (not suspended/deactivated)
-      const isActive = await checkUserActive(user.id);
-      if (!isActive) {
+      // Check user status and resolve orgId in a single DB query
+      const userStatus = await getUserStatus(user.id);
+      if (!userStatus.isActive) {
         return NextResponse.json(
           {
             error: { code: 'USER_NOT_ACTIVE', message: 'Your account is suspended or deactivated' },
@@ -96,27 +96,32 @@ export function withAuth(
         );
       }
 
-      const orgId = await getUserOrgId(user.id);
+      const orgId = userStatus.organizationId;
 
-      // Apply rate limiting after authentication if configured
-      if (rateLimit) {
-        const identifier = rateLimit.key === 'ip' ? ipFromRequest(req) : user.id;
+      // Initialize request-scoped permission cache and run the handler
+      // inside the AsyncLocalStorage context so all requirePermission() calls
+      // within this request share the 3-query result.
+      return permissionStorage.run(new Map(), async () => {
+        // Apply rate limiting after authentication if configured
+        if (rateLimit) {
+          const identifier = rateLimit.key === 'ip' ? ipFromRequest(req) : user.id;
 
-        const key = rateLimitKey(rateLimit.namespace, identifier);
-        const result = await checkRateLimit(key, {
-          windowMs: rateLimit.windowMs,
-          max: rateLimit.max,
-        });
+          const key = rateLimitKey(rateLimit.namespace, identifier);
+          const result = await checkRateLimit(key, {
+            windowMs: rateLimit.windowMs,
+            max: rateLimit.max,
+          });
 
-        if (!result.ok) {
-          return rateLimitResponse(result);
+          if (!result.ok) {
+            return rateLimitResponse(result);
+          }
+
+          const response = await handler(req, { user, orgId });
+          return addRateLimitHeaders(response, result);
         }
 
-        const response = await handler(req, { user, orgId });
-        return addRateLimitHeaders(response, result);
-      }
-
-      return handler(req, { user, orgId });
+        return handler(req, { user, orgId });
+      });
     } catch (error) {
       if (error instanceof AuthError) {
         return NextResponse.json(
@@ -151,19 +156,34 @@ export async function requirePermission(userId: string, permissionCode: string):
 }
 
 /**
- * Get the user's organization ID from the database.
+ * Get user status (active/suspended check) and organization ID in a single query.
+ * Consolidates what was previously two separate DB round-trips.
  */
-async function getUserOrgId(userId: string): Promise<string | null> {
+interface UserStatus {
+  isActive: boolean;
+  organizationId: string | null;
+}
+
+async function getUserStatus(userId: string): Promise<UserStatus> {
   try {
     const db = getDb();
     const [user] = await db
-      .select({ organizationId: schema.users.organizationId })
+      .select({
+        isActive: schema.users.isActive,
+        isSuspended: schema.users.isSuspended,
+        organizationId: schema.users.organizationId,
+      })
       .from(schema.users)
       .where(and(eq(schema.users.id, userId), isNull(schema.users.deletedAt)))
       .limit(1);
-    return user?.organizationId ?? null;
+
+    if (!user) return { isActive: false, organizationId: null };
+    return {
+      isActive: user.isActive === true && user.isSuspended !== true,
+      organizationId: user.organizationId ?? null,
+    };
   } catch {
-    return null;
+    return { isActive: false, organizationId: null };
   }
 }
 
@@ -183,17 +203,6 @@ export function enforceOrgScope(recordOrgId: string | null, userOrgId: string | 
  * Check if a user is active (not suspended or deactivated).
  */
 export async function checkUserActive(userId: string): Promise<boolean> {
-  try {
-    const db = getDb();
-    const [user] = await db
-      .select({ isActive: schema.users.isActive, isSuspended: schema.users.isSuspended })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .limit(1);
-
-    if (!user) return false;
-    return user.isActive === true && user.isSuspended !== true;
-  } catch {
-    return false;
-  }
+  const status = await getUserStatus(userId);
+  return status.isActive;
 }

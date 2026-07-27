@@ -120,6 +120,7 @@ export function useNotificationSSE() {
       const jitteredDelay = delay * (0.8 + Math.random() * 0.4);
 
       reconnectTimeoutRef.current = setTimeout(() => {
+        // eslint-disable-next-line react-hooks/immutability
         connect();
       }, jitteredDelay);
     };

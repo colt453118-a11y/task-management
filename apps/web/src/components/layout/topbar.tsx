@@ -245,6 +245,7 @@ export function Topbar() {
                 if (!notifOpen) refreshNotifs();
               }}
               className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
+              aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (

@@ -114,12 +114,26 @@ const itemVariants = {
 
 // ─── Custom Tooltips ────────────────────────────────────────
 
-function BurndownTooltip({ active, payload, label }: any) {
+interface TooltipPayloadEntry {
+  color: string;
+  name: string;
+  value: number;
+}
+
+function BurndownTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/95 dark:bg-surface-900/95 rounded-xl border p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
-      {payload.map((entry: any, idx: number) => (
+      {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
           {entry.name}: <span className="font-semibold">{Math.round(entry.value)}</span>
@@ -129,12 +143,20 @@ function BurndownTooltip({ active, payload, label }: any) {
   );
 }
 
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/95 dark:bg-surface-900/95 rounded-xl border p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
-      {payload.map((entry: any, idx: number) => (
+      {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
           {entry.name}: <span className="font-semibold">{entry.value}</span>
@@ -351,7 +373,7 @@ export default function AnalyticsPage() {
               icon={<Activity className="h-4 w-4" />}
               label="Weekly Velocity"
               value={avgVelocity}
-              sublabel={`Avg tasks completed per week`}
+              sublabel={'Avg tasks completed per week'}
               trend={avgVelocity >= 5 ? 'up' : avgVelocity >= 1 ? 'neutral' : 'down'}
               color="#a78bfa"
             />

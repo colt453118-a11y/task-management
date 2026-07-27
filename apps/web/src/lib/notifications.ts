@@ -1,6 +1,8 @@
+import type { NotificationEvent } from './notifications/listener';
 import { getDb, schema } from '@workmanagement/database';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { sendNotificationEmail } from './email';
+import { emitNotification } from './notifications/listener';
 
 export type CreateNotificationInput = {
   organizationId: string;
@@ -37,8 +39,10 @@ const TYPE_TO_PREF_KEY: Record<string, string> = {
 /**
  * Check if the user has enabled email notifications for a given type.
  *
- * Looks at the user's `preferences.notifications` JSON field.
- * Defaults to `true` if no preference is set.
+ * Preference resolution order (most specific wins):
+ * 1. `typeChannels[prefKey].email` — per-type, per-channel explicit override
+ * 2. `types[prefKey] && channels.email` — legacy: global type toggle + global channel toggle
+ * 3. Defaults to `true` if nothing is set
  */
 async function shouldSendEmailForType(
   userId: string,
@@ -64,11 +68,26 @@ async function shouldSendEmailForType(
     const notifications = prefs.notifications as Record<string, unknown> | undefined;
     if (!notifications) return true;
 
-    const types = notifications.types as Record<string, boolean> | undefined;
-    if (!types) return true;
+    // ── Step 1: Check per-type channel overrides (typeChannels) ──
+    // If the user has explicitly set email per notification type, respect that.
+    const typeChannels = notifications.typeChannels as
+      | Record<string, Record<string, boolean>>
+      | undefined;
+    const channelPrefs = typeChannels?.[prefKey];
+    if (channelPrefs !== undefined && channelPrefs.email !== undefined) {
+      return channelPrefs.email;
+    }
 
-    // Default to true if preference not explicitly set
-    return types[prefKey] !== false;
+    // ── Step 2: Fall back to the legacy combined check ──
+    // types[prefKey] controls whether the notification type fires at all,
+    // and channels.email is the global email toggle.
+    const types = notifications.types as Record<string, boolean> | undefined;
+    const channels = notifications.channels as Record<string, boolean> | undefined;
+
+    const typeEnabled = types ? types[prefKey] !== false : true;
+    const emailEnabled = channels ? channels.email !== false : true;
+
+    return typeEnabled && emailEnabled;
   } catch {
     // If we can't read preferences, send the email to be safe
     return true;
@@ -100,10 +119,36 @@ export async function createNotification(data: CreateNotificationInput) {
     })
     .returning();
 
+  const notification = notif!;
+
   // Fire-and-forget email notification — never block the API response
   sendEmailNotificationAsync(data).catch(() => {});
 
-  return notif;
+  // ── In-process push (instant, ~0.1ms) ───────────────────
+  // Deliver directly to SSE controllers within this Node.js process
+  // via the EventEmitter bus. No DB round-trip needed — the full
+  // notification object is already in memory.
+  emitNotification(notification as unknown as NotificationEvent);
+
+  // ── Cross-process push (~5ms) ───────────────────────────
+  // Fire a PostgreSQL notification so SSE listeners in OTHER
+  // server instances also receive this notification in real-time.
+  try {
+    await db.execute(
+      sql`SELECT pg_notify(
+        'notification_channel',
+        ${JSON.stringify({
+          userId: notification.userId,
+          notificationId: notification.id,
+          type: notification.type,
+        })}
+      )`,
+    );
+  } catch {
+    // Non-critical — the in-process push already delivered it locally
+  }
+
+  return notification;
 }
 
 /**

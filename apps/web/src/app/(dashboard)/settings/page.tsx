@@ -95,6 +95,8 @@ const moduleColors: Record<string, string> = {
   organization: 'bg-indigo-500/10 text-indigo-400',
 };
 
+type ChannelKey = 'inApp' | 'email' | 'push';
+
 type NotifPreferences = {
   channels?: {
     inApp?: boolean;
@@ -113,6 +115,12 @@ type NotifPreferences = {
     task_closed?: boolean;
     task_reopened?: boolean;
   };
+  /**
+   * Per-type, per-channel overrides.
+   * When a channel is explicitly set for a type, it overrides the global
+   * `channels` + `types` defaults. Not setting a value means "use default."
+   */
+  typeChannels?: Record<string, Partial<Record<ChannelKey, boolean>>>;
   digest?: {
     enabled?: boolean;
     frequency?: 'daily' | 'weekly' | 'never';
@@ -133,6 +141,7 @@ const DEFAULT_NOTIF_PREFS: NotifPreferences = {
     task_closed: false,
     task_reopened: false,
   },
+  typeChannels: {},
   digest: { enabled: false, frequency: 'daily' },
 };
 
@@ -149,7 +158,7 @@ const notifTypeMeta: Record<string, { label: string; description: string; icon: 
   task_reopened: { label: 'Reopened', description: 'When a closed task is reopened', icon: <ArrowRightLeft className="h-4 w-4" /> },
 };
 
-const channelMeta: Record<string, { label: string; description: string; icon: React.ReactNode }> = {
+const channelMeta: Record<ChannelKey, { label: string; description: string; icon: React.ReactNode }> = {
   inApp: { label: 'In-app', description: 'Notification bell in the top bar', icon: <Monitor className="h-4 w-4" /> },
   email: { label: 'Email', description: 'Send email notifications', icon: <Mail className="h-4 w-4" /> },
   push: { label: 'Push', description: 'Push notifications (coming soon)', icon: <Smartphone className="h-4 w-4" /> },
@@ -355,6 +364,7 @@ export default function SettingsPage() {
                 ...prev,
                 channels: { ...(prev.channels ?? {}), ...(data.preferences.channels ?? {}) },
                 types: { ...(prev.types ?? {}), ...(data.preferences.types ?? {}) },
+                typeChannels: { ...(prev.typeChannels ?? {}), ...(data.preferences.typeChannels ?? {}) },
                 digest: { ...(prev.digest ?? {}), ...(data.preferences.digest ?? {}) },
               }));
             }
@@ -387,6 +397,28 @@ export default function SettingsPage() {
       setNotifPrefsSaving(false);
     }
   };
+
+  /**
+   * Update a per-type channel toggle.
+   * When the user explicitly toggles a channel for a notification type,
+   * we store it in typeChannels so the backend can distinguish "explicitly
+   * set" from "use default."
+   */
+  const updateTypeChannel = useCallback(
+    (typeKey: string, channel: ChannelKey, value: boolean) => {
+      setNotifPrefs((prev) => ({
+        ...prev,
+        typeChannels: {
+          ...(prev.typeChannels ?? {}),
+          [typeKey]: {
+            ...((prev.typeChannels as Record<string, Partial<Record<ChannelKey, boolean>>> | undefined)?.[typeKey] ?? {}),
+            [channel]: value,
+          },
+        },
+      }));
+    },
+    [],
+  );
 
   const openCreateDialog = () => {
     setEditingRole(null);
@@ -863,66 +895,92 @@ export default function SettingsPage() {
                   Notification Channels
                 </h2>
                 <div className="space-y-2">
-                  {Object.keys(channelMeta).map((key) => {
-                    const k = key as keyof typeof channelMeta;
-                    return (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="text-surface-500">{channelMeta[k]!.icon}</div>
-                          <div>
-                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
-                              {channelMeta[k]!.label}
-                            </p>
-                            <p className="text-surface-500 text-xs">{channelMeta[k]!.description}</p>
-                          </div>
+                  {(['inApp', 'email', 'push'] as const).map((key) => (
+                    <motion.div
+                      key={key}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-surface-500">{channelMeta[key]!.icon}</div>
+                        <div>
+                          <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                            {channelMeta[key]!.label}
+                          </p>
+                          <p className="text-surface-500 text-xs">{channelMeta[key]!.description}</p>
                         </div>
-                        <Toggle
-                          enabled={(notifPrefs.channels as Record<string, boolean | undefined> | undefined)?.[k] ?? false}
-                          onChange={(v) => setNotifPrefs((prev) => ({ ...prev, channels: { ...(prev.channels ?? {}), [k]: v } }))}
-                          disabled={k === 'push'}
-                        />
-                      </motion.div>
-                    );
-                  })}
+                      </div>
+                      <Toggle
+                        enabled={notifPrefs.channels?.[key] ?? false}
+                        onChange={(v) => setNotifPrefs((prev) => ({ ...prev, channels: { ...(prev.channels ?? {}), [key]: v } }))}
+                        disabled={key === 'push'}
+                      />
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </SectionCard>
 
-            {/* Notification Types */}
+            {/* Notification Events — Per-Channel Toggles */}
             <SectionCard gradient={CARD_GRADIENTS.notifications ?? 'from-purple-500 to-violet-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 dark:text-surface-100 mb-1 flex items-center gap-2 text-base font-semibold">
                   <Bell className="text-surface-400 h-4 w-4" />
                   Notification Events
                 </h2>
-                <div className="space-y-2">
+                <p className="text-surface-500 mb-4 text-xs">
+                  Toggle each channel per event type. Unset channels use the global defaults above.
+                </p>
+                <div className="space-y-1">
                   {Object.keys(notifTypeMeta).map((key) => {
                     const k = key as keyof typeof notifTypeMeta;
+                    const tc = (notifPrefs.typeChannels as Record<string, Partial<Record<ChannelKey, boolean>>> | undefined)?.[k] ?? {};
                     return (
                       <motion.div
                         key={key}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
+                        className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 group flex items-center justify-between rounded-xl border px-4 py-2.5 transition-all duration-200"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="text-surface-500">{notifTypeMeta[k]!.icon}</div>
-                          <div>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="text-surface-500 shrink-0">{notifTypeMeta[k]!.icon}</div>
+                          <div className="min-w-0">
                             <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
                               {notifTypeMeta[k]!.label}
                             </p>
-                            <p className="text-surface-500 text-xs">{notifTypeMeta[k]!.description}</p>
+                            <p className="text-surface-500 hidden truncate text-xs sm:block">
+                              {notifTypeMeta[k]!.description}
+                            </p>
                           </div>
                         </div>
-                        <Toggle
-                          enabled={(notifPrefs.types as Record<string, boolean | undefined> | undefined)?.[k] ?? false}
-                          onChange={(v) => setNotifPrefs((prev) => ({ ...prev, types: { ...(prev.types ?? {}), [k]: v } }))}
-                        />
+                        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+                          {/* In-app */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">In-app</span>
+                            <Toggle
+                              enabled={tc.inApp ?? true}
+                              onChange={(v) => updateTypeChannel(k, 'inApp', v)}
+                            />
+                          </div>
+                          {/* Email */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Email</span>
+                            <Toggle
+                              enabled={tc.email ?? (notifPrefs.channels?.email ?? true)}
+                              onChange={(v) => updateTypeChannel(k, 'email', v)}
+                            />
+                          </div>
+                          {/* Push */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Push</span>
+                            <Toggle
+                              enabled={tc.push ?? false}
+                              onChange={(v) => updateTypeChannel(k, 'push', v)}
+                              disabled
+                            />
+                          </div>
+                        </div>
                       </motion.div>
                     );
                   })}

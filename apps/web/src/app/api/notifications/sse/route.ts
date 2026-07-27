@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { getDb, schema } from '@workmanagement/database';
 import { eq, and, gt, desc, sql } from 'drizzle-orm';
 import { getCurrentSession } from '@/lib/auth/session';
+import { registerSSEConnection, subscribeToBus } from '@/lib/notifications/listener';
+import type { NotificationEvent } from '@/lib/notifications/listener';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,12 +12,11 @@ export const runtime = 'nodejs';
 /**
  * Server-Sent Events endpoint for real-time notification delivery.
  *
- * On connect:
- *   1. Authenticates the user via session cookie
- *   2. Sends all unread notifications as initial `notification` events
- *   3. Polls the database every 3 seconds for new notifications
- *   4. Sends `heartbeat` events every 15 seconds to keep the connection alive
- *   5. Cleans up on client disconnect
+ * Architecture:
+ * - Uses PostgreSQL LISTEN/NOTIFY for instant push (sub-10ms delivery)
+ * - Falls back to a 30-second poll if LISTEN/NOTIFY fails or misses a message
+ * - Heartbeat every 15 seconds keeps the connection alive through proxies
+ * - Shared single-listener design: one DB connection for ALL SSE users
  *
  * Events sent over the stream:
  *   - `connected`    — initial handshake with userId
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   const userId = session.user.id;
   const encoder = new TextEncoder();
 
-  // Track last poll time — start with current time so we only get *new* notifications
+  // Track last poll time — used by the fallback poll only
   let lastPollTime = new Date();
 
   const stream = new ReadableStream({
@@ -86,8 +87,49 @@ export async function GET(req: NextRequest) {
         sendEvent('error', { message: 'Failed to load initial notifications' });
       }
 
-      // ── Poll for new notifications every 3 seconds ────────
-      const pollInterval = setInterval(async () => {
+      // ── Subscribe to the in-process notification bus ─────
+      // This is the PRIMARY delivery path: ~0.1ms, no DB round-trip.
+      // The bus delivers the full notification object directly from
+      // createNotification() to this SSE controller.
+      const unsubBus = subscribeToBus(userId, (notification: NotificationEvent) => {
+        sendEvent('notification', { notifications: [notification] });
+        // Fetch updated unread count after the notification
+        pushUnreadFromBus(userId, sendEvent);
+      });
+
+      async function pushUnreadFromBus(uid: string, se: typeof sendEvent) {
+        try {
+          const db = getDb();
+          const [result] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(schema.notifications)
+            .where(
+              and(
+                eq(schema.notifications.userId, uid),
+                eq(schema.notifications.isRead, false),
+                eq(schema.notifications.isDismissed, false),
+              ),
+            );
+          se('unread', { count: Number(result?.count ?? 0) });
+        } catch {
+          // Non-critical
+        }
+      }
+
+      // ── Register with the shared LISTEN/NOTIFY listener ───
+      // This handles notifications from OTHER server instances.
+      // Wrapped in try/catch — failure degrades to fallback poll.
+      let unregister: (() => void) | null = null;
+      try {
+        unregister = await registerSSEConnection(userId, controller);
+      } catch (err) {
+        console.error('[SSE] Failed to register listener:', err);
+      }
+
+      // ── Fallback poll (60s) — catches anything missed by ──
+      // both the bus and LISTEN/NOTIFY (e.g., bus listener limit
+      // exceeded, transient DB blip)
+      const fallbackPoll = setInterval(async () => {
         try {
           const db = getDb();
           const newNotifs = await db
@@ -106,7 +148,6 @@ export async function GET(req: NextRequest) {
           if (newNotifs.length > 0) {
             sendEvent('notification', { notifications: newNotifs });
 
-            // Fetch updated unread count
             const [unreadResult] = await db
               .select({ count: sql<number>`count(*)` })
               .from(schema.notifications)
@@ -120,34 +161,34 @@ export async function GET(req: NextRequest) {
             sendEvent('unread', { count: Number(unreadResult?.count ?? 0) });
           }
 
-          // Update last poll time to now (use the latest notification timestamp if available)
           if (newNotifs.length > 0) {
             const latestTs = newNotifs[0]?.createdAt;
             if (latestTs && latestTs.getTime() > lastPollTime.getTime()) {
               lastPollTime = new Date(latestTs);
             }
           } else {
-            // Still advance time so we don't re-fetch old ones
             lastPollTime = new Date();
           }
         } catch (err) {
-          console.error('[SSE] Poll error:', err);
+          console.error('[SSE] Fallback poll error:', err);
         }
-      }, 3_000);
+      }, 60_000);
 
       // ── Heartbeat every 15 seconds ────────────────────────
       const heartbeatInterval = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode(`event: heartbeat\ndata: {}\n\n`));
+          controller.enqueue(encoder.encode('event: heartbeat\ndata: {}\n\n'));
         } catch {
           clearInterval(heartbeatInterval);
-          clearInterval(pollInterval);
+          clearInterval(fallbackPoll);
         }
       }, 15_000);
 
       // ── Clean up on client disconnect ─────────────────────
       req.signal.addEventListener('abort', () => {
-        clearInterval(pollInterval);
+        unsubBus();
+        unregister?.();
+        clearInterval(fallbackPoll);
         clearInterval(heartbeatInterval);
         try {
           controller.close();

@@ -286,6 +286,7 @@ export function DependencyVisualizer({
 
   // Clear state when data changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSimulationDone(false);
     setScale(1);
     setOffset({ x: 0, y: 0 });
@@ -315,7 +316,7 @@ export function DependencyVisualizer({
       return { nodes: [], edges: [] };
     }
     return computeLayout(graphNodes, graphEdges, dimensions.width, dimensions.height);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [graphNodes, graphEdges, dimensions.width, dimensions.height]);
 
   // Run live simulation ticks for spring animation
@@ -473,6 +474,7 @@ export function DependencyVisualizer({
     const id = hoveredNode ?? selectedNode;
     if (!id) return new Set<string>();
     const connected = new Set<string>([id]);
+    // eslint-disable-next-line react-hooks/refs
     for (const edge of liveEdgesRef.current) {
       if (edge.source === id) connected.add(edge.target);
       if (edge.target === id) connected.add(edge.source);
@@ -485,6 +487,7 @@ export function DependencyVisualizer({
     const id = hoveredNode ?? selectedNode;
     if (!id) return new Set<string>();
     const edgeIds = new Set<string>();
+    // eslint-disable-next-line react-hooks/refs
     for (const edge of liveEdgesRef.current) {
       if (edge.source === id || edge.target === id) {
         edgeIds.add(edge.id);

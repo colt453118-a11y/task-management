@@ -167,6 +167,7 @@ export function WebhookSettings() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchWebhooks();
   }, [fetchWebhooks]);
 
@@ -765,7 +766,7 @@ export function WebhookSettings() {
               <textarea
                 value={form.headers}
                 onChange={(e) => setForm((p) => ({ ...p, headers: e.target.value }))}
-                placeholder={`Authorization: Bearer xxx\nX-Custom-Header: value`}
+                placeholder={'Authorization: Bearer xxx\nX-Custom-Header: value'}
                 rows={3}
                 className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-xs font-mono transition-all focus:outline-none focus:ring-2"
               />

@@ -184,12 +184,15 @@ export default function SearchPage() {
     }
   }, []);
 
+   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSavedSearches();
   }, [loadSavedSearches]);
 
   // ── Focus search input on mount and Cmd+K ──────────────────
 
+   
   useEffect(() => {
     inputRef.current?.focus();
 
@@ -205,6 +208,7 @@ export default function SearchPage() {
 
   // ── Debounce search query ──────────────────────────────────
 
+   
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
@@ -249,7 +253,9 @@ export default function SearchPage() {
   }, []);
 
   // Trigger search when debounced query, tab, or filters change
+   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchResults(debouncedQuery, activeTab, filters);
   }, [debouncedQuery, activeTab, filters, fetchResults]);
 

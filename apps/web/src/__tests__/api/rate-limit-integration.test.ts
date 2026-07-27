@@ -62,9 +62,13 @@ vi.mock('@/lib/api/csrf', () => ({
   csrfErrorResponse: vi.fn(),
 }));
 
-vi.mock('@/lib/permissions', () => ({
-  hasPermission: vi.fn(() => Promise.resolve(true)),
-}));
+vi.mock('@/lib/permissions', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/permissions')>();
+  return {
+    ...actual,
+    hasPermission: vi.fn(() => Promise.resolve(true)),
+  };
+});
 
 vi.mock('@workmanagement/database', () => ({
   getDb: vi.fn(() => ({

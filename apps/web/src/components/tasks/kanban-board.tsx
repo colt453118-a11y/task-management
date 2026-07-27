@@ -319,7 +319,10 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
 
     if (speed !== 0) {
       el.scrollLeft += speed;
-      scrollAnimRef.current = requestAnimationFrame(() => performAutoScroll(clientX));
+      scrollAnimRef.current = requestAnimationFrame(
+        // eslint-disable-next-line react-hooks/immutability
+        () => performAutoScroll(clientX),
+      );
     }
   }, []);
 

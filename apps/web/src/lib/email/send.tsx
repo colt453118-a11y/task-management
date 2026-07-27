@@ -1,15 +1,18 @@
+import { render } from '@react-email/components';
 import { Resend } from 'resend';
 import logger from '@/lib/logger';
 import {
-  taskAssignedTemplate,
-  taskCommentTemplate,
-  taskStatusChangedTemplate,
-  taskCompletedTemplate,
-  taskDeletedTemplate,
-  taskMentionTemplate,
-  taskDeadlineTemplate,
-  welcomeTemplate,
-} from './templates';
+  TaskAssignedEmail,
+  TaskCommentEmail,
+  TaskStatusChangedEmail,
+  TaskCompletedEmail,
+  TaskDeletedEmail,
+  TaskMentionEmail,
+  TaskDeadlineEmail,
+  WelcomeEmail,
+} from './components';
+import { escapeHtml } from './utils';
+import type { BaseEmailProps } from './components';
 
 // ─── Resend Client (lazy singleton) ────────────────────────────
 
@@ -35,17 +38,13 @@ const UNSUBSCRIBE_URL =
 
 // ─── HTML Escaping ─────────────────────────────────────────────
 
-/**
- * Escape HTML special characters to prevent XSS/injection in email content.
- * User-provided titles and messages must be escaped before interpolation.
- */
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+// escapeHtml imported from ./utils
+
+// ─── React Email render helper ─────────────────────────────────
+
+/** Render a React Email component to an HTML string. */
+async function renderEmail(component: React.ReactElement): Promise<string> {
+  return render(component);
 }
 
 // ─── Send Email ────────────────────────────────────────────────
@@ -84,6 +83,21 @@ export async function sendEmail(params: SendEmailParams): Promise<{ id: string }
   }
 }
 
+// ─── Build base props ─────────────────────────────────────────
+
+function buildBaseProps(
+  title: string,
+  message: string,
+  link: string,
+): BaseEmailProps {
+  return {
+    title: escapeHtml(title),
+    message: escapeHtml(message),
+    link,
+    unsubscribeUrl: UNSUBSCRIBE_URL,
+  };
+}
+
 // ─── Notification-Type Dispatch ────────────────────────────────
 
 interface NotificationEmail {
@@ -96,8 +110,7 @@ interface NotificationEmail {
 }
 
 export async function sendNotificationEmail(notif: NotificationEmail): Promise<void> {
-  const safeTitle = escapeHtml(notif.title);
-  const safeMessage = escapeHtml(notif.message);
+  const baseProps = buildBaseProps(notif.title, notif.message, notif.link);
 
   let subject: string;
   let html: string;
@@ -105,126 +118,57 @@ export async function sendNotificationEmail(notif: NotificationEmail): Promise<v
   switch (notif.type) {
     case 'task.assigned':
       subject = `[WorkManager] You've been assigned: ${notif.title}`;
-      html = taskAssignedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskAssignedEmail {...baseProps} />);
       break;
 
     case 'task.comment':
       subject = `[WorkManager] New comment on: ${notif.title}`;
-      html = taskCommentTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskCommentEmail {...baseProps} />);
       break;
 
     case 'task.completed':
       subject = `[WorkManager] ✓ Task completed: ${notif.title}`;
-      html = taskCompletedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskCompletedEmail {...baseProps} />);
       break;
 
     case 'task.status_changed':
       subject = `[WorkManager] Task status changed: ${notif.title}`;
-      html = taskStatusChangedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskStatusChangedEmail {...baseProps} />);
       break;
 
     case 'task.closed':
       subject = `[WorkManager] Task closed: ${notif.title}`;
-      html = taskDeletedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskDeletedEmail {...baseProps} />);
       break;
 
     case 'task.reopened':
       subject = `[WorkManager] Task reopened: ${notif.title}`;
-      html = taskStatusChangedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskStatusChangedEmail {...baseProps} />);
       break;
 
     case 'task.mention':
       subject = `[WorkManager] You were mentioned in: ${notif.title}`;
-      html = taskMentionTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskMentionEmail {...baseProps} />);
       break;
 
     case 'task.due_soon':
       subject = `[WorkManager] ⏰ Due soon: ${notif.title}`;
-      html = taskDeadlineTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        deadlineType: 'due_soon',
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskDeadlineEmail {...baseProps} deadlineType="due_soon" />);
       break;
 
     case 'task.overdue':
       subject = `[WorkManager] ⚠ Overdue: ${notif.title}`;
-      html = taskDeadlineTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        deadlineType: 'overdue',
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskDeadlineEmail {...baseProps} deadlineType="overdue" />);
       break;
 
     case 'task.escalated':
       subject = `[WorkManager] 🚨 Escalated: ${notif.title}`;
-      html = taskDeadlineTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        deadlineType: 'escalated',
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskDeadlineEmail {...baseProps} deadlineType="escalated" />);
       break;
 
     default:
       subject = `[WorkManager] ${notif.title}`;
-      html = taskAssignedTemplate({
-        userName: notif.userName,
-        title: safeTitle,
-        message: safeMessage,
-        link: notif.link,
-        unsubscribeUrl: UNSUBSCRIBE_URL,
-      });
+      html = await renderEmail(<TaskAssignedEmail {...baseProps} />);
   }
 
   await sendEmail({ to: notif.to, subject, html });
@@ -233,12 +177,13 @@ export async function sendNotificationEmail(notif: NotificationEmail): Promise<v
 // ─── Welcome Email ─────────────────────────────────────────────
 
 export async function sendWelcomeEmail(to: string, userName: string): Promise<void> {
+  const html = await renderEmail(
+    <WelcomeEmail userName={escapeHtml(userName)} unsubscribeUrl={UNSUBSCRIBE_URL} />,
+  );
+
   await sendEmail({
     to,
     subject: `Welcome to WorkManager, ${userName}!`,
-    html: welcomeTemplate({
-      userName: escapeHtml(userName),
-      unsubscribeUrl: UNSUBSCRIBE_URL,
-    }),
+    html,
   });
 }

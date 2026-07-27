@@ -76,6 +76,7 @@ const TestComponent: FC<{
 }> = ({ mobileOnly, onValues }) => {
   const values = useScrollShadow({ mobileOnly });
   const onValuesRef = useRef(onValues);
+  // eslint-disable-next-line react-hooks/refs
   onValuesRef.current = onValues;
 
   useEffect(() => {

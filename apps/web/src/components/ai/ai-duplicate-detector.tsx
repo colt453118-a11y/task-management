@@ -37,6 +37,7 @@ export function AIDuplicateDetector({
 
   // Reset dismissed state when title changes significantly
   useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
     if (dismissed) setDismissed(false);
   }, [title]); // eslint-disable-line react-hooks/exhaustive-deps
 

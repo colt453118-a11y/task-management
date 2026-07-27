@@ -282,7 +282,7 @@ async function computeVelocity(
   const points: VelocityPoint[] = [];
   const current = new Date(getMonday(startDate));
 
-  // eslint-disable-next-line no-unmodified-loop-condition
+   
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);

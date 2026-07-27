@@ -182,7 +182,7 @@ export default function DependencyGraphPage() {
                         completed: '#34d399',
                         closed: '#6b7280',
                       } as Record<string, string>
-                    )[status] ?? '#a8a29e'
+                    )[status] ?? '#a8a29e',
                   }} />
                   {status.replace(/_/g, ' ')} {count}
                 </span>

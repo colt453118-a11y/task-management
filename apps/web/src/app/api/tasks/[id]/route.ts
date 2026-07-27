@@ -12,6 +12,7 @@ import {
   READONLY_STATUSES,
 } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
+import type { AutomationContext } from '@/lib/automation/engine';
 import { indexTask, removeTaskFromIndex } from '@/lib/search';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
 import { extractAndResolveMentions } from '@/lib/mentions';
@@ -398,7 +399,7 @@ export const PATCH = withAuth(
 
       // Fire-and-forget automation rule evaluation
       import('@/lib/automation/engine').then(({ evaluateAutomationRules }) => {
-        const te = evaluateAutomationRules as (event: string, context: any) => Promise<any>;
+        const te = evaluateAutomationRules as (event: string, context: AutomationContext) => Promise<unknown>;
         const automationData = {
           id: task.id,
           title: task.title,
@@ -448,7 +449,7 @@ export const PATCH = withAuth(
           entityId: task.id,
           data: automationData,
           previousValues: Object.keys(parsed.data).reduce((acc, key) => {
-            (acc as any)[key] = (existing as any)[key];
+            (acc as Record<string, unknown>)[key] = (existing as Record<string, unknown>)[key];
             return acc;
           }, {} as Record<string, unknown>),
         });

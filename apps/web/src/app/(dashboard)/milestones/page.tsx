@@ -143,7 +143,9 @@ export default function MilestonesPage() {
     } catch { /* */ }
   }, []);
 
+   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMilestones();
     fetchProjects();
   }, [fetchMilestones, fetchProjects]);

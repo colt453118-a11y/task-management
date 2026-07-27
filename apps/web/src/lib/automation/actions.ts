@@ -277,7 +277,7 @@ async function executeEscalate(
           userId,
           type: 'task.escalated',
           title: '⚠️ Task Escalated',
-          message: message || `Task has been escalated`,
+          message: message || 'Task has been escalated',
           link: `/${context.entityType}s/${context.entityId}`,
           entityType: context.entityType,
           entityId: context.entityId,
