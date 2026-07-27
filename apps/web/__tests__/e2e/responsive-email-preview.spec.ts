@@ -87,7 +87,12 @@ test.describe('Email Preview — Responsive Layout', () => {
       test('raw HTML toggle shows/hides panel and copy button works', async ({
         page,
         context,
-      }) => {
+      }, testInfo) => {
+        test.skip(
+          testInfo.project.name !== 'chromium',
+          'clipboard-write permission only supported in Chromium',
+        );
+
         // Grant clipboard permission for this test
         await context.grantPermissions(['clipboard-write']);
 
