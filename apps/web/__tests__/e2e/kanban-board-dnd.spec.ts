@@ -425,8 +425,10 @@ test.describe('KanbanBoard Drag and Drop', () => {
     await expect(completedCard).toHaveClass(/opacity-60/);
     await expect(completedCard).toHaveCSS('opacity', '0.6');
 
-    // Locate the In Progress column
+    // Locate the In Progress column and ensure it's visible
+    // (Framer Motion column animations start at opacity 0)
     const inProgressColumn = page.getByTestId(KANBAN.column('in_progress'));
+    await expect(inProgressColumn).toBeVisible({ timeout: 10_000 });
 
     // Attempt to drag the completed (readonly) card
     await dragCardToColumn(page, completedCard, inProgressColumn);
