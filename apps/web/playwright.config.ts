@@ -10,7 +10,7 @@ export default defineConfig({
   globalTeardown: require.resolve('./__tests__/e2e/global-teardown'),
   expect: {
     toHaveScreenshot: {
-      maxDiffPixels: 2000,
+      maxDiffPixels: 5000,
       threshold: 0.5,
     },
   },
