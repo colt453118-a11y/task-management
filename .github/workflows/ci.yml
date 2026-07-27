@@ -138,7 +138,7 @@ jobs:
           retention-days: 7
 
       - name: Upload updated screenshots
-        if: github.event.inputs.update_snapshots == 'true'
+        if: always() && github.event.inputs.update_snapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-screenshots-chromium-linux
