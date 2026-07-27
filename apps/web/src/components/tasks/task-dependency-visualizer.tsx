@@ -12,6 +12,7 @@ import {
   GitBranch,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DEP_GRAPH } from '@/lib/test-ids';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -596,6 +597,7 @@ export function DependencyVisualizer({
       {/* Graph container */}
       <div
         ref={containerRef}
+        data-testid={DEP_GRAPH.graphView}
         className={cn(
           'relative overflow-hidden rounded-xl border',
           fullScreen
