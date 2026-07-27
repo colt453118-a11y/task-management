@@ -28,6 +28,12 @@ const ALL_SLUGS = [
 ] as const;
 
 test.describe('Email Preview — Visual Snapshots', () => {
+  // Visual regression only runs on Chromium to avoid maintaining snapshots
+  // for every browser. The email rendering is identical across browsers.
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Visual regression on Chromium only');
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
   });
