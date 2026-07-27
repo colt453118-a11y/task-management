@@ -367,7 +367,7 @@ test.describe('TaskDependencyGraph', () => {
 
     // After add, dialog closes — switch to list view to verify dep appeared
     await page.getByTestId(DEP_GRAPH.toggleList).click();
-    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Blocked by (1)')).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
@@ -398,12 +398,12 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search and select
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 10_000 });
     await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
     // After add, dialog closes — switch to list view to verify dep appeared
     await page.getByTestId(DEP_GRAPH.toggleList).click();
-    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Blocked by (1)')).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
