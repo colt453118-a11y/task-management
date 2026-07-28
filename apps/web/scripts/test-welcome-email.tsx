@@ -26,31 +26,31 @@ const MAILPIT_API = 'http://localhost:8025/api/v1/messages';
 async function main(): Promise<void> {
   const toEmail = process.argv[2];
   if (!toEmail) {
-    console.error('Usage: npx tsx scripts/test-welcome-email.tsx <recipient-email> [user-name]');
-    console.error('Example: npx tsx scripts/test-welcome-email.tsx user@example.com');
+    console.warn('Usage: npx tsx scripts/test-welcome-email.tsx <recipient-email> [user-name]');
+    console.warn('Example: npx tsx scripts/test-welcome-email.tsx user@example.com');
     process.exit(1);
   }
 
   const userName = process.argv[3] || 'Jane Cooper';
 
-  console.log('\n📧 Sending welcome email');
-  console.log(`   To:       ${toEmail}`);
-  console.log(`   Name:     ${userName}`);
-  console.log(`   SMTP:     ${SMTP_HOST}:${SMTP_PORT}`);
-  console.log('   Mailpit:  http://localhost:8025\n');
+  console.warn('\n📧 Sending welcome email');
+  console.warn(`   To:       ${toEmail}`);
+  console.warn(`   Name:     ${userName}`);
+  console.warn(`   SMTP:     ${SMTP_HOST}:${SMTP_PORT}`);
+  console.warn('   Mailpit:  http://localhost:8025\n');
 
   // Step 1: Render the WelcomeEmail component to HTML
-  console.log('⏳ Rendering WelcomeEmail component...');
+  console.warn('⏳ Rendering WelcomeEmail component...');
   const html = await render(
     <WelcomeEmail
       userName={userName}
       unsubscribeUrl="http://localhost:3000/settings/notifications"
     />,
   );
-  console.log(`   ✅ Rendered: ${html.length.toLocaleString()} bytes\n`);
+  console.warn(`   ✅ Rendered: ${html.length.toLocaleString()} bytes\n`);
 
   // Step 2: Create SMTP transport to Mailpit
-  console.log('⏳ Connecting to Mailpit SMTP...');
+  console.warn('⏳ Connecting to Mailpit SMTP...');
   const transporter = createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
@@ -58,10 +58,10 @@ async function main(): Promise<void> {
   });
 
   await transporter.verify();
-  console.log('   ✅ SMTP connection verified\n');
+  console.warn('   ✅ SMTP connection verified\n');
 
   // Step 3: Send the email
-  console.log('⏳ Sending email...');
+  console.warn('⏳ Sending email...');
   const info = await transporter.sendMail({
     from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
     to: toEmail,
@@ -73,9 +73,9 @@ async function main(): Promise<void> {
     },
   });
 
-  console.log('   ✅ Email sent!');
-  console.log(`   Message ID: ${info.messageId}`);
-  console.log('\n📬 Checking Mailpit for delivery...');
+  console.warn('   ✅ Email sent!');
+  console.warn(`   Message ID: ${info.messageId}`);
+  console.warn('\n📬 Checking Mailpit for delivery...');
 
   // Brief wait for mail to be processed
   await new Promise((r) => setTimeout(r, 1000));
@@ -87,20 +87,20 @@ async function main(): Promise<void> {
       messages_count: number;
       messages: Array<{ Subject: string; To: Array<{ Address: string; Name: string }> }>;
     };
-    console.log(`   📬 Mailpit has ${data.messages_count} message(s)`);
+    console.warn(`   📬 Mailpit has ${data.messages_count} message(s)`);
     if (data.messages?.length && data.messages[0]) {
       const latest = data.messages[0];
       const recipient = latest.To?.[0]?.Address ?? 'unknown';
-      console.log(`   📨 Latest: "${latest.Subject}" → ${recipient}`);
+      console.warn(`   📨 Latest: "${latest.Subject}" → ${recipient}`);
     }
   } else {
-    console.log(`   ⚠️  Mailpit API: HTTP ${apiRes.status}`);
+    console.warn(`   ⚠️  Mailpit API: HTTP ${apiRes.status}`);
   }
 
-  console.log('\n✅ Done! View at http://localhost:8025\n');
+  console.warn('\n✅ Done! View at http://localhost:8025\n');
 }
 
 main().catch((err) => {
-  console.error('\n❌ Error:', err instanceof Error ? err.message : String(err));
+  console.warn('\n❌ Error:', err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

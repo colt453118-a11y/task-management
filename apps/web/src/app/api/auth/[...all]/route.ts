@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from '@/lib/auth';
 import { checkRateLimit, rateLimitKey, ipFromRequest } from '@/lib/api/rate-limit';
+import { getDb, schema } from '@workmanagement/database';
+import { eq, and } from 'drizzle-orm';
 
 let _handler: {
   POST: (req: Request) => Promise<Response>;
@@ -13,6 +15,67 @@ async function getHandler() {
     _handler = toNextJsHandler(getAuth());
   }
   return _handler;
+}
+
+// ─── New User Org Assignment ────────────────────────────────────
+
+/**
+ * Assign a newly registered user to the default organization and
+ * grant them the "member" role so they can immediately access
+ * org-scoped data (tasks, projects, etc.).
+ *
+ * Runs fire-and-forget after a successful signup — never blocks
+ * the auth response.
+ */
+async function assignNewUserToOrg(userId: string): Promise<void> {
+  try {
+    const db = getDb();
+
+    // Find the default organization (created by db:seed)
+    const [org] = await db
+      .select({ id: schema.organizations.id })
+      .from(schema.organizations)
+      .where(eq(schema.organizations.slug, 'default'))
+      .limit(1);
+
+    if (!org) {
+      console.warn('[auth] No default organization found — new user will have no org context');
+      return;
+    }
+
+    // Update the user's organization_id
+    await db
+      .update(schema.users)
+      .set({ organizationId: org.id })
+      .where(eq(schema.users.id, userId));
+
+    // Find the "member" role for this org
+    const [memberRole] = await db
+      .select({ id: schema.roles.id })
+      .from(schema.roles)
+      .where(
+        and(
+          eq(schema.roles.slug, 'member'),
+          eq(schema.roles.organizationId, org.id),
+        ),
+      )
+      .limit(1);
+
+    if (memberRole) {
+      await db
+        .insert(schema.userRoles)
+        .values({
+          userId,
+          roleId: memberRole.id,
+        })
+        .onConflictDoNothing();
+    }
+
+    console.log(`[auth] New user ${userId} assigned to default org and member role`);
+  } catch (err) {
+    // Log but never fail the signup — this is a best-effort assignment
+    console.error('[auth] Failed to assign org/role to new user:', err);
+  }
 }
 
 // ─── Rate-limited Auth Handler ───────────────────────────────────
@@ -93,7 +156,31 @@ export async function POST(request: Request) {
   const blocked = await rateLimitAuthRequest(request);
   if (blocked) return blocked;
   const h = await getHandler();
-  return h.POST(request);
+  const response = await h.POST(request);
+
+  // ── Auto-assign new users to default org ────────────────
+  // Only runs for successful signups (not sign-ins or other auth actions).
+  // Assigns the user to the default organization and member role so
+  // they can immediately access org-scoped data without manual admin intervention.
+  if (response.status === 200) {
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/\/$/, '');
+    const isSignUp = /\/auth\/register$/.test(path) || /\/sign-up\/email$/.test(path);
+
+    if (isSignUp) {
+      try {
+        const body = await response.clone().json();
+        if (body?.user?.id) {
+          // Fire-and-forget — never block the auth response
+          assignNewUserToOrg(body.user.id);
+        }
+      } catch {
+        // Response body may not be parseable (e.g. non-JSON)
+      }
+    }
+  }
+
+  return response;
 }
 
 export async function GET(request: Request) {

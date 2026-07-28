@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: 4,
   globalSetup: require.resolve('./__tests__/e2e/global-setup'),
   globalTeardown: require.resolve('./__tests__/e2e/global-teardown'),
   expect: {

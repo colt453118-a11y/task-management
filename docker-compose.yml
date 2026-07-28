@@ -51,8 +51,9 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    # No host port — accessible via Docker internal network as 'minio:9000'
-    ports: []
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     command: server /data --console-address ":9001"
     volumes:
       - miniodata:/data
@@ -74,8 +75,8 @@ services:
     container_name: wm-meilisearch
     environment:
       MEILI_MASTER_KEY: dev-master-key
-    # No host port — only accessible via Docker internal network
-    ports: []
+    ports:
+      - "7700:7700"
     volumes:
       - meilidata:/meili_data
     healthcheck:

@@ -67,7 +67,14 @@ export interface ProjectSearchDocument {
 export async function initializeSearchIndexes(): Promise<void> {
   const client = getSearchClient();
 
-  // Create or update the tasks index
+  // Ensure indexes exist with explicit primary key before updating settings.
+  // Meilisearch requires a primary key to store documents; calling updateSettings
+  // on a non-existent index creates it without a primary key, causing silent failures.
+  await client.createIndex(INDEXES.TASKS, { primaryKey: 'id' }).catch(() => {});
+  await client.createIndex(INDEXES.PROJECTS, { primaryKey: 'id' }).catch(() => {});
+  await client.createIndex(INDEXES.USERS, { primaryKey: 'id' }).catch(() => {});
+
+  // Update the tasks index settings
   const taskIndex = client.index(INDEXES.TASKS);
   await taskIndex.updateSettings({
     searchableAttributes: ['title', 'description', 'taskIdDisplay', 'labels', 'tags'],
@@ -76,6 +83,7 @@ export async function initializeSearchIndexes(): Promise<void> {
     rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
   });
 
+  // Update the projects index settings
   const projectIndex = client.index(INDEXES.PROJECTS);
   await projectIndex.updateSettings({
     searchableAttributes: ['name', 'code', 'description', 'tags'],
@@ -83,6 +91,7 @@ export async function initializeSearchIndexes(): Promise<void> {
     sortableAttributes: ['createdAt', 'name'],
   });
 
+  // Update the users index settings
   const userIndex = client.index(INDEXES.USERS);
   await userIndex.updateSettings({
     searchableAttributes: ['name', 'email', 'displayName', 'designation'],
