@@ -5,6 +5,25 @@ import { getDb, schema } from '@workmanagement/database';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+const NOTIFICATION_TYPE_KEYS = [
+  'task_assigned',
+  'task_comment',
+  'task_status_changed',
+  'task_mention',
+  'task_due_soon',
+  'task_overdue',
+  'task_escalated',
+  'task_completed',
+  'task_closed',
+  'task_reopened',
+] as const;
+
+const TypeChannelSchema = z.object({
+  inApp: z.boolean().optional(),
+  email: z.boolean().optional(),
+  push: z.boolean().optional(),
+});
+
 const NotificationPreferencesSchema = z.object({
   channels: z
     .object({
@@ -27,6 +46,18 @@ const NotificationPreferencesSchema = z.object({
       task_reopened: z.boolean().default(false),
     })
     .optional(),
+  /**
+   * Per-type, per-channel overrides.
+   * When set, a type+channel combination explicitly overrides the
+   * global `types` + `channels` defaults.
+   *
+   * Example:
+   *   { "task_comment": { "email": false }, "task_assigned": { "email": true } }
+   *
+   * This lets users say "send me email for task_assigned but not for task_comment"
+   * while keeping both as in-app notifications.
+   */
+  typeChannels: z.record(z.enum(NOTIFICATION_TYPE_KEYS), TypeChannelSchema).optional(),
   digest: z
     .object({
       enabled: z.boolean().default(false),

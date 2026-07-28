@@ -120,7 +120,7 @@ describe('TaskDependencyGraph — Store Integration', () => {
     // Populate store with dependencies
     useTaskStore.setState({ blockedBy: [dep1], blocking: [] });
 
-    // Mock the current task fetch (GraphView fetches this on mount)
+    // Mock the current task fetch (the visualizer fetches this on mount)
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockFetchResponse({
         task: { id: 'task-1', title: 'My Task', taskIdDisplay: 'TASK-1', status: 'in_progress' },
@@ -129,10 +129,9 @@ describe('TaskDependencyGraph — Store Integration', () => {
 
     render(<DependencySection taskId="task-1" />);
 
-    // Should render the dependency from the store
+    // Should render the dependency from the store in the SVG graph
     expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
     expect(screen.getByText('TASK-2')).toBeInTheDocument();
-    expect(screen.getByText('Completed')).toBeInTheDocument();
   });
 
   it('shows empty state when store has no dependencies', () => {
@@ -147,7 +146,7 @@ describe('TaskDependencyGraph — Store Integration', () => {
     render(<DependencySection taskId="task-1" />);
     expect(screen.getByText('No dependencies')).toBeInTheDocument();
 
-    // Mock current task fetch (GraphView mounts later)
+    // Mock current task fetch
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockFetchResponse({
         task: { id: 'task-1', title: 'My Task', taskIdDisplay: 'TASK-1', status: 'in_progress' },
@@ -157,9 +156,8 @@ describe('TaskDependencyGraph — Store Integration', () => {
     // Update the store with dependencies (simulating a refetch)
     useTaskStore.setState({ blockedBy: [dep1], blocking: [] });
 
-    // Component should re-render to show the dependencies
+    // Component should re-render to show the dependencies in the SVG graph
     expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
-    expect(screen.getByText('Blocked by')).toBeInTheDocument();
   });
 
   // ── Remove + refetch flow ─────────────────────────────────
@@ -255,8 +253,7 @@ describe('TaskDependencyGraph — Store Integration', () => {
   // ── Add + refetch flow ────────────────────────────────────
 
   it('adds a dependency, refetches, and shows the updated store data', async () => {
-    // Mock current task fetch (no deps initially, so GraphView won't mount)
-    // But just in case, set up the mock
+    // Mock current task fetch
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockFetchResponse({
         task: { id: 'task-1', title: 'My Task', taskIdDisplay: 'TASK-1', status: 'in_progress' },
@@ -309,7 +306,7 @@ describe('TaskDependencyGraph — Store Integration', () => {
       expect(useTaskStore.getState().blockedBy).toHaveLength(1);
     });
 
-    // The UI should show the new dependency after refetch
+    // The UI should show the new dependency after refetch in the SVG graph
     expect(await screen.findByText('Database schema')).toBeInTheDocument();
   });
 
@@ -355,7 +352,7 @@ describe('TaskDependencyGraph — Store Integration', () => {
     expect(screen.getByText('Frontend setup')).toBeInTheDocument();
   });
 
-  // ── Store updates via setDependencies (simulating parallel updates) ──
+  // ── Store updates via setDependencies ────────────────────
 
   it('handles store being updated externally via setDependencies', async () => {
     // Mock current task fetch

@@ -26,6 +26,7 @@ function getSearchClient(): MeiliSearch {
 export const INDEXES = {
   TASKS: 'tasks',
   PROJECTS: 'projects',
+  USERS: 'users',
 } as const;
 
 // ─── Task Document Types ───────────────────────────────────────
@@ -46,12 +47,34 @@ export interface TaskSearchDocument {
   updatedAt: string;
 }
 
+// ─── Project Document Types ────────────────────────────────────
+
+export interface ProjectSearchDocument {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  status: string;
+  ownerId: string;
+  organizationId: string;
+  tags: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Initialize Indexes ────────────────────────────────────────
 
 export async function initializeSearchIndexes(): Promise<void> {
   const client = getSearchClient();
 
-  // Create or update the tasks index
+  // Ensure indexes exist with explicit primary key before updating settings.
+  // Meilisearch requires a primary key to store documents; calling updateSettings
+  // on a non-existent index creates it without a primary key, causing silent failures.
+  await client.createIndex(INDEXES.TASKS, { primaryKey: 'id' }).catch(() => {});
+  await client.createIndex(INDEXES.PROJECTS, { primaryKey: 'id' }).catch(() => {});
+  await client.createIndex(INDEXES.USERS, { primaryKey: 'id' }).catch(() => {});
+
+  // Update the tasks index settings
   const taskIndex = client.index(INDEXES.TASKS);
   await taskIndex.updateSettings({
     searchableAttributes: ['title', 'description', 'taskIdDisplay', 'labels', 'tags'],
@@ -60,10 +83,19 @@ export async function initializeSearchIndexes(): Promise<void> {
     rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
   });
 
+  // Update the projects index settings
   const projectIndex = client.index(INDEXES.PROJECTS);
   await projectIndex.updateSettings({
-    searchableAttributes: ['name', 'code', 'description'],
+    searchableAttributes: ['name', 'code', 'description', 'tags'],
     filterableAttributes: ['organizationId', 'status', 'ownerId'],
+    sortableAttributes: ['createdAt', 'name'],
+  });
+
+  // Update the users index settings
+  const userIndex = client.index(INDEXES.USERS);
+  await userIndex.updateSettings({
+    searchableAttributes: ['name', 'email', 'displayName', 'designation'],
+    filterableAttributes: ['organizationId', 'employmentStatus', 'departmentId'],
     sortableAttributes: ['createdAt', 'name'],
   });
 }
@@ -134,7 +166,7 @@ export async function searchTasks(
 
   if (options.filter) {
     for (const [key, value] of Object.entries(options.filter)) {
-      filterParts.push(`${key} = ${value}`);
+      if (value) filterParts.push(`${key} = ${value}`);
     }
   }
 
@@ -146,6 +178,79 @@ export async function searchTasks(
 
   return {
     hits: result.hits as TaskSearchDocument[],
+    total: result.estimatedTotalHits ?? 0,
+    estimatedTotal: result.estimatedTotalHits ?? 0,
+    limit: result.limit ?? 20,
+    offset: result.offset ?? 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PROJECT INDEXING
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Index a Single Project ───────────────────────────────────
+
+export async function indexProject(project: ProjectSearchDocument): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).addDocuments([project]);
+  } catch (error) {
+    console.error('[search] Failed to index project:', error instanceof Error ? error.message : error);
+  }
+}
+
+// ─── Index Multiple Projects ───────────────────────────────────
+
+export async function indexProjects(projects: ProjectSearchDocument[]): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).addDocuments(projects);
+  } catch (error) {
+    console.error(
+      '[search] Failed to index projects:',
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+// ─── Remove Project from Index ─────────────────────────────────
+
+export async function removeProjectFromIndex(projectId: string): Promise<void> {
+  try {
+    const client = getSearchClient();
+    await client.index(INDEXES.PROJECTS).deleteDocument(projectId);
+  } catch (error) {
+    console.error(
+      '[search] Failed to remove project from index:',
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+// ─── Search Projects ──────────────────────────────────────────
+
+export async function searchProjects(
+  options: SearchOptions,
+): Promise<SearchResult<ProjectSearchDocument>> {
+  const client = getSearchClient();
+
+  const filterParts: string[] = [`organizationId = ${options.organizationId}`];
+
+  if (options.filter) {
+    for (const [key, value] of Object.entries(options.filter)) {
+      if (value) filterParts.push(`${key} = ${value}`);
+    }
+  }
+
+  const result = await client.index(INDEXES.PROJECTS).search(options.query, {
+    limit: options.limit ?? 20,
+    offset: options.offset ?? 0,
+    filter: filterParts,
+  });
+
+  return {
+    hits: result.hits as ProjectSearchDocument[],
     total: result.estimatedTotalHits ?? 0,
     estimatedTotal: result.estimatedTotalHits ?? 0,
     limit: result.limit ?? 20,

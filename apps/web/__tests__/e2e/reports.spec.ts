@@ -123,7 +123,7 @@ test.describe('Reports', () => {
     await page.getByRole('button', { name: /snapshot/i }).click();
 
     // Should show success toast
-    await expect(page.getByText(/snapshot generated/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/snapshot generated/i).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('opens export dropdown with correct options', async ({ page }) => {

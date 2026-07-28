@@ -316,6 +316,35 @@ export default function TasksPage() {
     [fetchTasks],
   );
 
+  const handleReorder = useCallback(
+    async (taskId: string, newStatus: string, orderedIds: string[]) => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus, order: orderedIds }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error?.message ?? 'Failed to reorder task');
+        }
+        // Reorder the local tasks array to match the new order
+        setTasks((prev) => {
+          const columnTasks = prev.filter((t) => t.status === newStatus);
+          const otherTasks = prev.filter((t) => t.status !== newStatus);
+          // Build a map for fast lookup
+          const taskMap = new Map(columnTasks.map((t) => [t.id, t]));
+          const reordered = orderedIds.map((id) => taskMap.get(id)!).filter(Boolean);
+          return [...otherTasks, ...reordered];
+        });
+      } catch (err) {
+        console.error('Reorder failed:', err);
+        fetchTasks();
+      }
+    },
+    [fetchTasks],
+  );
+
   // ── Selection handlers ─────────────────────────────────────
 
   const toggleSelect = (id: string) => {
@@ -578,18 +607,18 @@ export default function TasksPage() {
       {/* Header */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <div className="flex items-center gap-3">
-            <div className="from-brand-400/20 to-brand-600/20 ring-brand-500/10 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ring-1">
-              <ClipboardList className="text-brand-500 h-5 w-5" />
+            <div className="from-brand-400/20 to-brand-600/20 ring-brand-500/10 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ring-1 sm:h-10 sm:w-10 sm:rounded-2xl">
+              <ClipboardList className="text-brand-500 h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h1 className="text-surface-900 dark:text-surface-50 text-2xl font-bold tracking-tight">
+              <h1 className="text-surface-900 dark:text-surface-50 text-xl font-bold tracking-tight sm:text-2xl">
                 Tasks
               </h1>
-              <p className="text-surface-500 mt-0.5 text-sm">
+              <p className="text-surface-500 mt-0.5 text-xs sm:text-sm">
                 {loading ? 'Loading...' : `${totalCount} task${totalCount !== 1 ? 's' : ''} total`}
               </p>
             </div>
@@ -602,158 +631,154 @@ export default function TasksPage() {
             onClick={handleExport}
             disabled={loading || exporting}
             title="Export tasks as CSV"
-            className="btn-shine"
+            className="btn-shine h-9 px-2 sm:h-auto sm:px-3"
           >
-            <Download className={cn('mr-1.5 h-4 w-4', exporting && 'animate-spin')} />
-            {exporting ? 'Exporting...' : 'Export'}
+            <Download className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', exporting && 'animate-spin')} />
+            <span className="hidden sm:inline ml-1 sm:ml-1.5">{exporting ? 'Exporting...' : 'Export'}</span>
           </Button>
           <Link href="/tasks/new">
-            <Button className="btn-shine shadow-sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New Task
+            <Button className="btn-shine shadow-sm h-9 px-3 sm:h-auto sm:px-4">
+              <Plus className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">New Task</span>
             </Button>
           </Link>
         </div>
       </motion.div>
 
       {/* Toolbar */}
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[200px] max-w-md flex-1">
-          <Search className="text-surface-400 absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="relative min-w-0 flex-1">
+          <Search className="text-surface-400 absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 sm:h-4 sm:w-4 sm:left-3.5" />
           <Input
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Search..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="h-10 pl-10"
+            className="h-9 pl-8 text-xs sm:h-10 sm:pl-10 sm:text-sm"
           />
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="mr-2 h-4 w-4" />
-          Filters
-          {(statusFilter || priorityFilter || deletedByFilter) && (
-            <span className="bg-brand-500 ml-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium text-white">
-              {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0) + (deletedByFilter ? 1 : 0)}
-            </span>
-          )}
-        </Button>
 
-        {/* Watched toggle */}
-        <button
-          onClick={() => {
-            setShowTrash(false);
-            setWatchedOnly(!watchedOnly);
-            setPage(0);
-          }}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200',
-            watchedOnly && !showTrash
-              ? 'bg-brand-500/10 text-brand-500 border-brand-500/20 border'
-              : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
-          )}
-          title={
-            showTrash
-              ? 'Switch to watched tasks'
-              : watchedOnly
-                ? 'Show all tasks'
-                : 'Show watched tasks only'
-          }
-        >
-          <Eye className={cn('h-3.5 w-3.5', watchedOnly && !showTrash && 'fill-brand-500/20')} />
-          Watched
-          {watchedOnly && !showTrash && (
-            <span className="bg-brand-500/15 inline-flex h-4 w-4 items-center justify-center rounded-full">
-              <X
-                className="text-brand-500 h-2.5 w-2.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setWatchedOnly(false);
-                  setPage(0);
-                }}
-              />
-            </span>
-          )}
-        </button>
+        {/* Compact action buttons on mobile */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="h-9 px-2 sm:px-3">
+            <Filter className="h-3.5 w-3.5 sm:mr-1.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {(statusFilter || priorityFilter || deletedByFilter) && (
+              <span className="bg-brand-500 ml-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium text-white sm:ml-1.5 sm:h-5 sm:w-5 sm:text-[10px]">
+                {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0) + (deletedByFilter ? 1 : 0)}
+              </span>
+            )}
+          </Button>
 
-        {/* Trash toggle */}
-        <button
-          onClick={() => {
-            setShowTrash(!showTrash);
-            setWatchedOnly(false);
-            setDeletedByFilter('');
-            setPage(0);
-          }}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200',
-            showTrash
-              ? 'bg-error/10 text-error border-error/20 border'
-              : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
-          )}
-          title={showTrash ? 'Show active tasks' : 'Show recently deleted tasks'}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Trash
-          {showTrash && (
-            <span className="bg-error/15 inline-flex h-4 w-4 items-center justify-center rounded-full">
-              <X
-                className="text-error h-2.5 w-2.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowTrash(false);
-                  setDeletedByFilter('');
-                  setPage(0);
-                }}
-              />
-            </span>
-          )}
-        </button>
-
-        {/* View Toggle */}
-        <div className="border-surface-300/20 bg-surface-100/80 flex items-center rounded-xl border p-0.5">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setView('list')}
+          {/* Watched toggle */}
+          <button
+            onClick={() => {
+              setShowTrash(false);
+              setWatchedOnly(!watchedOnly);
+              setPage(0);
+            }}
             className={cn(
-              'relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
-              view === 'list'
-                ? 'text-white'
-                : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+              'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-xl sm:px-3',
+              watchedOnly && !showTrash
+                ? 'bg-brand-500/10 text-brand-500 border-brand-500/20 border'
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
             )}
           >
-            {view === 'list' && (
-              <motion.span
-                layoutId="viewToggleBg"
-                className="bg-brand-500 absolute inset-0 rounded-lg shadow-sm"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
+            <Eye className={cn('h-3.5 w-3.5', watchedOnly && !showTrash && 'fill-brand-500/20')} />
+            <span className="hidden sm:inline">Watched</span>
+            {watchedOnly && !showTrash && (
+              <span className="bg-brand-500/15 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full sm:h-4 sm:w-4">
+                <X
+                  className="text-brand-500 h-2 w-2 sm:h-2.5 sm:w-2.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setWatchedOnly(false);
+                    setPage(0);
+                  }}
+                />
+              </span>
             )}
-            <span className="relative z-10 flex items-center gap-1.5">
-              <LayoutList className="h-3.5 w-3.5" />
-              List
-            </span>
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setView('board')}
+          </button>
+
+          {/* Trash toggle */}
+          <button
+            onClick={() => {
+              setShowTrash(!showTrash);
+              setWatchedOnly(false);
+              setDeletedByFilter('');
+              setPage(0);
+            }}
             className={cn(
-              'relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
-              view === 'board'
-                ? 'text-white'
-                : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+              'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-xl sm:px-3',
+              showTrash
+                ? 'bg-error/10 text-error border-error/20 border'
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
             )}
           >
-            {view === 'board' && (
-              <motion.span
-                layoutId="viewToggleBg"
-                className="bg-brand-500 absolute inset-0 rounded-lg shadow-sm"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Trash</span>
+            {showTrash && (
+              <span className="bg-error/15 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full sm:h-4 sm:w-4">
+                <X
+                  className="text-error h-2 w-2 sm:h-2.5 sm:w-2.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTrash(false);
+                    setDeletedByFilter('');
+                    setPage(0);
+                  }}
+                />
+              </span>
             )}
-            <span className="relative z-10 flex items-center gap-1.5">
-              <Columns3 className="h-3.5 w-3.5" />
-              Board
-            </span>
-          </motion.button>
+          </button>
+
+          {/* View Toggle */}
+          <div className="border-surface-300/20 bg-surface-100/80 flex items-center rounded-lg border p-0.5 sm:rounded-xl">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setView('list')}
+              className={cn(
+                'relative flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-lg sm:px-3',
+                view === 'list'
+                  ? 'text-white'
+                  : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+              )}
+            >
+              {view === 'list' && (
+                <motion.span
+                  layoutId="viewToggleBg"
+                  className="bg-brand-500 absolute inset-0 rounded-md sm:rounded-lg shadow-sm"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1 sm:gap-1.5">
+                <LayoutList className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="max-sm:sr-only sm:inline">List</span>
+              </span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setView('board')}
+              className={cn(
+                'relative flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-lg sm:px-3',
+                view === 'board'
+                  ? 'text-white'
+                  : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+              )}
+            >
+              {view === 'board' && (
+                <motion.span
+                  layoutId="viewToggleBg"
+                  className="bg-brand-500 absolute inset-0 rounded-md sm:rounded-lg shadow-sm"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1 sm:gap-1.5">
+                <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="max-sm:sr-only sm:inline">Board</span>
+              </span>
+            </motion.button>
+          </div>
         </div>
       </motion.div>
 
@@ -1145,7 +1170,7 @@ export default function TasksPage() {
         )
       ) : view === 'board' ? (
         <motion.div variants={itemVariants}>
-          <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} />
+          <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} onReorder={handleReorder} />
         </motion.div>
       ) : (
         <>
@@ -1157,47 +1182,47 @@ export default function TasksPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-surface-300/20 bg-surface-200/40 dark:bg-surface-800/40 border-b">
-                    <th className="w-10 px-4 py-3.5">
+                    <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5">
                       <Checkbox
                         checked={
                           tasks.length > 0 && (selectedIds.size === tasks.length || allSelectedMode)
                         }
                         onCheckedChange={toggleSelectAll}
-                        className="h-4 w-4"
+                        className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                       />
                     </th>
-                    <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                    <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                       ID
                     </th>
-                    <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                    <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
                       Title
                     </th>
-                    <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                    <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
                       Status
                     </th>
-                    <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                    <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                       Priority
                     </th>
                     {showTrash ? (
                       <>
-                        <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                           Deleted By
                         </th>
-                        <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                           Deleted At
                         </th>
                       </>
                     ) : (
                       <>
-                        <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                           Assignee
                         </th>
-                        <th className="text-surface-500 px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
-                          Due Date
+                        <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
+                          Due
                         </th>
                       </>
                     )}
-                    <th className="w-10 px-4 py-3.5" />
+                    <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5" />
                   </tr>
                 </thead>
                 <tbody>
@@ -1219,39 +1244,39 @@ export default function TasksPage() {
                           : 'hover:bg-surface-200/30 dark:hover:bg-surface-800/30 hover:-translate-y-px',
                       )}
                     >
-                      <td className="px-4 py-3.5">
+                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
                         <Checkbox
                           checked={selectedIds.has(task.id)}
                           onCheckedChange={() => toggleSelect(task.id)}
-                          className="h-4 w-4 transition-transform duration-150 hover:scale-110"
+                          className="h-3.5 w-3.5 transition-transform duration-150 hover:scale-110 sm:h-4 sm:w-4"
                         />
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="hidden px-2 py-2.5 sm:table-cell sm:px-4 sm:py-3.5">
                         <Link
                           href={`/tasks/${task.id}`}
-                          className="text-surface-500 hover:text-brand-500 font-mono text-xs transition-colors duration-200"
+                          className="text-surface-500 hover:text-brand-500 font-mono text-[10px] transition-colors duration-200 sm:text-xs"
                         >
                           {task.taskIdDisplay}
                         </Link>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
                         <Link
                           href={`/tasks/${task.id}`}
-                          className="text-surface-900 hover:text-brand-500 dark:text-surface-100 inline-block font-medium transition-all duration-200 group-hover:translate-x-0.5"
+                          className="text-surface-900 hover:text-brand-500 dark:text-surface-100 inline-block text-xs font-medium transition-all duration-200 group-hover:translate-x-0.5 sm:text-sm"
                         >
-                          {task.title}
+                          <span className="line-clamp-1">{task.title}</span>
                           <span className="absolute inset-0" aria-hidden="true" />
                         </Link>
                       </td>
-                      <td className="px-4 py-3.5">
-                        <Badge variant={statusColors[task.status] ?? 'default'} size="sm">
+                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
+                        <Badge variant={statusColors[task.status] ?? 'default'} size="sm" className="px-1.5 py-0 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs">
                           {task.status.replace(/_/g, ' ')}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="hidden px-2 py-2.5 sm:table-cell sm:px-4 sm:py-3.5">
                         <span
                           className={cn(
-                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium transition-transform duration-200 hover:scale-105',
+                            'inline-flex items-center rounded-full px-1.5 py-0 text-[10px] font-medium transition-transform duration-200 hover:scale-105 sm:px-2 sm:py-0.5 sm:text-xs',
                             priorityBadge[task.priority]?.color ??
                               'bg-surface-200/70 text-surface-500',
                           )}
@@ -1261,32 +1286,25 @@ export default function TasksPage() {
                       </td>
                       {showTrash ? (
                         <>
-                          <td className="text-surface-500 px-4 py-3.5 text-xs">
+                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                             {task.updatedByName ? (
                               <div className="flex items-center gap-1.5">
-                                <div className="from-error/70 to-error ring-surface-200/50 dark:ring-surface-700/50 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-[9px] font-medium text-white ring-2">
+                                <div className="from-error/70 to-error ring-surface-200/50 dark:ring-surface-700/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 sm:h-6 sm:w-6 sm:text-[9px]">
                                   {task.updatedByName.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="max-w-[100px] truncate">{task.updatedByName}</span>
+                                <span className="max-w-[80px] truncate sm:max-w-[100px]">{task.updatedByName}</span>
                               </div>
                             ) : (
                               <span className="text-surface-400 italic">Unknown</span>
                             )}
                           </td>
-                          <td className="text-surface-500 px-4 py-3.5 text-xs">
+                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                             {task.deletedAt ? (
                               <span className="flex items-center gap-1">
-                                <span>
+                                <span className="text-[10px] sm:text-xs">
                                   {new Date(task.deletedAt).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
-                                    year: 'numeric',
-                                  })}
-                                </span>
-                                <span className="text-surface-400">
-                                  {new Date(task.deletedAt).toLocaleTimeString('en-US', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
                                   })}
                                 </span>
                               </span>
@@ -1297,13 +1315,13 @@ export default function TasksPage() {
                         </>
                       ) : (
                         <>
-                          <td className="text-surface-500 px-4 py-3.5 text-xs">
+                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                             {task.assignedTo ? (
                               <div className="group/assignee flex items-center gap-1.5">
-                                <div className="from-brand-400 to-brand-600 ring-surface-200/50 dark:ring-surface-700/50 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-[9px] font-medium text-white ring-2 transition-transform duration-200 group-hover/assignee:scale-110">
+                                <div className="from-brand-400 to-brand-600 ring-surface-200/50 dark:ring-surface-700/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 transition-transform duration-200 group-hover/assignee:scale-110 sm:h-6 sm:w-6 sm:text-[9px]">
                                   {task.assignedTo.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="max-w-[80px] truncate">{task.assignedTo}</span>
+                                <span className="max-w-[60px] truncate sm:max-w-[80px]">{task.assignedTo}</span>
                               </div>
                             ) : (
                               <span className="text-surface-500">—</span>
@@ -1311,7 +1329,7 @@ export default function TasksPage() {
                           </td>
                           <td
                             className={cn(
-                              'px-4 py-3.5 text-xs',
+                              'px-2 py-2.5 text-[10px] sm:px-4 sm:py-3.5 sm:text-xs',
                               task.dueDate &&
                                 new Date(task.dueDate) < new Date() &&
                                 !['completed', 'closed', 'cancelled'].includes(task.status)
@@ -1323,21 +1341,20 @@ export default function TasksPage() {
                               ? new Date(task.dueDate).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
-                                  year: 'numeric',
                                 })
                               : '—'}
                           </td>
                         </>
                       )}
-                      <td className="px-4 py-3.5">
+                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
                         {showTrash ? (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1 sm:gap-1.5">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleRestore(task.id)}
                               disabled={restoringId === task.id}
-                              className="h-8 rounded-lg text-xs"
+                              className="h-7 rounded-lg px-1.5 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
                               title="Restore this task"
                             >
                               {restoringId === task.id ? (
@@ -1346,23 +1363,15 @@ export default function TasksPage() {
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1">
-                                  <RotateCcw className="h-3.5 w-3.5" /> Restore
+                                  <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                  <span className="hidden sm:inline">Restore</span>
                                 </span>
                               )}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeletingTask(task)}
-                              className="text-error hover:text-error hover:bg-error/5 h-8 rounded-lg text-xs"
-                              title="Permanently delete this task"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
                           </div>
                         ) : (
-                          <button className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 scale-75 rounded-lg p-1.5 opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <button className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 opacity-100 transition-all duration-200 sm:opacity-0 sm:group-hover:opacity-100">
+                            <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                         )}
                       </td>

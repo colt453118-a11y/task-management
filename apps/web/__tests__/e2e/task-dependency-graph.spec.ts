@@ -255,29 +255,22 @@ test.describe('TaskDependencyGraph', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(MOCK_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Graph mode active by default
+    // Graph mode active by default — the SVG force-directed graph is rendered
     await expect(page.getByTestId(DEP_GRAPH.toggleGraph)).toHaveClass(/bg-brand-500/);
+    await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
 
     // Header shows dependency count
     await expect(page.getByTestId(DEP_GRAPH.count)).toBeVisible();
 
-    // Blocked by section
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
-    await expect(page.getByText('Design system components')).toBeVisible();
+    // SVG graph renders task titles as <text> elements (some truncated at 22 chars)
+    await expect(page.getByText(/Design system/)).toBeVisible();
     await expect(page.getByText('Build API endpoints')).toBeVisible();
+    await expect(page.getByText(/Write integration/)).toBeVisible();
+
+    // Task ID displays appear in SVG
     await expect(page.getByText('TASK-002')).toBeVisible();
     await expect(page.getByText('TASK-003')).toBeVisible();
-
-    // Status badges — use .first()/.last() to avoid strict mode (status text appears
-    // in both the badge and the task's own dropdown)
-    await expect(page.getByText('In Progress').first()).toBeVisible();
-    await expect(page.getByText('Completed').last()).toBeVisible();
-
-    // Blocking section
-    await expect(page.getByText('Blocking').first()).toBeVisible();
-    await expect(page.getByText('Write integration tests')).toBeVisible();
     await expect(page.getByText('TASK-004')).toBeVisible();
-    await expect(page.getByText('To Do').first()).toBeVisible();
   });
 
   test('toggles between graph and list views', async ({ page }) => {
@@ -287,8 +280,8 @@ test.describe('TaskDependencyGraph', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(MOCK_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Graph view visible
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
+    // Graph view visible (SVG force-directed graph)
+    await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
 
     // Click "List" toggle
     await page.getByTestId(DEP_GRAPH.toggleList).click();
@@ -372,9 +365,10 @@ test.describe('TaskDependencyGraph', () => {
     await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
     await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears (dep item uses id 'dep-new')
-    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
+    // After add, dialog closes — switch to list view to verify dep appeared
+    await page.getByTestId(DEP_GRAPH.toggleList).click();
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-new'))).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Blocked by (1)')).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
 
@@ -404,12 +398,13 @@ test.describe('TaskDependencyGraph', () => {
 
     // Search and select
     await page.getByTestId(DEP_GRAPH.searchInput).fill('CI');
-    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId(DEP_GRAPH.searchResult('task-search-1'))).toBeVisible({ timeout: 10_000 });
     await page.getByTestId(DEP_GRAPH.searchResult('task-search-1')).click();
 
-    // After add, dialog closes and dep appears (dep item uses id 'dep-empty-add')
-    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
+    // After add, dialog closes — switch to list view to verify dep appeared
+    await page.getByTestId(DEP_GRAPH.toggleList).click();
+    await expect(page.getByTestId(DEP_GRAPH.item('dep-empty-add'))).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Blocked by (1)')).toBeVisible();
     expect(wasMutated()).toBe(true);
   });
 
@@ -527,10 +522,10 @@ test.describe('TaskDependencyGraph — Remove Interactions', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(MOCK_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Should show a single dep
-    await expect(page.getByText('Design system components')).toBeVisible();
+    // In graph mode, the dep title appears as SVG text (truncated if > 22 chars)
+    await expect(page.getByText(/Design system/)).toBeVisible();
 
-    // Switch to list view for easier remove interaction
+    // Switch to list view for remove interaction
     await page.getByTestId(DEP_GRAPH.toggleList).click();
     await expect(page.getByText('Blocked by (1)')).toBeVisible();
 
@@ -548,7 +543,7 @@ test.describe('TaskDependencyGraph — Remove Interactions', () => {
     await expect(page.getByText('Link this task to others')).toBeVisible();
   });
 
-  test('removes a blockedBy dependency via graph view', async ({ page }) => {
+  test('removes a blockedBy dependency (via list view)', async ({ page }) => {
     await mockPageApis(page);
 
     createDepsMutationRoute(
@@ -560,20 +555,24 @@ test.describe('TaskDependencyGraph — Remove Interactions', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(MOCK_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // In graph view (default), graph view should be visible
+    // SVG graph view is rendered by default (no inline remove buttons)
     await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
+
+    // Switch to list view where remove buttons exist
+    await page.getByTestId(DEP_GRAPH.toggleList).click();
+    await expect(page.getByText('Blocked by (2)')).toBeVisible();
 
     const deleteResponse = page.waitForResponse(
       (res) => res.url().includes('/dependencies') && res.request().method() === 'DELETE',
     );
 
-    // Click remove button via data-testid (Playwright can click opacity-0 elements)
     await page.getByTestId(DEP_GRAPH.remove('dep-blockedby-1')).click();
     await deleteResponse;
 
     // After removal, the dep should disappear
     await expect(page.getByText('Design system components')).not.toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('Build API endpoints')).toBeVisible();
+    await expect(page.getByText('Blocked by (1)')).toBeVisible();
   });
 
   test('handles API error when removing a dependency', async ({ page }) => {
@@ -705,7 +704,8 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
 
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(STATIC_TASK.title).first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
+    await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
+    await expect(page.getByText(/Build API endpoints/)).toBeVisible();
 
     await expect(page).toHaveScreenshot('dependency-graph-with-deps.png', {
       animations: 'disabled',
@@ -759,8 +759,7 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
 
     // Graph view (default) with one blocked-by dep
     await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
-    await expect(page.getByText('Design system components')).toBeVisible();
+    await expect(page.getByText(/Design system/)).toBeVisible();
 
     await expect(page).toHaveScreenshot('dependency-graph-single-dep.png', {
       animations: 'disabled',
@@ -776,11 +775,10 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
     await page.goto(`/tasks/${TASK_ID}`);
     await expect(page.getByText(STATIC_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
-    // Both blocked-by (remaining) and blocking sections visible
-    await expect(page.getByText('Blocked by').first()).toBeVisible();
-    await expect(page.getByText('Blocking').first()).toBeVisible();
+    // SVG graph renders task nodes as <text> elements (some truncated at 22 chars)
+    await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
     await expect(page.getByText('Build API endpoints')).toBeVisible();
-    await expect(page.getByText('Write integration tests')).toBeVisible();
+    await expect(page.getByText(/Write integration/)).toBeVisible();
 
     await expect(page).toHaveScreenshot('dependency-graph-after-removal.png', {
       animations: 'disabled',

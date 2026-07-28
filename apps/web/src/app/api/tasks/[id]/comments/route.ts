@@ -9,6 +9,7 @@ import { CommentCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
+import { extractAndResolveMentions } from '@/lib/mentions';
 
 export const runtime = 'nodejs';
 
@@ -140,6 +141,27 @@ export const POST = withAuth(
           entityType: 'task',
           entityId: taskId,
         });
+      }
+
+      // ── Detect @mentions in comments and notify mentioned users ─
+      if (content) {
+        const mentionedUserIds = await extractAndResolveMentions(orgId!, content, user.id);
+        for (const mentionedId of mentionedUserIds) {
+          // Skip if already notified as assignee
+          if (mentionedId === task?.assignedTo) continue;
+
+          await createNotification({
+            organizationId: orgId!,
+            userId: mentionedId,
+            type: 'task.mention',
+            title: `You were mentioned in: ${task!.title}`,
+            message: content.substring(0, 200),
+            link: `/tasks/${taskId}`,
+            actorId: user.id,
+            entityType: 'task',
+            entityId: taskId,
+          });
+        }
       }
 
       // Fire-and-forget webhook dispatch — never block the API response

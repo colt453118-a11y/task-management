@@ -8,6 +8,7 @@ const publicPaths = [
   '/auth/reset-password',
   '/api/auth',
   '/api/health',
+  '/api/email/preview',
 ];
 
 /**
@@ -16,7 +17,7 @@ const publicPaths = [
  */
 const SESSION_COOKIE_NAME = 'better-auth.session_token';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const { pathname } = request.nextUrl;
 

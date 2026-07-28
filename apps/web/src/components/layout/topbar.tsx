@@ -17,6 +17,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useEffect, useState, useRef, startTransition, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { SearchCommand } from './search-command';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/ui/keyboard-shortcuts';
@@ -25,6 +26,8 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { useNotificationStore } from '@/stores/notification-store';
+import { useNotificationSSE } from '@/lib/hooks/use-notification-sse';
+import { useScrollHide } from '@/lib/hooks/use-scroll-hide';
 import Link from 'next/link';
 
 /** Relative time string for notification timestamps. */
@@ -68,6 +71,12 @@ export function Topbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // ── Scroll-to-hide + shadow (mobile only) ────────────────
+  const { elementSpring, shadowSpring, shadowParallaxSpring } = useScrollHide({
+    hideOffset: -60,
+    mobileOnly: true,
+  });
+
   // Notification store
   const notifications = useNotificationStore((s) => s.notifications);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -78,7 +87,10 @@ export function Topbar() {
   const markAllAsRead = useNotificationStore((s) => s.markAllAsRead);
   const dismiss = useNotificationStore((s) => s.dismiss);
 
-  // Fetch notifications on mount and periodically
+  // Subscribe to real-time SSE notifications
+  useNotificationSSE();
+
+  // Fetch notifications on mount
   const refreshNotifs = useCallback(() => {
     fetchNotifications({ limit: 20 });
     fetchUnreadCount();
@@ -87,10 +99,6 @@ export function Topbar() {
   useEffect(() => {
     startTransition(() => setMounted(true));
     refreshNotifs();
-
-    // Poll every 30s for new notifications
-    const interval = setInterval(refreshNotifs, 30_000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -159,23 +167,48 @@ export function Topbar() {
 
   return (
     <>
-      <header className="border-surface-300/20 bg-surface-50/80 sticky top-0 z-30 flex h-14 items-center justify-between border-b px-4 backdrop-blur-xl sm:px-6">
+      <motion.header
+        className="border-surface-300/20 bg-surface-50/80 sticky top-0 z-30 flex h-12 sm:h-14 items-center justify-between border-b px-3 backdrop-blur-xl sm:px-6"
+        style={{
+          y: elementSpring,
+        }}
+      >
+        {/* Shadow overlay — fades in when content scrolls behind the header */}
+        {/* Light mode: black shadow */}
+        <motion.div
+          className="pointer-events-none absolute top-full left-0 right-0 h-3 dark:hidden"
+          style={{
+            opacity: shadowSpring,
+            y: shadowParallaxSpring,
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.10), transparent)',
+          }}
+        />
+        {/* Dark mode: white shadow */}
+        <motion.div
+          className="pointer-events-none absolute top-full left-0 right-0 h-3 hidden dark:block"
+          style={{
+            opacity: shadowSpring,
+            y: shadowParallaxSpring,
+            background: 'linear-gradient(to bottom, rgba(255,255,255,0.05), transparent)',
+          }}
+        />
         {/* Search */}
-        <div className="relative max-w-md flex-1">
-          <Search className="text-surface-400 absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
+        <div className="relative flex-1 sm:max-w-md">
+          <Search className="text-surface-400 absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 sm:h-4 sm:w-4 sm:left-3.5" />
           <button
             onClick={() => setSearchOpen(true)}
-            className="border-surface-300/20 bg-surface-100/50 text-surface-400 hover:border-surface-400/30 hover:text-surface-500 focus:ring-brand-500/20 dark:bg-surface-800/30 dark:hover:bg-surface-700/30 w-full rounded-xl border py-2 pl-10 pr-3 text-left text-sm transition-all duration-200 focus:outline-none focus:ring-2"
+            className="border-surface-300/20 bg-surface-100/50 text-surface-400 hover:border-surface-400/30 hover:text-surface-500 focus:ring-brand-500/20 dark:bg-surface-800/30 dark:hover:bg-surface-700/30 w-full rounded-xl border py-1.5 pl-8 pr-2 text-left text-xs transition-all duration-200 focus:outline-none focus:ring-2 sm:py-2 sm:pl-10 sm:pr-3 sm:text-sm"
           >
-            <span>Search tasks...</span>
-            <kbd className="border-surface-300/20 bg-surface-100/80 text-surface-500 dark:bg-surface-800/80 pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[10px] font-medium sm:flex">
+            <span className="hidden sm:inline">Search tasks...</span>
+            <span className="sm:hidden">Search...</span>
+            <kbd className="border-surface-300/20 bg-surface-100/80 text-surface-500 dark:bg-surface-800/80 pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[10px] font-medium sm:flex">
               <span>⌘</span>K
             </kbd>
           </button>
         </div>
 
         {/* Quick create + theme */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0 sm:gap-0.5">
           {/* Quick Create Button */}
           <button
             onClick={() => setQuickCreateOpen(true)}
@@ -184,7 +217,7 @@ export function Topbar() {
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Quick</span>
-            <kbd className="border-brand-500/20 bg-brand-500/10 hidden items-center rounded border px-1 py-0.5 text-[9px] font-medium lg:inline-flex">
+            <kbd className="border-brand-500/20 bg-brand-500/10 hidden items-center rounded border px-1 py-0.5 text-[9px] font-medium md:inline-flex">
               ⌘T
             </kbd>
           </button>
@@ -212,6 +245,7 @@ export function Topbar() {
                 if (!notifOpen) refreshNotifs();
               }}
               className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
+              aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
@@ -227,7 +261,7 @@ export function Topbar() {
             </button>
 
             {notifOpen && (
-              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 w-80 rounded-2xl border p-3 shadow-lg backdrop-blur-xl">
+              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 w-72 rounded-2xl border p-3 shadow-lg backdrop-blur-xl sm:w-80" style={{ maxWidth: 'calc(100vw - 16px)' }}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <span className="text-surface-500 text-xs font-semibold uppercase tracking-wider">
                     Notifications
@@ -366,7 +400,7 @@ export function Topbar() {
             </button>
 
             {userMenuOpen && (
-              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 w-56 rounded-2xl border p-1.5 shadow-lg backdrop-blur-xl">
+              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 min-w-[200px] rounded-2xl border p-1.5 shadow-lg backdrop-blur-xl sm:w-56">
                 <div className="border-surface-300/20 dark:border-surface-700/30 border-b px-3 py-2.5">
                   <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
                     Admin User
@@ -404,7 +438,7 @@ export function Topbar() {
             )}
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <SearchCommand
         key={searchOpen ? 'open' : 'closed'}

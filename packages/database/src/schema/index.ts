@@ -300,15 +300,19 @@ export * from './task-templates';
 export * from './notifications';
 export * from './time-corrections';
 export * from './webhooks';
+export * from './automation';
+export * from './saved-searches';
 
 // ─── Import domain tables for relations ──────────────────────
 
 import { sessions } from './auth';
+import { projects } from './projects';
 
 // ─── Relations ───────────────────────────────────────────────
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   users: many(users),
+  projects: many(projects),
   departments: many(departments),
   teams: many(teams),
   roles: many(roles),

@@ -8,6 +8,8 @@ import { TaskCreateSchema, validationError } from '@/lib/api/validation';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { indexTask } from '@/lib/search';
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver';
+import { extractAndResolveMentions } from '@/lib/mentions';
+import { createNotification } from '@/lib/notifications';
 
 export const runtime = 'nodejs';
 
@@ -229,6 +231,9 @@ export const POST = withAuth(
         }
       }
 
+      // ── Detect @mentions in description ───────────────────────
+      const mentionedUserIds = await extractAndResolveMentions(orgId!, description, user.id);
+
       const [task] = await db()
         .insert(schema.tasks)
         .values({
@@ -245,6 +250,7 @@ export const POST = withAuth(
           updatedBy: user.id,
           taskIdDisplay: `TASK-${Date.now().toString(36).toUpperCase()}`,
           status: 'open',
+          mentionedUserIds: mentionedUserIds.length > 0 ? mentionedUserIds : undefined,
         })
         .returning();
 
@@ -292,6 +298,61 @@ export const POST = withAuth(
         projectId: task.projectId ?? null,
         createdBy: user.id,
       });
+
+      // ── Notify assignee on creation ──────────────────────────
+      if (assignedTo && assignedTo !== user.id) {
+        await createNotification({
+          organizationId: orgId!,
+          userId: assignedTo,
+          type: 'task.assigned',
+          title: `You've been assigned: ${task.title}`,
+          message: `Task #${task.taskIdDisplay} was assigned to you`,
+          link: `/tasks/${task.id}`,
+          actorId: user.id,
+          entityType: 'task',
+          entityId: task.id,
+        });
+      }
+
+      // ── Notify mentioned users ──────────────────────────────
+      for (const mentionedId of mentionedUserIds) {
+        if (mentionedId === assignedTo) continue; // Already notified as assignee
+
+        await createNotification({
+          organizationId: orgId!,
+          userId: mentionedId,
+          type: 'task.mention',
+          title: `You were mentioned in: ${task.title}`,
+          message: description?.substring(0, 200) ?? '',
+          link: `/tasks/${task.id}`,
+          actorId: user.id,
+          entityType: 'task',
+          entityId: task.id,
+        });
+      }
+
+      // Fire-and-forget automation rule evaluation
+      import('@/lib/automation/engine').then(({ evaluateAutomationRules }) => {
+        evaluateAutomationRules('task.created', {
+          organizationId: orgId!,
+          triggeredByUserId: user.id,
+          entityType: 'task',
+          entityId: task.id,
+          data: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            taskIdDisplay: task.taskIdDisplay,
+            status: task.status,
+            priority: task.priority ?? 'medium',
+            assignedTo: task.assignedTo ?? null,
+            projectId: task.projectId ?? null,
+            dueDate: task.dueDate,
+            createdAt: task.createdAt,
+            createdBy: user.id,
+          },
+        });
+      }).catch(() => {});
 
       return NextResponse.json({ task }, { status: 201 });
     } catch (error) {

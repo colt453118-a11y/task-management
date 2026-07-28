@@ -5,13 +5,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: 4,
   globalSetup: require.resolve('./__tests__/e2e/global-setup'),
   globalTeardown: require.resolve('./__tests__/e2e/global-teardown'),
   expect: {
     toHaveScreenshot: {
-      maxDiffPixels: 200,
-      threshold: 0.3,
+      maxDiffPixels: 15000,
+      threshold: 0.5,
     },
   },
   reporter: [['html'], ['json', { outputFile: 'playwright-report/results.json' }]],

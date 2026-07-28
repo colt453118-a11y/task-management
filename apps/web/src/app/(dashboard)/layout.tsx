@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
+import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
 import { PageTransition } from '@/components/ui/page-transition';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
@@ -14,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar />
-        <main className="bg-surface-50 dark:bg-surface-950 scrollbar-thin flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="bg-surface-50 dark:bg-surface-950 scrollbar-thin flex-1 overflow-y-auto p-4 pb-20 sm:p-6 sm:pb-6 lg:p-8">
           <div className="mx-auto w-full max-w-7xl">
             <ErrorBoundary>
               <PageTransition>{children}</PageTransition>
@@ -22,6 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
       </div>
+      <MobileBottomNav />
       <ScrollToTop />
     </div>
   );

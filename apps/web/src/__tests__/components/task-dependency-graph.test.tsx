@@ -78,6 +78,7 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
+    // The new DependencyVisualizer shows "No dependencies" with a button
     expect(screen.getByText('No dependencies')).toBeInTheDocument();
     expect(screen.getByText('Link this task to others')).toBeInTheDocument();
     expect(screen.getByText('Add dependency')).toBeInTheDocument();
@@ -86,10 +87,6 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
   // ── Graph view ───────────────────────────────────────────────
 
   it('renders blockedBy dependencies in graph view', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse(currentTaskResponse),
-    );
-
     render(
       <TaskDependencyGraph
         blockedBy={[blockedByDep]}
@@ -100,19 +97,16 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    // Should show the section header
-    expect(screen.getByText('Blocked by')).toBeInTheDocument();
+    // The "Dependencies" header is always visible
+    expect(screen.getByText('Dependencies')).toBeInTheDocument();
 
-    // The dependency task title should appear
+    // The dependency task title should appear in the SVG graph
     expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
     expect(screen.getByText('TASK-2')).toBeInTheDocument();
 
-    // The current task info should be fetched and displayed
-    expect(await screen.findByText('Current Task')).toBeInTheDocument();
-    expect(screen.getByText('TASK-1')).toBeInTheDocument();
-
-    // The status badge should be rendered
-    expect(screen.getByText('Completed')).toBeInTheDocument();
+    // Legend items are rendered
+    expect(screen.getByText('Blocks relation')).toBeInTheDocument();
+    expect(screen.getByText('Root task')).toBeInTheDocument();
   });
 
   it('renders blocking dependencies in graph view', async () => {
@@ -130,7 +124,7 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    expect(screen.getByText('Blocking')).toBeInTheDocument();
+    // The dependency task title should appear
     expect(await screen.findByText('API integration')).toBeInTheDocument();
     expect(screen.getByText('TASK-3')).toBeInTheDocument();
   });
@@ -150,21 +144,16 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    expect(screen.getByText('Blocked by')).toBeInTheDocument();
-    expect(screen.getByText('Blocking')).toBeInTheDocument();
-
+    // Both task titles should appear in the SVG graph
     expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
     expect(screen.getByText('API integration')).toBeInTheDocument();
 
-    // Total dependency count should be shown
+    // Total dependency count should be shown in the header
     expect(screen.getByText('(2)')).toBeInTheDocument();
   });
 
   it('renders unknown task title when dependsOnTask is missing', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse(currentTaskResponse),
-    );
-
+    // When dependsOnTask is undefined, the node is filtered out
     const depNoTask = { ...blockedByDep, dependsOnTask: undefined };
 
     render(
@@ -177,16 +166,14 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    expect(await screen.findByText('Unknown task')).toBeInTheDocument();
+    // The dependency is filtered out, so only the root task placeholder renders.
+    // The graph still shows with just the root task node.
+    expect(screen.getByText('Dependencies')).toBeInTheDocument();
   });
 
-  // ── Fetches current task info in graph view ──────────────────
+  // ── Current task fetch ──────────────────────────────────────
 
   it('fetches current task info from API on mount in graph view', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockFetchResponse(currentTaskResponse),
-    );
-
     render(
       <TaskDependencyGraph
         blockedBy={[blockedByDep]}
@@ -197,18 +184,13 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    // Wait for current task info to render
-    expect(await screen.findByText('Current Task')).toBeInTheDocument();
+    // Wait for the graph to render with the dependency title
+    expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
 
-    // Should have fetched the current task
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/tasks/task-1');
+    // The visualizer receives task info via props, not by fetching
   });
 
   it('shows placeholder when current task fetch fails', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('Network error'),
-    );
-
     render(
       <TaskDependencyGraph
         blockedBy={[blockedByDep]}
@@ -219,8 +201,8 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    // Should show placeholder text when fetch fails
-    expect(await screen.findByText('Current Task')).toBeInTheDocument();
+    // The graph renders dependencies through props, no fetch needed
+    expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
   });
 
   // ── View toggle ──────────────────────────────────────────────
@@ -240,22 +222,22 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    // Initially in graph mode with 'Blocked by' heading
-    expect(screen.getByText('Blocked by')).toBeInTheDocument();
+    // Initially in graph mode — the dependency title is visible
+    expect(await screen.findByText('Frontend setup')).toBeInTheDocument();
 
     // Find the Graph/List toggle buttons and click List
     const listButton = screen.getByText('List');
     fireEvent.click(listButton);
 
-    // Now should be in list mode with 'Blocked by (1)' heading
+    // Now should be in list mode with section headers
     expect(screen.getByText('Blocked by (1)')).toBeInTheDocument();
 
-    // Click back to graph
+    // Click back to Graph
     const graphButton = screen.getByText('Graph');
     fireEvent.click(graphButton);
 
-    // Back in graph mode
-    expect(screen.getByText('Blocked by')).toBeInTheDocument();
+    // Back in graph mode — the dependency title should still be visible
+    expect(screen.getByText('Frontend setup')).toBeInTheDocument();
   });
 
   // ── List view ────────────────────────────────────────────────
@@ -453,11 +435,6 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
   });
 
   it('filters out the current task and already-depended tasks from search results', async () => {
-    // Mock current task fetch so graph view shows a real title (not placeholder)
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      mockFetchResponse({ task: { id: 'task-1', title: 'Main Task', taskIdDisplay: 'TASK-1', status: 'in_progress' } }),
-    );
-
     render(
       <TaskDependencyGraph
         blockedBy={[blockedByDep]} // task-dep-1 is already a dependency
@@ -473,7 +450,7 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
 
     const searchInput = screen.getByPlaceholderText('Search tasks to link...');
 
-    // Mock search returns all tasks including current + already-depended
+    // Mock the search response (the only fetch call - visualizer doesn't fetch)
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
       mockFetchResponse({
         tasks: [
@@ -493,9 +470,6 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
     expect(await screen.findByText('New feature')).toBeInTheDocument();
     expect(screen.queryByText('Current Task')).not.toBeInTheDocument();
     expect(screen.queryByText('Already Dep Task')).not.toBeInTheDocument();
-
-    // Graph view center node should still show the current task title
-    expect(screen.getByText('Main Task')).toBeInTheDocument();
   });
 
   it('adds a dependency by clicking a search result', async () => {
@@ -707,7 +681,7 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       />,
     );
 
-    expect(screen.queryByText(/\(0\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\\(0\\)/)).not.toBeInTheDocument();
   });
 
   it('shows correct dependency count for multiple blockedBy', async () => {
@@ -891,7 +865,7 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
         status: i % 2 === 0 ? 'todo' : 'in_progress',
       }));
 
-      // Use mockImplementation to handle any stray fetch calls (e.g. from GraphView)
+      // Mock search results
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
         if (url.includes('/api/tasks?search=')) {
           return mockFetchResponse({ tasks: manyTasks });
@@ -899,7 +873,6 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
         return mockFetchResponse(currentTaskResponse);
       });
 
-      // Input triggers debounce which will call the mock after 300ms
       fireEvent.change(searchInput, { target: { value: 'task' } });
 
       // Wait for debounce to fire and results to appear
@@ -1136,7 +1109,6 @@ describe('TaskDependencyGraph (React Testing Library)', () => {
       });
 
       // All typing happens synchronously, well before any 300ms debounce fires
-      // So each keystroke clears the previous debounce, and only the last fires
       fireEvent.change(searchInput, { target: { value: 'A' } });
       fireEvent.change(searchInput, { target: { value: 'AB' } });
       fireEvent.change(searchInput, { target: { value: 'ABC' } });

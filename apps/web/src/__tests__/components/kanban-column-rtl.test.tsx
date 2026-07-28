@@ -64,6 +64,10 @@ function sampleTask(
   };
 }
 
+function toLanes(tasks: ReturnType<typeof sampleTask>[]): { id: string; label: string; count: number; tasks: typeof tasks }[] {
+  return [{ id: 'all', label: 'All', count: tasks.length, tasks }];
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // KanbanColumn Tests
 // ═══════════════════════════════════════════════════════════════════
@@ -81,7 +85,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('renders column header with label and task count', () => {
     const tasks = [sampleTask({ id: 't1' }), sampleTask({ id: 't2' })];
-    render(<KanbanColumn status="open" label="Open" tasks={tasks} headerBg="bg-status-open/5" />);
+    render(<KanbanColumn status="open" label="Open" lanes={toLanes(tasks)} headerBg="bg-status-open/5" />);
 
     // Label in heading
     expect(screen.getByText('Open')).toBeInTheDocument();
@@ -94,7 +98,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="in_progress"
         label="In Progress"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-in-progress/5"
       />,
     );
@@ -107,7 +111,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('falls back to bg-surface-400 for unknown status dot color', () => {
     const { container } = render(
-      <KanbanColumn status="unknown" label="Unknown" tasks={[]} headerBg="" />,
+      <KanbanColumn status="unknown" label="Unknown" lanes={toLanes([])} headerBg="" />,
     );
 
     const dot = container.querySelector('span.h-2\\.5');
@@ -119,7 +123,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="blocked"
         label="Blocked"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-blocked/5"
       />,
     );
@@ -133,7 +137,7 @@ describe('KanbanColumn (React Testing Library)', () => {
   // ── Empty state ────────────────────────────────────────────
 
   it('shows "No tasks" and "Drag tasks here" when tasks array is empty', () => {
-    render(<KanbanColumn status="draft" label="Draft" tasks={[]} headerBg="bg-status-draft/5" />);
+    render(<KanbanColumn status="draft" label="Draft" lanes={toLanes([])} headerBg="bg-status-draft/5" />);
 
     expect(screen.getByText('No tasks')).toBeInTheDocument();
     expect(screen.getByText('Drag tasks here')).toBeInTheDocument();
@@ -144,7 +148,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="open"
         label="Open"
-        tasks={[sampleTask(), sampleTask({ id: 't2' })]}
+        lanes={toLanes([sampleTask(), sampleTask({ id: 't2' })])}
         headerBg="bg-status-open/5"
       />,
     );
@@ -162,7 +166,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       sampleTask({ id: 't3', title: 'Task Three' }),
     ];
 
-    render(<KanbanColumn status="open" label="Open" tasks={tasks} headerBg="bg-status-open/5" />);
+    render(<KanbanColumn status="open" label="Open" lanes={toLanes(tasks)} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('Task One')).toBeInTheDocument();
     expect(screen.getByText('Task Two')).toBeInTheDocument();
@@ -172,14 +176,14 @@ describe('KanbanColumn (React Testing Library)', () => {
   it('renders task cards with correct status inheritance', () => {
     const task = sampleTask({ id: 't1', title: 'My Task', status: 'open' });
 
-    render(<KanbanColumn status="open" label="Open" tasks={[task]} headerBg="bg-status-open/5" />);
+    render(<KanbanColumn status="open" label="Open" lanes={toLanes([task])} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('My Task')).toBeInTheDocument();
     expect(screen.getByText('TASK-1')).toBeInTheDocument();
   });
 
   it('passes 0 count badge when tasks array is empty', () => {
-    render(<KanbanColumn status="open" label="Open" tasks={[]} headerBg="bg-status-open/5" />);
+    render(<KanbanColumn status="open" label="Open" lanes={toLanes([])} headerBg="bg-status-open/5" />);
 
     expect(screen.getByText('0')).toBeInTheDocument();
   });
@@ -196,7 +200,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="open"
         label="Open"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-open/5"
         isValidDropTarget={undefined}
       />,
@@ -219,7 +223,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="in_progress"
         label="In Progress"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-in-progress/5"
         isValidDropTarget
       />,
@@ -241,7 +245,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="completed"
         label="Done"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-completed/5"
         isValidDropTarget={false}
       />,
@@ -265,7 +269,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="open"
         label="Open"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-open/5"
         isValidDropTarget={false}
       />,
@@ -291,7 +295,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status={status}
         label={status.charAt(0).toUpperCase() + status.slice(1)}
-        tasks={[]}
+        lanes={toLanes([])}
         headerBg=""
       />,
     );
@@ -302,7 +306,7 @@ describe('KanbanColumn (React Testing Library)', () => {
 
   it('falls back to border-l-surface-300 for unknown status', () => {
     const { container } = render(
-      <KanbanColumn status="unknown" label="Unknown" tasks={[]} headerBg="" />,
+      <KanbanColumn status="unknown" label="Unknown" lanes={toLanes([])} headerBg="" />,
     );
 
     const column = container.firstChild as HTMLElement;
@@ -312,7 +316,7 @@ describe('KanbanColumn (React Testing Library)', () => {
   // ── Create button ──────────────────────────────────────────
 
   it('renders create button with correct aria-label based on label prop', () => {
-    render(<KanbanColumn status="open" label="Open" tasks={[]} headerBg="bg-status-open/5" />);
+    render(<KanbanColumn status="open" label="Open" lanes={toLanes([])} headerBg="bg-status-open/5" />);
 
     const button = screen.getByRole('button', { name: 'Create task in Open' });
     expect(button).toBeInTheDocument();
@@ -323,7 +327,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="in_progress"
         label="In Progress"
-        tasks={[]}
+        lanes={toLanes([])}
         headerBg="bg-status-in-progress/5"
       />,
     );
@@ -345,7 +349,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="in_progress"
         label="In Progress"
-        tasks={[]}
+        lanes={toLanes([])}
         headerBg="bg-status-in-progress/5"
       />,
     );
@@ -369,7 +373,7 @@ describe('KanbanColumn (React Testing Library)', () => {
       <KanbanColumn
         status="blocked"
         label="Blocked"
-        tasks={[sampleTask()]}
+        lanes={toLanes([sampleTask()])}
         headerBg="bg-status-blocked/5"
       />,
     );

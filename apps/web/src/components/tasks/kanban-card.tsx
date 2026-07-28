@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Calendar, User, GripVertical } from 'lucide-react';
 import { KANBAN } from '@/lib/test-ids';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { triggerHaptic } from '@/lib/haptics';
 
 interface KanbanCardProps {
   task: {
@@ -17,6 +19,7 @@ interface KanbanCardProps {
     dueDate: string | null;
   };
   isDragOverlay?: boolean;
+  onTap?: (task: KanbanCardProps['task']) => void;
 }
 
 const priorityConfig: Record<string, { label: string; color: string; dot: string }> = {
@@ -66,11 +69,12 @@ function formatDate(dateStr: string | null): string | null {
   }
 }
 
-export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
+export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardProps) {
   const isReadonly = READONLY_STATUSES.has(task.status);
   const priority = priorityConfig[task.priority] ?? priorityConfig.none!;
   const formattedDate = formatDate(task.dueDate);
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isReadonly;
+  const [isHolding, setIsHolding] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -85,6 +89,43 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
       }
     : undefined;
 
+  const touchHandledRef = useRef(false);
+
+  // Long-press visual feedback for mobile
+  const handleTouchStart = () => {
+    setIsHolding(true);
+    if (!touchHandledRef.current && !isReadonly) {
+      touchHandledRef.current = true;
+      triggerHaptic('light');
+    }
+  };
+  const handleTouchEnd = () => {
+    setIsHolding(false);
+    touchHandledRef.current = false;
+  };
+
+  const wasDraggedRef = useRef(false);
+
+  // Reset holding state when actual drag begins (prevents stuck visual state
+  // if dnd-kit takes over touch handling after the 250ms delay).
+  // The board's handleDragStart fires the 'pickup' haptic — we only reset state here.
+  useEffect(() => {
+    if (isDragging) {
+      wasDraggedRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsHolding(false);
+      touchHandledRef.current = false;
+    }
+  }, [isDragging]);
+
+  const handleTap = useCallback(() => {
+    // Only fire tap if no drag occurred since last pointer down
+    if (!wasDraggedRef.current && !isReadonly && onTap) {
+      onTap(task);
+    }
+    wasDraggedRef.current = false;
+  }, [onTap, task, isReadonly]);
+
   return (
     <div
       ref={setNodeRef}
@@ -95,6 +136,10 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
       tabIndex={0}
       aria-label={`Task ${task.taskIdDisplay}: ${task.title}`}
       data-testid={KANBAN.card(task.id)}
+      onClick={handleTap}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       className={cn(
         // Base card styles
         'group relative rounded-lg border bg-white p-3 transition-all duration-200',
@@ -108,14 +153,16 @@ export function KanbanCard({ task, isDragOverlay = false }: KanbanCardProps) {
         isDragOverlay &&
           'shadow-glass border-brand-300 dark:border-brand-700 rotate-[3deg] scale-105',
         isReadonly && 'opacity-60',
+        // Long-press feedback for mobile touch
+        isHolding && !isReadonly && 'scale-[0.97] border-brand-300 dark:border-brand-600 shadow-md bg-brand-500/5',
         // Left border accent by status
         'border-l-4',
         statusBorderAccent[task.status] ?? 'border-l-surface-300',
       )}
     >
-      {/* Drag handle indicator - shows on hover */}
+      {/* Drag handle indicator — always visible on mobile (no hover on touch), shows on hover on desktop */}
       {!isReadonly && !isDragOverlay && (
-        <div className="absolute -left-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div className="absolute -left-2 top-1/2 -translate-y-1/2 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100">
           <GripVertical className="text-surface-400 h-3.5 w-3.5" />
         </div>
       )}

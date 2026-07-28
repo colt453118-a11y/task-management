@@ -14,7 +14,6 @@ const PUBLIC_ROUTES = [
   '/auth/register',
   '/auth/forgot-password',
   '/auth/reset-password',
-  '/api/health',
 ] as const;
 
 const PROTECTED_ROUTES = [

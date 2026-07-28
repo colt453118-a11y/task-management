@@ -124,13 +124,13 @@ export async function checkRateLimit(
     multi.incr(windowKey);
     multi.ttl(windowKey);
     // redis@4 exec() returns [error | null, value][] — cast the values we need
-    const results = (await multi.exec()) as Array<[Error | null, number]> | null;
+    const results = (await multi.exec()) as Array<number> | null;
 
-    const count = results?.[0]?.[1];
-    let ttl = results?.[1]?.[1];
+    const count = results?.[0];
+    let ttl = results?.[1];
 
     // On first increment, set TTL to expire the window
-    if (count === 1) {
+    if (count === 1 && (ttl === -1 || ttl === -2)) {
       const expirySeconds = Math.ceil(config.windowMs / 1000);
       await client.expire(windowKey, expirySeconds);
       ttl = expirySeconds;
