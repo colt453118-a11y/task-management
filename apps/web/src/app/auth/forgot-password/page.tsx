@@ -52,26 +52,34 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="auth-bg flex min-h-screen items-center justify-center p-4">
+        {/* Animated background */}
+        <div className="auth-orb animate-float-slow" style={{
+          width: '400px', height: '400px',
+          background: 'radial-gradient(circle, rgba(52,211,153,0.08), transparent 70%)',
+          top: '-100px', right: '-80px',
+        }} />
+        <div className="auth-noise" />
+
         <div className="animate-fade-in-up w-full max-w-sm">
-          <div className="glass rounded-2xl p-8 text-center shadow-lg">
+          <div className="gradient-border-card p-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25">
               <CheckCircle2 className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-surface-900 mt-5 text-xl font-bold">Check your email</h1>
-            <p className="text-surface-500 mt-2 text-sm leading-relaxed">
+            <h1 className="mt-5 text-xl font-bold text-surface-900">Check your email</h1>
+            <p className="mt-2 text-sm leading-relaxed text-surface-600">
               We sent a password reset link to{' '}
-              <span className="text-surface-700 dark:text-surface-300 font-medium">{email}</span>.
+              <span className="font-medium text-surface-300">{email}</span>.
               Please check your inbox and follow the instructions.
             </p>
             <Link
               href="/auth/login"
-              className="text-brand-500 hover:text-brand-400 group mt-6 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+              className="group mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-400 transition-colors hover:text-brand-300"
             >
               Back to login
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
-          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-600">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Your data is encrypted and secure</span>
           </div>
@@ -82,23 +90,31 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="auth-bg flex min-h-screen items-center justify-center p-4">
-      <div className="relative w-full max-w-sm">
-        <div className="animate-float bg-brand-500/5 pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl" />
-        <div
-          className="animate-float pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-purple-500/5 blur-3xl"
-          style={{ animationDelay: '1.5s' }}
-        />
+      {/* Animated background orbs */}
+      <div className="auth-orb animate-float-slow" style={{
+        width: '400px', height: '400px',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.08), transparent 70%)',
+        top: '-100px', right: '-80px',
+      }} />
+      <div className="auth-orb animate-float-reverse" style={{
+        width: '350px', height: '350px',
+        background: 'radial-gradient(circle, rgba(167,139,250,0.06), transparent 70%)',
+        bottom: '-120px', left: '-80px',
+        animationDelay: '2s',
+      }} />
+      <div className="auth-noise" />
 
+      <div className="relative w-full max-w-sm">
         <div className="animate-fade-in-up">
-          <div className="glass rounded-2xl p-8 shadow-lg">
+          <div className="gradient-border-card p-8">
             <div className="mb-8 text-center">
-              <div className="from-brand-500 to-brand-700 shadow-brand-500/25 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
+              <div className="glow-ring mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25">
                 <Mail className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-surface-900 mt-4 text-2xl font-bold tracking-tight">
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-surface-900">
                 Forgot password?
               </h1>
-              <p className="text-surface-500 mt-1.5 text-sm">
+              <p className="mt-1.5 text-sm text-surface-600">
                 Enter your email and we&apos;ll send you a reset link
               </p>
             </div>
@@ -106,12 +122,12 @@ export default function ForgotPasswordPage() {
             <form onSubmit={onSubmit} className="space-y-5">
               {error && (
                 <div
-                  className="animate-slide-up border-error/20 bg-error/5 text-error rounded-xl border px-4 py-3 text-sm"
+                  className="animate-slide-up rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error"
                   role="alert"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-error/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                      <span className="text-error text-xs font-bold">!</span>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-error/10">
+                      <span className="text-xs font-bold text-error">!</span>
                     </div>
                     <span>{error}</span>
                   </div>
@@ -121,7 +137,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                 >
                   Email
                 </label>
@@ -134,13 +150,13 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   required
                   placeholder="name@company.com"
-                  className="bg-surface-100/80 dark:bg-surface-900/80"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="h-11 w-full text-base shadow-sm"
+                size="xl"
+                className="btn-shine w-full text-base shadow-lg shadow-brand-500/20"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -154,11 +170,11 @@ export default function ForgotPasswordPage() {
               </Button>
             </form>
 
-            <p className="text-surface-500 mt-6 text-center text-sm">
+            <p className="mt-6 text-center text-sm text-surface-600">
               Remember your password?{' '}
               <Link
                 href="/auth/login"
-                className="text-brand-500 hover:text-brand-400 inline-flex items-center gap-1 font-semibold transition-colors"
+                className="inline-flex items-center gap-1 font-semibold text-brand-400 transition-colors hover:text-brand-300"
               >
                 Sign in
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
@@ -166,7 +182,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-600">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Your data is encrypted and secure</span>
           </div>

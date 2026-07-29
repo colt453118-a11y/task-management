@@ -234,7 +234,7 @@ const TABS: { id: Tab; label: string; gradient: string }[] = [
 
 function SectionCard({ gradient, children, className = '' }: { gradient: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border ${className}`}>
+    <div className={`neon-card relative overflow-hidden rounded-2xl ${className}`}>
       <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${gradient} opacity-60`} />
       {children}
     </div>
@@ -758,7 +758,7 @@ export default function SettingsPage() {
                         key={user.id}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 hover:border-brand-500/20 hover:bg-surface-200/50 dark:hover:bg-surface-800/50 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
+                        className="neon-card hover:bg-surface-200/40 dark:hover:bg-surface-800/50 flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">

@@ -147,13 +147,13 @@ export function Sidebar() {
   const sidebarContent = (
     <aside
       className={cn(
-        'border-surface-300/20 bg-surface-50/90 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
+        'border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
         collapsed && !isMobile ? 'w-16' : 'w-60',
         isMobile && 'w-60',
       )}
     >
       {/* Logo */}
-      <div className="border-surface-300/20 flex h-14 shrink-0 items-center justify-between border-b px-4">
+      <div className="border-surface-500/20 dark:border-surface-700/30 flex h-14 shrink-0 items-center justify-between border-b px-4">
         {(!collapsed || isMobile) && (
           <Link href="/" className="group flex items-center gap-2.5">
             <div className="from-brand-400 to-brand-600 group-hover:shadow-brand-500/20 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-all duration-200 group-hover:shadow-md">
@@ -211,12 +211,12 @@ export function Sidebar() {
                 href={item.href}
                 onMouseEnter={() => setHoveredItem(item.href)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={cn(
-                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-brand-500/10 text-brand-400 active-neon'
-                    : 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-300/10 dark:hover:text-surface-300',
-                )}
+            className={cn(
+              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+              isActive
+                ? 'bg-brand-500/10 text-brand-400 active-neon shadow-sm shadow-brand-500/10'
+                : 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-700/30 dark:hover:text-surface-300',
+            )}
                 title={collapsed && !isMobile ? item.label : undefined}
               >
                 <div className="relative">
@@ -271,7 +271,7 @@ export function Sidebar() {
       </nav>
 
       {/* Quick create */}
-      <div className="border-surface-300/20 shrink-0 border-t p-3">
+      <div className="border-surface-500/20 dark:border-surface-700/30 shrink-0 border-t p-3">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-quick-create'))}
           className={cn(

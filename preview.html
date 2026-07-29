@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkManager — Full App Walkthrough</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f13; color: #e4e4e7; font-family: system-ui, -apple-system, sans-serif; padding: 40px; }
+  h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; background: linear-gradient(135deg, #a78bfa, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #71717a; margin-bottom: 6px; font-size: 14px; }
+  .user-info { background: #1a1a24; border: 1px solid #27272a; border-radius: 10px; padding: 16px 20px; margin-bottom: 32px; display: inline-block; }
+  .user-info code { background: #27272a; padding: 3px 10px; border-radius: 5px; font-size: 13px; color: #a1a1aa; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 20px; }
+  .card { background: #1a1a24; border-radius: 12px; border: 1px solid #27272a; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+  .card:hover { border-color: #3f3f46; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .card-header { padding: 12px 16px; border-bottom: 1px solid #27272a; display: flex; align-items: center; gap: 10px; }
+  .badge-auth { background: #1e1b4b; color: #a78bfa; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .badge-dash { background: #052e16; color: #4ade80; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .card h2 { font-size: 14px; font-weight: 600; color: #f4f4f5; }
+  .card img { width: 100%; display: block; }
+  .card .meta { padding: 8px 16px; border-top: 1px solid #27272a; color: #71717a; font-size: 12px; display: flex; justify-content: space-between; }
+  footer { margin-top: 50px; text-align: center; color: #52525b; font-size: 13px; }
+  a { color: #818cf8; text-decoration: none; }
+  a:hover { color: #a5b4fc; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>🚀 WorkManager — Full App Walkthrough</h1>
+  <p class="subtitle">Live at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+  <div class="user-info">
+    <strong style="color: #f4f4f5;">Test User:</strong>
+    <code>demo1785341871889@example.com</code>
+    <code>DemoPass123!</code>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-auth">🔐 Auth</span>
+        <h2>Login</h2>
+      </div>
+      <a href="screenshots/01-login.png" target="_blank">
+        <img src="screenshots/01-login.png" alt="login" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>01-login.png</span>
+        <span>581 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-auth">🔐 Auth</span>
+        <h2>Register</h2>
+      </div>
+      <a href="screenshots/02-register.png" target="_blank">
+        <img src="screenshots/02-register.png" alt="register" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>02-register.png</span>
+        <span>586 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-auth">🔐 Auth</span>
+        <h2>Forgot password</h2>
+      </div>
+      <a href="screenshots/03-forgot-password.png" target="_blank">
+        <img src="screenshots/03-forgot-password.png" alt="forgot password" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>03-forgot-password.png</span>
+        <span>567 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-auth">🔐 Auth</span>
+        <h2>Reset password</h2>
+      </div>
+      <a href="screenshots/04-reset-password.png" target="_blank">
+        <img src="screenshots/04-reset-password.png" alt="reset password" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>04-reset-password.png</span>
+        <span>471 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Dashboard home</h2>
+      </div>
+      <a href="screenshots/10-dashboard-home.png" target="_blank">
+        <img src="screenshots/10-dashboard-home.png" alt="dashboard home" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>10-dashboard-home.png</span>
+        <span>259 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Tasks</h2>
+      </div>
+      <a href="screenshots/11-tasks.png" target="_blank">
+        <img src="screenshots/11-tasks.png" alt="tasks" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>11-tasks.png</span>
+        <span>192 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>New task</h2>
+      </div>
+      <a href="screenshots/12-new-task.png" target="_blank">
+        <img src="screenshots/12-new-task.png" alt="new task" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>12-new-task.png</span>
+        <span>202 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Projects</h2>
+      </div>
+      <a href="screenshots/13-projects.png" target="_blank">
+        <img src="screenshots/13-projects.png" alt="projects" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>13-projects.png</span>
+        <span>171 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Calendar</h2>
+      </div>
+      <a href="screenshots/14-calendar.png" target="_blank">
+        <img src="screenshots/14-calendar.png" alt="calendar" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>14-calendar.png</span>
+        <span>188 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Analytics</h2>
+      </div>
+      <a href="screenshots/15-analytics.png" target="_blank">
+        <img src="screenshots/15-analytics.png" alt="analytics" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>15-analytics.png</span>
+        <span>169 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Teams</h2>
+      </div>
+      <a href="screenshots/16-teams.png" target="_blank">
+        <img src="screenshots/16-teams.png" alt="teams" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>16-teams.png</span>
+        <span>177 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Settings</h2>
+      </div>
+      <a href="screenshots/17-settings.png" target="_blank">
+        <img src="screenshots/17-settings.png" alt="settings" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>17-settings.png</span>
+        <span>187 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Notifications</h2>
+      </div>
+      <a href="screenshots/18-notifications.png" target="_blank">
+        <img src="screenshots/18-notifications.png" alt="notifications" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>18-notifications.png</span>
+        <span>175 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Search</h2>
+      </div>
+      <a href="screenshots/19-search.png" target="_blank">
+        <img src="screenshots/19-search.png" alt="search" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>19-search.png</span>
+        <span>194 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Milestones</h2>
+      </div>
+      <a href="screenshots/20-milestones.png" target="_blank">
+        <img src="screenshots/20-milestones.png" alt="milestones" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>20-milestones.png</span>
+        <span>171 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Reports</h2>
+      </div>
+      <a href="screenshots/21-reports.png" target="_blank">
+        <img src="screenshots/21-reports.png" alt="reports" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>21-reports.png</span>
+        <span>209 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Automation</h2>
+      </div>
+      <a href="screenshots/22-automation.png" target="_blank">
+        <img src="screenshots/22-automation.png" alt="automation" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>22-automation.png</span>
+        <span>169 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Timer</h2>
+      </div>
+      <a href="screenshots/23-timer.png" target="_blank">
+        <img src="screenshots/23-timer.png" alt="timer" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>23-timer.png</span>
+        <span>230 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Users</h2>
+      </div>
+      <a href="screenshots/24-users.png" target="_blank">
+        <img src="screenshots/24-users.png" alt="users" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>24-users.png</span>
+        <span>182 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Task templates</h2>
+      </div>
+      <a href="screenshots/25-task-templates.png" target="_blank">
+        <img src="screenshots/25-task-templates.png" alt="task templates" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>25-task-templates.png</span>
+        <span>162 KB</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="badge-dash">📊 Dashboard</span>
+        <h2>Corrections</h2>
+      </div>
+      <a href="screenshots/26-corrections.png" target="_blank">
+        <img src="screenshots/26-corrections.png" alt="corrections" loading="lazy">
+      </a>
+      <div class="meta">
+        <span>26-corrections.png</span>
+        <span>203 KB</span>
+      </div>
+    </div>
+  </div>
+  <footer>
+    Generated 7/29/2026, 9:48:53 PM · 21 screenshots · User: demo1785341871889@example.com
+  </footer>
+</body>
+</html>

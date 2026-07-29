@@ -369,13 +369,18 @@ export default function DashboardPage() {
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} variants={itemVariants} custom={i}>
             <motion.div
-              whileHover={{ y: -2 }}
-              className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:shadow-sm sm:rounded-2xl sm:p-5"
+              whileHover={{ y: -3 }}
+              className="neon-card group relative overflow-hidden rounded-xl border p-3 transition-all duration-300 sm:rounded-2xl sm:p-5"
             >
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60`} />
-              <div className="flex items-start justify-between gap-2">
+              {/* Gradient top border */}
+              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+              
+              {/* Subtle glow on hover */}
+              <div className={`absolute -inset-0.5 bg-gradient-to-r ${kpi.gradient} opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-15`} />
+              
+              <div className="relative flex items-start justify-between gap-2">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
+                  <p className="text-surface-700 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-surface-900 text-lg font-bold tracking-tight sm:text-2xl">{kpi.value}</p>
                     {kpi.trend && (
@@ -435,7 +440,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="text-surface-400 h-4 w-4" />
+                <Sparkles className="text-surface-500 h-4 w-4" />
                 Quick Actions
               </CardTitle>
             </CardHeader>
@@ -448,16 +453,15 @@ export default function DashboardPage() {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      'group flex flex-col items-center gap-2 rounded-xl border border-surface-300/20 p-4 text-center transition-all duration-200 hover:shadow-sm',
-                      'hover:border-brand-500/30',
+                      'group neon-card flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-200',
                     )}
                   >
-                    <div className={cn('rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110', action.color)}>
+                    <div className={cn('rounded-xl p-2.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm', action.color)}>
                       <action.icon className="h-5 w-5" />
                     </div>
                     <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{action.label}</span>
                     {action.shortcut && (
-                      <kbd className="border-surface-300/20 bg-surface-200/50 text-surface-500 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
+                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 dark:text-surface-600 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
                         {action.shortcut}
                       </kbd>
                     )}

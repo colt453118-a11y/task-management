@@ -1087,7 +1087,7 @@ export default function TimeTrackingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center py-16 text-center"
               >
-                <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border">
+                <div className="neon-card mb-5 flex h-20 w-20 items-center justify-center rounded-3xl">
                   <Clock className="text-surface-400 h-9 w-9" />
                 </div>
                 <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">

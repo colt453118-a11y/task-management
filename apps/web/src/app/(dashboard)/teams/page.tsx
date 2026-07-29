@@ -112,7 +112,7 @@ export default function TeamsPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="border-surface-300/30 bg-surface-100 rounded-xl border p-5">
+            <div key={i} className="neon-card rounded-xl p-5">
               <div className="shimmer h-4 w-3/4 rounded-md" />
               <div className="shimmer mt-2 h-3 w-1/4 rounded-md" />
               <div className="shimmer mt-3 h-3 w-full rounded-md" />
@@ -162,7 +162,7 @@ export default function TeamsPage() {
             {departments.length !== 1 ? 's' : ''}
           </p>
         </div>{' '}
-        <Button onClick={openCreate} className="shadow-sm">
+        <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
           <Plus className="mr-2 h-4 w-4" /> Create Team
         </Button>
       </motion.div>
@@ -177,10 +177,10 @@ export default function TeamsPage() {
             {departments.map((dept) => (
               <Link key={dept.id} href={`/teams/departments/${dept.id}`}>
                 <motion.div
-                  whileHover={{ y: -2 }}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-5 transition-all duration-200 hover:shadow-sm"
+                  whileHover={{ y: -3 }}
+                  className="neon-card group relative overflow-hidden rounded-2xl p-5"
                 >
-                  <div className="from-brand-500 to-brand-400 absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r opacity-60" />
+                  <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
                   <div className="mb-2 flex items-start justify-between">
                     <h3 className="text-surface-900 truncate font-semibold">{dept.name}</h3>
                     <Badge variant={dept.isActive ? 'success' : 'default'} size="sm">
@@ -212,10 +212,10 @@ export default function TeamsPage() {
                 <motion.div
                   variants={itemVariants}
                   custom={i}
-                  whileHover={{ y: -2 }}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-5 transition-all duration-200 hover:shadow-sm"
+                  whileHover={{ y: -3 }}
+                  className="neon-card group relative overflow-hidden rounded-2xl p-5"
                 >
-                  <div className="from-brand-500 to-brand-400 absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r opacity-60" />
+                  <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
                   <div className="mb-2 flex items-start justify-between">
                     <h3 className="text-surface-900 truncate font-semibold">{team.name}</h3>
                     <Badge variant={team.isActive ? 'success' : 'default'} size="sm">
@@ -268,7 +268,7 @@ export default function TeamsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="gradient-border-card w-full max-w-md p-6"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-surface-900 text-lg font-semibold">Create Team</h3>

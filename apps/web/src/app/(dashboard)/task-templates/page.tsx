@@ -308,7 +308,7 @@ export default function TaskTemplatesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className={cn(
-                  'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm',
+                  'neon-card relative overflow-hidden rounded-2xl transition-all duration-200',
                   t.isDefault && 'ring-1 ring-amber-500/30',
                 )}
               >

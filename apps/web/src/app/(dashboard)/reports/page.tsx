@@ -357,7 +357,7 @@ export default function ReportsPage() {
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="border-surface-300/20 bg-surface-100/80 rounded-2xl border p-5">
+            <div key={i} className="neon-card rounded-2xl p-5">
               <div className="shimmer h-3 w-20 rounded-lg" />
               <div className="shimmer mt-3 h-8 w-16 rounded-lg" />
             </div>
@@ -365,7 +365,7 @@ export default function ReportsPage() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {[1, 2].map((i) => (
-            <div key={i} className="border-surface-300/20 bg-surface-100/80 rounded-2xl border p-6">
+            <div key={i} className="neon-card rounded-2xl p-6">
               <div className="shimmer h-4 w-36 rounded-lg" />
               <div className="mt-4 space-y-3">
                 {[1, 2, 3].map((j) => (
@@ -514,7 +514,7 @@ export default function ReportsPage() {
                     <motion.div key={card.label} variants={itemVariants}>
                       <motion.div
                         whileHover={{ y: -2 }}
-                        className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/50 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-5 transition-all duration-200 hover:shadow-sm"
+                        className="neon-card group relative overflow-hidden rounded-2xl p-5 transition-all duration-200"
                       >
                         <div
                           className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${style.gradient} opacity-60`}
@@ -575,7 +575,7 @@ export default function ReportsPage() {
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 hover:border-brand-500/20 flex items-center justify-between rounded-xl border p-3 text-sm transition-all duration-200 hover:shadow-sm"
+                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl p-3 text-sm transition-all duration-200"
                         >
                           <div className="flex items-center gap-3">
                             <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 items-center justify-center rounded-lg">
@@ -680,7 +680,7 @@ export default function ReportsPage() {
                         key={tmpl.id}
                         whileHover={{ y: -2, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-surface-300/20 p-4 text-center transition-all duration-200 hover:border-brand-500/30 hover:shadow-sm"
+                        className="neon-card group flex flex-col items-center gap-2 rounded-xl p-4 text-center transition-all duration-200"
                       >
                         <div className="bg-brand-500/10 text-brand-500 rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110">
                           <tmpl.icon className="h-5 w-5" />
@@ -809,7 +809,7 @@ export default function ReportsPage() {
                         <motion.div
                           key={stat.label}
                           whileHover={{ y: -1 }}
-                          className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 rounded-xl border p-3 transition-all duration-200 hover:shadow-sm"
+                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 rounded-xl p-3 transition-all duration-200"
                         >
                           <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
                             {stat.label}
@@ -823,7 +823,7 @@ export default function ReportsPage() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                       {/* Daily hours chart */}
-                      <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 rounded-xl border p-4">
+                      <div className="neon-card rounded-xl p-4">
                         <p className="text-surface-500 mb-3 text-xs font-semibold uppercase tracking-wider">
                           Hours by Day
                         </p>
@@ -873,7 +873,7 @@ export default function ReportsPage() {
                       </div>
 
                       {/* Top users */}
-                      <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 rounded-xl border p-4">
+                      <div className="neon-card rounded-xl p-4">
                         <p className="text-surface-500 mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
                           <UserCheck className="h-3 w-3" />
                           Top Users by Hours
@@ -986,7 +986,7 @@ export default function ReportsPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center py-12 text-center">
-                    <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border">
+                    <div className="neon-card mb-4 flex h-12 w-12 items-center justify-center rounded-2xl">
                       <Timer className="text-surface-400 h-6 w-6" />
                     </div>
                     <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">

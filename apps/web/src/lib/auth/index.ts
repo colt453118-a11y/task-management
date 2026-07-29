@@ -37,6 +37,43 @@ export function getAuth(): ReturnType<typeof betterAuth> {
       enabled: true,
       autoSignIn: true,
       requireEmailVerification: false,
+      async sendResetPassword(data: { user: { email: string }; url: string }, _request: unknown) {
+        const logger = (await import('@/lib/logger')).default;
+        logger.info(
+          { email: data.user.email, url: data.url },
+          '[auth] Password reset requested',
+        );
+
+        // In development, log the reset URL so devs can copy-paste it
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('\n═══════════════════════════════════════════════════════════════');
+          console.log('🔑 PASSWORD RESET LINK (dev mode):');
+          console.log(`   ${data.url}`);
+          console.log('   Copy and paste this URL into your browser to reset your password.');
+          console.log('═══════════════════════════════════════════════════════════════\n');
+        }
+
+        // If RESEND_API_KEY is configured, send the email
+        if (process.env.RESEND_API_KEY) {
+          try {
+            const { sendEmail } = await import('@/lib/email');
+            await sendEmail({
+              to: data.user.email,
+              subject: 'Reset your WorkManager password',
+              html: `
+                <h1>Reset your WorkManager password</h1>
+                <p>Click the link below to reset your password. This link expires in 1 hour.</p>
+                <a href="${data.url}" style="color:#6366f1;font-size:16px">Reset password</a>
+                <p style="margin-top:24px;color:#71717a;font-size:14px">
+                  If you didn't request this, you can safely ignore this email.
+                </p>
+              `,
+            });
+          } catch (err) {
+            console.error('[auth] Failed to send password reset email:', err);
+          }
+        }
+      },
     },
     socialProviders: {
       google: {

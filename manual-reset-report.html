@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Password Reset Flow Test Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 32px;
+    }
+    .summary {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 16px 24px;
+      text-align: center;
+      flex: 1;
+    }
+    .stat .value {
+      font-size: 32px;
+      font-weight: 700;
+    }
+    .stat .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .stat.pass .value { color: #22c55e; }
+    .stat.fail .value { color: #ef4444; }
+    .stat.total .value { color: #3b82f6; }
+    
+    .results-table {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid #334155;
+      gap: 12px;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-icon { font-size: 20px; width: 28px; }
+    .result-label { flex: 1; font-size: 14px; }
+    .result-detail { color: #94a3b8; font-size: 12px; }
+    
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+    }
+    .screenshot-card {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid #334155;
+    }
+    .screenshot-card .caption {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .screenshot-card .caption strong {
+      color: #e2e8f0;
+    }
+    .user-info {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+    .user-info code {
+      background: #0f172a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .overall {
+      background: #14532d;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 Password Reset Flow — Manual Test Report</h1>
+  <p class="subtitle">Generated: 2026-07-29T16:46:06.247Z · User: manual-test-1785343539428@example.com</p>
+  
+  <div class="summary">
+    <div class="stat total">
+      <div class="value">12</div>
+      <div class="label">Steps</div>
+    </div>
+    <div class="stat pass">
+      <div class="value">12</div>
+      <div class="label">Passed</div>
+    </div>
+    <div class="stat fail">
+      <div class="value">0</div>
+      <div class="label">Failed</div>
+    </div>
+    <div class="stat pass">
+      <div class="value">✅</div>
+      <div class="label">Status</div>
+    </div>
+  </div>
+  
+  <div class="overall">
+    🎉 ALL STEPS PASSED — Password reset flow is working end-to-end
+  </div>
+  
+  <div class="user-info">
+    <strong>Test User:</strong> <code>manual-test-1785343539428@example.com</code><br>
+    <strong>Initial Password:</strong> <code>InitialPass123!</code><br>
+    <strong>Changed Password:</strong> <code>ChangedPass456!</code>
+  </div>
+  
+  <div class="results-table">
+    
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 1: App opens at localhost:3000</div>
+      <div class="result-detail">Redirected to login page</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 2: Register page loads</div>
+      <div class="result-detail">Registration form is visible</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 3: Registration form has all fields</div>
+      <div class="result-detail">firstName:true lastName:true email:true password:true</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 4: User registration</div>
+      <div class="result-detail">Redirected to dashboard: http://localhost:3000/</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 5: Logout works</div>
+      <div class="result-detail">Redirected to: http://localhost:3000/auth/login?redirect=%2F</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 6: Forgot password page loads</div>
+      <div class="result-detail">Forgot password form is visible</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 7: Password reset requested</div>
+      <div class="result-detail">Success message displayed</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 8: Reset token found in database</div>
+      <div class="result-detail">Token: eKzJd8yu... (expires: Wed Jul 29 2026 17:45:50 GMT+0530 (India Standard Time))</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 9: Reset password form loads with token</div>
+      <div class="result-detail">Reset password form visible</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 10: Password reset submission</div>
+      <div class="result-detail">Password changed successfully</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 11: Login with new password</div>
+      <div class="result-detail">Redirected to dashboard: http://localhost:3000/</div>
+    </div>
+    <div class="result-row">
+      <div class="result-icon">✅</div>
+      <div class="result-label">Step 12: Old password rejected</div>
+      <div class="result-detail">Stayed on login page with error</div>
+    </div>
+  </div>
+  
+  <h2 style="margin-bottom: 16px;">📸 Step-by-Step Screenshots</h2>
+  <div class="screenshots-grid">
+    
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/01-01-app-home.png" alt="App Home Page (redirected to login)" loading="lazy">
+      <div class="caption"><strong>App Home Page (redirected to login)</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/02-02-register-form.png" alt="Registration Form" loading="lazy">
+      <div class="caption"><strong>Registration Form</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/03-03-register-filled.png" alt="Registration Form - Filled" loading="lazy">
+      <div class="caption"><strong>Registration Form - Filled</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/04-04-after-register.png" alt="After Registration - Dashboard" loading="lazy">
+      <div class="caption"><strong>After Registration - Dashboard</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/05-05-after-logout.png" alt="After Logout - Redirected to Login" loading="lazy">
+      <div class="caption"><strong>After Logout - Redirected to Login</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/06-06-forgot-password.png" alt="Forgot Password Page" loading="lazy">
+      <div class="caption"><strong>Forgot Password Page</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/07-07-forgot-filled.png" alt="Forgot Password - Email Filled" loading="lazy">
+      <div class="caption"><strong>Forgot Password - Email Filled</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/08-08-forgot-success.png" alt="Forgot Password - Success Response" loading="lazy">
+      <div class="caption"><strong>Forgot Password - Success Response</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/09-09-reset-form.png" alt="Reset Password - Form" loading="lazy">
+      <div class="caption"><strong>Reset Password - Form</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/10-10-reset-filled.png" alt="Reset Password - Filled" loading="lazy">
+      <div class="caption"><strong>Reset Password - Filled</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/11-11-reset-success.png" alt="Reset Password - Success" loading="lazy">
+      <div class="caption"><strong>Reset Password - Success</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/12-12-login-new-pw.png" alt="Login with New Password" loading="lazy">
+      <div class="caption"><strong>Login with New Password</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/13-13-login-success.png" alt="Login Successful - Dashboard" loading="lazy">
+      <div class="caption"><strong>Login Successful - Dashboard</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/14-14-login-old-pw.png" alt="Login with Old Password" loading="lazy">
+      <div class="caption"><strong>Login with Old Password</strong></div>
+    </div>
+    <div class="screenshot-card">
+      <img src="manual-reset-screenshots/15-15-old-pw-rejected.png" alt="Old Password Rejected" loading="lazy">
+      <div class="caption"><strong>Old Password Rejected</strong></div>
+    </div>
+  </div>
+</body>
+</html>

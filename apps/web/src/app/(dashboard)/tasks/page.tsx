@@ -788,7 +788,7 @@ export default function TasksPage() {
           initial={{ opacity: 0, y: -10, height: 0 }}
           animate={{ opacity: 1, y: 0, height: 'auto' }}
           exit={{ opacity: 0, y: -10, height: 0 }}
-          className="border-surface-300/20 bg-surface-100/80 flex flex-wrap gap-4 rounded-2xl border p-4"
+          className="neon-card flex flex-wrap gap-4 rounded-2xl p-4"
         >
           <div className="space-y-1.5">
             <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
@@ -855,7 +855,7 @@ export default function TasksPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-brand-500/20 bg-brand-500/5 rounded-2xl border px-4 py-3"
+            className="border-brand-500/20 border bg-brand-500/5 rounded-2xl px-4 py-3"
           >
             <div className="flex items-center justify-between gap-4">
               <p className="text-surface-600 dark:text-surface-400 text-sm">
@@ -907,7 +907,7 @@ export default function TasksPage() {
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -10, height: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-              className="border-brand-500/20 bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl border p-3"
+              className="border-brand-500/20 border bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl p-3"
             >
               <span className="text-surface-600 dark:text-surface-400 mr-1 text-xs font-medium">
                 <span className="text-brand-500 font-semibold">
@@ -970,7 +970,7 @@ export default function TasksPage() {
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -10, height: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-              className="border-brand-500/20 bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl border p-3"
+              className="border-brand-500/20 border bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl p-3"
             >
               <span className="text-surface-600 dark:text-surface-400 mr-1 text-xs font-medium">
                 <span className="text-brand-500 font-semibold">
@@ -1080,7 +1080,7 @@ export default function TasksPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="border-surface-300/20 bg-surface-100/80 rounded-2xl border p-6">
+          <div className="neon-card rounded-2xl p-6">
             <div className="space-y-4">
               {Array.from({ length: 5 }, (_, i) => (
                 <motion.div
@@ -1104,7 +1104,7 @@ export default function TasksPage() {
       ) : error ? (
         <motion.div
           variants={itemVariants}
-          className="border-error/20 bg-error/5 flex flex-col items-center rounded-2xl border py-12 text-center"
+          className="border-error/20 border bg-error/5 flex flex-col items-center rounded-2xl py-12 text-center"
         >
           <AlertCircle className="text-error mb-3 h-10 w-10" />
           <p className="text-error text-sm font-medium">{error}</p>
@@ -1112,12 +1112,11 @@ export default function TasksPage() {
             Try again
           </Button>
         </motion.div>
-      ) : showTrash ? (
-        <motion.div
-          variants={itemVariants}
-          className="border-surface-300/20 bg-surface-100/80 flex flex-col items-center rounded-2xl border py-16 text-center"
-        >
-          <Trash2 className="text-surface-400 mx-auto mb-3 h-10 w-10" />
+      ) : showTrash ? (          <motion.div
+            variants={itemVariants}
+            className="neon-card flex flex-col items-center rounded-2xl py-16 text-center"
+          >
+            <Trash2 className="text-surface-400 mx-auto mb-3 h-10 w-10" />
           <p className="text-surface-500 text-sm font-medium">Trash is empty</p>
           <p className="text-surface-500 mt-1 text-xs">Deleted tasks will appear here</p>
         </motion.div>
@@ -1176,12 +1175,12 @@ export default function TasksPage() {
         <>
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className="neon-card overflow-hidden rounded-2xl"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-surface-300/20 bg-surface-200/40 dark:bg-surface-800/40 border-b">
+                  <tr className="border-surface-500/20 bg-surface-300/40 dark:bg-surface-700/30 border-b">
                     <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5">
                       <Checkbox
                         checked={
@@ -1384,7 +1383,7 @@ export default function TasksPage() {
 
           {/* Pagination */}
           {showPagination && (
-            <motion.div variants={itemVariants} className="flex items-center justify-between">
+            <motion.div variants={itemVariants} className="neon-card flex items-center justify-between rounded-xl px-4 py-3">
               <p className="text-surface-500 text-sm">
                 Page{' '}
                 <span className="text-surface-700 dark:text-surface-300 font-medium">

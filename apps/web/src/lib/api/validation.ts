@@ -338,7 +338,7 @@ export const TimeCorrectionCreateSchema = z
   })
   .strict('Unexpected fields in time correction');
 
-export type TimeCorrectionCreateInput = z.infer<typeof TimeCorrectionCreateSchema>;
+
 
 export const TimeCorrectionReviewSchema = z
   .object({
@@ -351,8 +351,6 @@ export const TimeCorrectionReviewSchema = z
       .nullable(),
   })
   .strict('Unexpected fields in time correction review');
-
-export type TimeCorrectionReviewInput = z.infer<typeof TimeCorrectionReviewSchema>;
 
 // Role schemas
 export const RoleCreateSchema = z
@@ -377,69 +375,7 @@ export const RoleCreateSchema = z
   })
   .strict('Unexpected fields in role creation');
 
-export const RoleUpdateSchema = z
-  .object({
-    name: z
-      .string()
-      .min(1)
-      .max(100)
-      .transform((s) => s.trim())
-      .optional(),
-    description: z
-      .string()
-      .max(500)
-      .transform((s) => s.trim())
-      .optional()
-      .nullable(),
-    permissionIds: z.array(z.string().uuid()).optional(),
-    isActive: z.boolean().optional(),
-  })
-  .strict('Unexpected fields in role update');
 
-export const RoleAssignSchema = z
-  .object({
-    roleId: z.string().uuid('Invalid role ID').min(1, 'roleId is required'),
-  })
-  .strict('Unexpected fields in role assignment');
-
-// User update schema
-export const UserUpdateSchema = z
-  .object({
-    firstName: z
-      .string()
-      .max(100)
-      .transform((s) => s.trim())
-      .optional(),
-    lastName: z
-      .string()
-      .max(100)
-      .transform((s) => s.trim())
-      .optional(),
-    displayName: z
-      .string()
-      .max(200)
-      .transform((s) => s.trim())
-      .optional(),
-    phone: z
-      .string()
-      .max(50)
-      .transform((s) => s.trim())
-      .optional(),
-    designation: z
-      .string()
-      .max(200)
-      .transform((s) => s.trim())
-      .optional(),
-    departmentId: z.string().uuid().optional().nullable(),
-    teamId: z.string().uuid().optional().nullable(),
-    location: z
-      .string()
-      .max(255)
-      .transform((s) => s.trim())
-      .optional(),
-    timezone: z.string().max(50).optional(),
-  })
-  .strict('Unexpected fields in user update');
 
 // Validation response helper
 export function validationError(errors: z.ZodError) {

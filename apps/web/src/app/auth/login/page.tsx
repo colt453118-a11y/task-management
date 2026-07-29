@@ -44,34 +44,70 @@ export default function LoginPage() {
 
   return (
     <div className="auth-bg flex min-h-screen items-center justify-center p-4">
-      <div className="relative w-full max-w-sm">
-        <div className="animate-float bg-brand-500/[0.03] pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full blur-3xl" />
-        <div
-          className="animate-float pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-purple-500/[0.03] blur-3xl"
-          style={{ animationDelay: '2s' }}
-        />
+      {/* Animated background orbs */}
+      <div className="auth-orb animate-float-slow" style={{
+        width: '600px', height: '600px',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%)',
+        top: '-200px', right: '-150px',
+      }} />
+      <div className="auth-orb animate-float-reverse" style={{
+        width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(167,139,250,0.08), transparent 70%)',
+        bottom: '-200px', left: '-150px',
+        animationDelay: '2s',
+      }} />
+      <div className="auth-orb animate-float" style={{
+        width: '300px', height: '300px',
+        background: 'radial-gradient(circle, rgba(192,132,252,0.06), transparent 70%)',
+        top: '30%', right: '-80px',
+        animationDelay: '4s',
+      }} />
+      <div className="auth-orb" style={{
+        width: '200px', height: '200px',
+        background: 'radial-gradient(circle, rgba(34,211,238,0.04), transparent 70%)',
+        bottom: '20%', right: '20%',
+        filter: 'blur(60px)',
+      }} />
 
+      {/* Noise texture overlay */}
+      <div className="auth-noise" />
+
+      {/* Animated geometric shapes */}
+      <div className="auth-geo animate-rotate-slow" style={{
+        width: '120px', height: '120px', borderRadius: '30%',
+        top: '15%', left: '8%',
+        borderColor: 'rgba(99,102,241,0.06)',
+      }} />
+      <div className="auth-geo animate-drift" style={{
+        width: '60px', height: '60px', borderRadius: '50%',
+        bottom: '25%', right: '12%',
+        borderColor: 'rgba(167,139,250,0.06)',
+      }} />
+
+      <div className="relative w-full max-w-sm">
         <div className="animate-fade-in-up">
-          <div className="glass rounded-2xl p-8 shadow-lg">
+          <div className="gradient-border-card p-8">
             <div className="mb-8 text-center">
-              <div className="from-brand-400 to-brand-600 shadow-brand-500/30 mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
+              <div className="glow-ring mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-500/30">
                 <Sparkles className="h-7 w-7 text-white" />
               </div>
-              <h1 className="text-surface-900 mt-5 text-2xl font-bold tracking-tight">
+              <h1 className="mt-5 text-2xl font-bold tracking-tight text-surface-900">
                 Welcome back
               </h1>
-              <p className="text-surface-500 mt-1.5 text-sm">Sign in to your workspace</p>
+              <p className="mt-1.5 text-sm text-surface-600">
+                Sign in to your workspace
+              </p>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-5">
               {error && (
                 <div
-                  className="animate-slide-up border-error/20 bg-error/5 text-error rounded-xl border px-4 py-3 text-sm"
+                  className="animate-slide-up rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error"
                   role="alert"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-error/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                      <span className="text-error text-xs font-bold">!</span>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-error/10">
+                      <span className="text-xs font-bold text-error">!</span>
                     </div>
                     <span>{error}</span>
                   </div>
@@ -81,7 +117,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                 >
                   Email
                 </label>
@@ -94,7 +130,6 @@ export default function LoginPage() {
                   autoComplete="email"
                   required
                   placeholder="name@company.com"
-                  className="bg-surface-100/80 dark:bg-surface-900/80"
                 />
               </div>
 
@@ -102,13 +137,13 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="password"
-                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                    className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                   >
                     Password
                   </label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-brand-500 hover:text-brand-400 text-xs font-medium transition-colors"
+                    className="text-xs font-medium text-brand-400 transition-colors hover:text-brand-300"
                   >
                     Forgot?
                   </Link>
@@ -123,12 +158,12 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     required
                     placeholder="••••••••"
-                    className="bg-surface-100/80 dark:bg-surface-900/80 pr-11"
+                    className="pr-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-600 transition-colors hover:text-surface-300"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -138,7 +173,8 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="h-11 w-full text-base shadow-sm"
+                size="xl"
+                className="btn-shine w-full text-base shadow-lg shadow-brand-500/20"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -155,17 +191,17 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="border-surface-300/30 w-full border-t" />
+                <span className="w-full border-t border-surface-600/30" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-surface-100 dark:bg-surface-900 text-surface-500 px-3 text-xs font-medium uppercase tracking-wider">
+                <span className="bg-surface-200/30 px-3 text-xs font-medium uppercase tracking-wider text-surface-600 backdrop-blur-sm">
                   Or continue with
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="h-11" disabled>
+              <Button variant="outline" size="xl" className="h-11" disabled>
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -186,7 +222,7 @@ export default function LoginPage() {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" className="h-11" disabled>
+              <Button variant="outline" size="xl" className="h-11" disabled>
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     d="M11.4 24H0V12.6c0-1.4.3-2.7.9-3.9A9.9 9.9 0 0 1 5.2 3.6c1.4-.7 2.8-1 4.3-1h.6L10 0h7.5c1.6 0 3.1.4 4.5 1.3 1.4.9 2.4 2.1 3 3.6.7 1.6.9 3.3.7 5-.2 1.7-.8 3.2-1.8 4.6-1 1.4-2.2 2.4-3.7 3.1-1.5.7-3.1 1-4.8 1L11.4 24zM10 7.5v8c2.2 0 4.1-1.8 4.1-4.1S12.2 7.5 10 7.5z"
@@ -197,11 +233,11 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            <p className="text-surface-500 mt-6 text-center text-sm">
+            <p className="mt-6 text-center text-sm text-surface-600">
               Don&apos;t have an account?{' '}
               <Link
                 href="/auth/register"
-                className="text-brand-500 hover:text-brand-400 inline-flex items-center gap-1 font-semibold transition-colors"
+                className="inline-flex items-center gap-1 font-semibold text-brand-400 transition-colors hover:text-brand-300"
               >
                 Sign up
                 <ArrowRight className="h-3 w-3" />
@@ -209,7 +245,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-600">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Secured with encryption</span>
           </div>

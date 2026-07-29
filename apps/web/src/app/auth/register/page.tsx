@@ -55,34 +55,65 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-bg flex min-h-screen items-center justify-center p-4">
-      <div className="relative w-full max-w-sm">
-        <div className="animate-float bg-brand-500/[0.03] pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full blur-3xl" />
-        <div
-          className="animate-float pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-purple-500/[0.03] blur-3xl"
-          style={{ animationDelay: '2s' }}
-        />
+      {/* Animated background orbs */}
+      <div className="auth-orb animate-float-slow" style={{
+        width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%)',
+        top: '-150px', left: '-100px',
+      }} />
+      <div className="auth-orb animate-float-reverse" style={{
+        width: '450px', height: '450px',
+        background: 'radial-gradient(circle, rgba(192,132,252,0.07), transparent 70%)',
+        bottom: '-150px', right: '-100px',
+        animationDelay: '2.5s',
+      }} />
+      <div className="auth-orb" style={{
+        width: '250px', height: '250px',
+        background: 'radial-gradient(circle, rgba(34,211,238,0.04), transparent 70%)',
+        top: '40%', left: '5%',
+        filter: 'blur(50px)',
+      }} />
 
+      {/* Noise texture */}
+      <div className="auth-noise" />
+
+      {/* Geometric shapes */}
+      <div className="auth-geo animate-rotate-slow" style={{
+        width: '80px', height: '80px', borderRadius: '40%',
+        top: '20%', right: '10%',
+        borderColor: 'rgba(167,139,250,0.06)',
+      }} />
+      <div className="auth-geo animate-drift" style={{
+        width: '50px', height: '50px',
+        borderRadius: '30% 60% 30% 60%',
+        bottom: '30%', left: '8%',
+        borderColor: 'rgba(99,102,241,0.05)',
+      }} />
+
+      <div className="relative w-full max-w-sm">
         <div className="animate-fade-in-up">
-          <div className="glass rounded-2xl p-8 shadow-lg">
+          <div className="gradient-border-card p-8">
             <div className="mb-8 text-center">
-              <div className="from-brand-400 to-brand-600 shadow-brand-500/30 mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
+              <div className="glow-ring mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-500/30">
                 <UserPlus className="h-7 w-7 text-white" />
               </div>
-              <h1 className="text-surface-900 mt-5 text-2xl font-bold tracking-tight">
+              <h1 className="mt-5 text-2xl font-bold tracking-tight text-surface-900">
                 Create an account
               </h1>
-              <p className="text-surface-500 mt-1.5 text-sm">Get started with your workspace</p>
+              <p className="mt-1.5 text-sm text-surface-600">
+                Get started with your workspace
+              </p>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
               {error && (
                 <div
-                  className="animate-slide-up border-error/20 bg-error/5 text-error rounded-xl border px-4 py-3 text-sm"
+                  className="animate-slide-up rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error"
                   role="alert"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-error/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                      <span className="text-error text-xs font-bold">!</span>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-error/10">
+                      <span className="text-xs font-bold text-error">!</span>
                     </div>
                     <span>{error}</span>
                   </div>
@@ -93,7 +124,7 @@ export default function RegisterPage() {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="firstName"
-                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                    className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                   >
                     First name
                   </label>
@@ -104,13 +135,12 @@ export default function RegisterPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="bg-surface-100/80 dark:bg-surface-900/80"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label
                     htmlFor="lastName"
-                    className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                    className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                   >
                     Last name
                   </label>
@@ -121,7 +151,6 @@ export default function RegisterPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
-                    className="bg-surface-100/80 dark:bg-surface-900/80"
                   />
                 </div>
               </div>
@@ -129,7 +158,7 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                 >
                   Email
                 </label>
@@ -142,14 +171,13 @@ export default function RegisterPage() {
                   autoComplete="email"
                   required
                   placeholder="name@company.com"
-                  className="bg-surface-100/80 dark:bg-surface-900/80"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="password"
-                  className="text-surface-500 dark:text-surface-400 text-xs font-semibold uppercase tracking-wider"
+                  className="text-xs font-semibold uppercase tracking-wider text-surface-600"
                 >
                   Password
                 </label>
@@ -164,23 +192,24 @@ export default function RegisterPage() {
                     required
                     minLength={8}
                     placeholder="Min. 8 characters"
-                    className="bg-surface-100/80 dark:bg-surface-900/80 pr-11"
+                    className="pr-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-600 transition-colors hover:text-surface-300"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-surface-500 text-[11px]">Must be at least 8 characters</p>
+                <p className="text-[11px] text-surface-600">Must be at least 8 characters</p>
               </div>
 
               <Button
                 type="submit"
-                className="h-11 w-full text-base shadow-sm"
+                size="xl"
+                className="btn-shine w-full text-base shadow-lg shadow-brand-500/20"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -194,11 +223,11 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <p className="text-surface-500 mt-6 text-center text-sm">
+            <p className="mt-6 text-center text-sm text-surface-600">
               Already have an account?{' '}
               <Link
                 href="/auth/login"
-                className="text-brand-500 hover:text-brand-400 inline-flex items-center gap-1 font-semibold transition-colors"
+                className="inline-flex items-center gap-1 font-semibold text-brand-400 transition-colors hover:text-brand-300"
               >
                 Sign in
                 <ArrowRight className="h-3 w-3" />
@@ -206,7 +235,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <div className="text-surface-500 mt-6 flex items-center justify-center gap-2 text-xs">
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-surface-600">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Your data is encrypted and secure</span>
           </div>

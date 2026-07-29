@@ -60,7 +60,7 @@ export function MobileBottomNav() {
 
   return (
     <motion.nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-300/20 bg-surface-50/95 backdrop-blur-xl md:hidden overflow-visible"        style={{
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 backdrop-blur-xl md:hidden overflow-visible"        style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         y: elementSpring,
       }}

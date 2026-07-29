@@ -674,7 +674,7 @@ export default function AutomationPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       className={cn(
-                        'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm',
+                        'neon-card overflow-hidden rounded-2xl transition-all duration-200',
                         !rule.enabled && 'opacity-60',
                       )}
                     >
@@ -816,7 +816,7 @@ export default function AutomationPage() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border">
+            <div className="neon-card relative overflow-hidden rounded-2xl">
               <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-surface-300 to-surface-400 opacity-40" />
               <div className="p-4">
                 {logs.length === 0 ? (
