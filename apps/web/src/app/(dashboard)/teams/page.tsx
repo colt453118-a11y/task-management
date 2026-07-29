@@ -180,7 +180,7 @@ export default function TeamsPage() {
                   whileHover={{ y: -3 }}
                   className="neon-card group relative overflow-hidden rounded-2xl p-5"
                 >
-                  <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+                  <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
                   <div className="mb-2 flex items-start justify-between">
                     <h3 className="text-surface-900 truncate font-semibold">{dept.name}</h3>
                     <Badge variant={dept.isActive ? 'success' : 'default'} size="sm">
@@ -215,7 +215,7 @@ export default function TeamsPage() {
                   whileHover={{ y: -3 }}
                   className="neon-card group relative overflow-hidden rounded-2xl p-5"
                 >
-                  <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+                  <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
                   <div className="mb-2 flex items-start justify-between">
                     <h3 className="text-surface-900 truncate font-semibold">{team.name}</h3>
                     <Badge variant={team.isActive ? 'success' : 'default'} size="sm">
