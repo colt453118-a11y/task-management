@@ -1,4 +1,6 @@
-CREATE TABLE "departments" (
+CREATE EXTENSION IF NOT EXISTS citext;
+
+--> statement-breakpointCREATE TABLE "departments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
 	"name" varchar(200) NOT NULL,
