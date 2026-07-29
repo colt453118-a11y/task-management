@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  NODE_VERSION: "22"
+
 jobs:
   test:
     timeout-minutes: 45
@@ -17,6 +20,13 @@ jobs:
           - chromium
           - firefox
           - Mobile Chrome
+        include:
+          - project: chromium
+            install: chromium
+          - project: firefox
+            install: firefox
+          - project: Mobile Chrome
+            install: chromium
 
     services:
       postgres:
@@ -49,7 +59,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -72,13 +82,12 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('apps/web/pnpm-lock.yaml', 'apps/web/package.json') }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright browser
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
-        working-directory: apps/web
+        run: pnpm --filter @workmanagement/web exec playwright install --with-deps ${{ matrix.install }}
 
       - name: Run E2E tests (${{ matrix.project }})
-        run: pnpm --filter @workmanagement/web test:e2e -- --project='${{ matrix.project }}'
+        run: pnpm --filter @workmanagement/web exec playwright test --project='${{ matrix.project }}' --reporter=list
         env:
           CI: true
           DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
