@@ -9,6 +9,8 @@ const publicPaths = [
   '/api/auth',
   '/api/health',
   '/api/email/preview',
+  '/api/cron',
+  '/api/automation',
 ];
 
 /**

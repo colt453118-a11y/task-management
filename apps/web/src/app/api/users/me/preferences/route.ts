@@ -64,6 +64,16 @@ const NotificationPreferencesSchema = z.object({
       frequency: z.enum(['daily', 'weekly', 'never']).default('daily'),
     })
     .optional(),
+  /**
+   * Sound/vibration media feedback preferences for notifications.
+   * Synced to localStorage on the client for instant access during SSE.
+   */
+  media: z
+    .object({
+      soundEnabled: z.boolean().default(true),
+      hapticEnabled: z.boolean().default(true),
+    })
+    .optional(),
 });
 
 export const PATCH = withAuth(

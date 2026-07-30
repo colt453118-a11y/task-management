@@ -83,6 +83,7 @@ export const ACTION_LABELS: Record<string, string> = {
   add_label: 'Add Label',
   change_priority: 'Change Priority',
   escalate: 'Escalate',
+  send_email: 'Send Email',
 };
 
 export const ACTION_ICONS: Record<string, string> = {
@@ -92,6 +93,7 @@ export const ACTION_ICONS: Record<string, string> = {
   add_label: 'Tag',
   change_priority: 'Flag',
   escalate: 'AlertTriangle',
+  send_email: 'Mail',
 };
 
 // ─── Condition Operators (for UI) ───────────────────────────

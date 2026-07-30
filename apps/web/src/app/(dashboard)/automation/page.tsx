@@ -25,6 +25,7 @@ import {
   History,
   Sparkles,
   Clock,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -88,6 +89,7 @@ const TRIGGER_DEFINITIONS: Record<string, { label: string; description: string; 
 
 const ACTION_OPTIONS = [
   { value: 'notify', label: 'Send Notification', description: 'Notify one or more users', icon: Bell },
+  { value: 'send_email', label: 'Send Email', description: 'Send an email to specified recipients', icon: Mail },
   { value: 'change_status', label: 'Change Status', description: 'Update the task status', icon: ArrowRightLeft },
   { value: 'assign', label: 'Assign To', description: 'Assign the task to a user', icon: UserPlus },
   { value: 'add_label', label: 'Add Label', description: 'Add a label to the task', icon: Tag },
@@ -133,6 +135,7 @@ const TRIGGER_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 
 const ACTION_ICONS_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   notify: Bell,
+  send_email: Mail,
   change_status: ArrowRightLeft,
   assign: UserPlus,
   add_label: Tag,
@@ -157,6 +160,7 @@ function getActionIcon(type: string) {
 function getActionLabel(type: string): string {
   const actions: Record<string, string> = {
     notify: 'Notify',
+    send_email: 'Send Email',
     change_status: 'Change Status',
     assign: 'Assign',
     add_label: 'Add Label',
@@ -313,6 +317,59 @@ function ActionConfigEditor({
               />
             </div>
             <p className="text-surface-500 text-[10px]">Escalation also sets priority to critical.</p>
+          </div>
+        );
+
+      case 'send_email':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-surface-500 mb-1 block text-[10px] font-semibold uppercase tracking-wider">
+                To (email addresses, comma-separated)
+              </label>
+              <input
+                type="text"
+                value={((config.to as string[]) ?? []).join(', ')}
+                onChange={(e) =>
+                  onChange({
+                    ...action,
+                    config: {
+                      ...config,
+                      to: e.target.value
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    },
+                  })
+                }
+                placeholder="user@example.com, manager@example.com"
+                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              />
+            </div>
+            <div>
+              <label className="text-surface-500 mb-1 block text-[10px] font-semibold uppercase tracking-wider">
+                Subject
+              </label>
+              <input
+                type="text"
+                value={(config.subject as string) ?? ''}
+                onChange={(e) => onChange({ ...action, config: { ...config, subject: e.target.value } })}
+                placeholder="e.g., Task requires immediate attention"
+                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              />
+            </div>
+            <div>
+              <label className="text-surface-500 mb-1 block text-[10px] font-semibold uppercase tracking-wider">
+                Message
+              </label>
+              <textarea
+                value={(config.message as string) ?? ''}
+                onChange={(e) => onChange({ ...action, config: { ...config, message: e.target.value } })}
+                placeholder="Write the email body content here..."
+                rows={3}
+                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              />
+            </div>
           </div>
         );
 
@@ -497,6 +554,7 @@ export default function AutomationPage() {
   const addAction = (type: string) => {
     const defaults: Record<string, Record<string, unknown>> = {
       notify: { userIds: [], message: '' },
+      send_email: { to: [], userIds: [], subject: '', message: '' },
       change_status: { status: '' },
       assign: { userId: '' },
       add_label: { label: '' },

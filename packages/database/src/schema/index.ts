@@ -302,6 +302,7 @@ export * from './time-corrections';
 export * from './webhooks';
 export * from './automation';
 export * from './saved-searches';
+export * from './leave';
 
 // ─── Import domain tables for relations ──────────────────────
 

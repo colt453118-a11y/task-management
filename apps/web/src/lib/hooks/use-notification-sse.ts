@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useNotificationStore } from '@/stores/notification-store';
 import type { Notification } from '@/stores/notification-store';
+import { triggerNotificationFeedback } from '@/lib/notification-media';
 
 /**
  * Maximum consecutive failures before we give up on SSE reconnection.
@@ -72,6 +73,10 @@ export function useNotificationSSE() {
         const notifications: Notification[] = data.notifications ?? [];
         for (const notif of notifications) {
           addOptimistic(notif);
+        }
+        // Trigger sound + haptic feedback for new notifications
+        if (notifications.length > 0) {
+          triggerNotificationFeedback();
         }
       } catch {
         // Ignore malformed events

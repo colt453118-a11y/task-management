@@ -25,10 +25,12 @@ import {
   Search as SearchIcon,
   Milestone,
   Layers,
+  CalendarDays,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { motion, AnimatePresence, useTransform } from 'framer-motion';
 import { useScrollShadow } from '@/lib/hooks/use-scroll-shadow';
+import { useNotificationStore } from '@/stores/notification-store';
 
 const navItems = [
   { label: 'Search', href: '/search', icon: SearchIcon },
@@ -41,9 +43,11 @@ const navItems = [
   { label: 'People', href: '/users', icon: UserRoundCog },
   { label: 'Time Tracking', href: '/timer', icon: Clock },
   { label: 'Corrections', href: '/corrections', icon: FileEdit },
+  { label: 'Time Off', href: '/leave', icon: CalendarDays },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Analytics', href: '/analytics', icon: TrendingUp },
   { label: 'Calendar', href: '/calendar', icon: Calendar },
+  { label: 'Gantt Chart', href: '/gantt', icon: CalendarDays },
   { label: 'Notifications', href: '/notifications', icon: Bell },
   { label: 'Automation', href: '/automation', icon: Bot },
   { label: 'Settings', href: '/settings', icon: Settings },
@@ -96,6 +100,7 @@ export function Sidebar() {
   const [isMobile, setIsMobile] = useState(true); // Assume mobile until proven otherwise — prevents flash
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   useEffect(() => {
     const check = () => startTransition(() => setIsMobile(window.innerWidth < 768));
@@ -232,6 +237,12 @@ export function Sidebar() {
                     <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
                       <span className="bg-brand-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
                       <span className="bg-brand-500 relative inline-flex h-1.5 w-1.5 rounded-full" />
+                    </span>
+                  )}
+                  {/* Unread notification badge on the Notifications icon */}
+                  {item.href === '/notifications' && unreadCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 dark:ring-surface-900">
+                      {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </div>

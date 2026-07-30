@@ -46,6 +46,7 @@ const nextConfig: NextConfig = {
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
+            "report-uri /api/csp-violation",
           ].join('; '),
         },
         {

@@ -33,10 +33,17 @@ import {
   Save,
   Sparkles,
   Webhook,
+  Volume2,
+  Play,
 } from 'lucide-react';
 
 import { AISettings } from '@/components/settings/ai-settings';
 import { WebhookSettings } from '@/components/settings/webhook-settings';
+import { EODScheduleSettings } from '@/components/settings/eod-schedule-settings';
+import { setMediaPrefs } from '@/lib/notification-media';
+import { useToast } from '@/hooks/use-toast';
+import { playNotificationChime, isNotificationSoundSupported } from '@/lib/notification-sound';
+import { triggerHaptic } from '@/lib/haptics';
 
 type Tab = 'general' | 'roles' | 'ai' | 'security' | 'notifications' | 'webhooks';
 type Organization = {
@@ -125,6 +132,15 @@ type NotifPreferences = {
     enabled?: boolean;
     frequency?: 'daily' | 'weekly' | 'never';
   };
+  /**
+   * Sound/vibration media feedback preferences.
+   * These are also synced to localStorage so the SSE handler
+   * can read them instantly without an API roundtrip.
+   */
+  media?: {
+    soundEnabled?: boolean;
+    hapticEnabled?: boolean;
+  };
 };
 
 const DEFAULT_NOTIF_PREFS: NotifPreferences = {
@@ -143,6 +159,7 @@ const DEFAULT_NOTIF_PREFS: NotifPreferences = {
   },
   typeChannels: {},
   digest: { enabled: false, frequency: 'daily' },
+  media: { soundEnabled: true, hapticEnabled: true },
 };
 
 const notifTypeMeta: Record<string, { label: string; description: string; icon: React.ReactNode }> = {
@@ -246,6 +263,7 @@ function SectionCard({ gradient, children, className = '' }: { gradient: string;
 // ═══════════════════════════════════════════════════════════════
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('general');
   const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
@@ -358,15 +376,28 @@ export default function SettingsPage() {
         try {
           const res = await fetch('/api/users/me/preferences');
           if (res.ok) {
-            const data = await res.json();
-            if (data.preferences && Object.keys(data.preferences).length > 0) {
-              setNotifPrefs((prev) => ({
-                ...prev,
-                channels: { ...(prev.channels ?? {}), ...(data.preferences.channels ?? {}) },
-                types: { ...(prev.types ?? {}), ...(data.preferences.types ?? {}) },
-                typeChannels: { ...(prev.typeChannels ?? {}), ...(data.preferences.typeChannels ?? {}) },
-                digest: { ...(prev.digest ?? {}), ...(data.preferences.digest ?? {}) },
-              }));
+            const data = await res.json();              if (data.preferences && Object.keys(data.preferences).length > 0) {
+              setNotifPrefs((prev) => {
+                const updated = {
+                  ...prev,
+                  channels: { ...(prev.channels ?? {}), ...(data.preferences.channels ?? {}) },
+                  types: { ...(prev.types ?? {}), ...(data.preferences.types ?? {}) },
+                  typeChannels: { ...(prev.typeChannels ?? {}), ...(data.preferences.typeChannels ?? {}) },
+                  digest: { ...(prev.digest ?? {}), ...(data.preferences.digest ?? {}) },
+                  media: { ...(prev.media ?? {}), ...(data.preferences.media ?? {}) },
+                };
+                // Sync media prefs to localStorage only if the API actually returned them
+                const apiMedia = data.preferences.media as
+                  | { soundEnabled?: boolean; hapticEnabled?: boolean }
+                  | undefined;
+                if (apiMedia) {
+                  setMediaPrefs({
+                    soundEnabled: apiMedia.soundEnabled ?? true,
+                    hapticEnabled: apiMedia.hapticEnabled ?? true,
+                  });
+                }
+                return updated;
+              });
             }
           }
         } catch {
@@ -389,6 +420,13 @@ export default function SettingsPage() {
         body: JSON.stringify(notifPrefs),
       });
       if (!res.ok) throw new Error('Failed to save');
+      // Sync media prefs to localStorage for the SSE hook
+      if (notifPrefs.media) {
+        setMediaPrefs({
+          soundEnabled: notifPrefs.media.soundEnabled ?? true,
+          hapticEnabled: notifPrefs.media.hapticEnabled ?? true,
+        });
+      }
       setNotifPrefsSaved(true);
       setTimeout(() => setNotifPrefsSaved(false), 2000);
     } catch {
@@ -615,6 +653,11 @@ export default function SettingsPage() {
                 ))}
                 <p className="text-surface-500 text-xs pt-1">General settings cannot be edited yet.</p>
               </div>
+            </SectionCard>
+
+            {/* EOD Report Schedule */}
+            <SectionCard gradient={CARD_GRADIENTS.general ?? 'from-blue-500 to-blue-400'} className="mt-6">
+              <EODScheduleSettings />
             </SectionCard>
           </motion.div>
         )}
@@ -918,6 +961,91 @@ export default function SettingsPage() {
                       />
                     </motion.div>
                   ))}
+
+                  {/* Sound & Haptic feedback toggles */}
+                  <div className="border-surface-300/20 dark:border-surface-700/30 border-t pt-3 mt-3">
+                    <p className="text-surface-500 mb-2 text-[10px] font-semibold uppercase tracking-wider">
+                      Notification Feedback
+                    </p>
+                    <div className="space-y-2">
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Volume2 className="text-surface-500 h-4 w-4" />
+                          <div>
+                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">Sound</p>
+                            <p className="text-surface-500 text-xs">Play a chime on new notifications</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              playNotificationChime();
+                              toast({
+                                title: '🔔 Preview chime',
+                                description: 'Notification chime is playing...',
+                              });
+                            }}
+                            disabled={!(notifPrefs.media?.soundEnabled ?? true) || !isNotificationSoundSupported()}
+                            title="Preview chime"
+                            aria-label="Preview notification chime"
+                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-200 ${
+                              (notifPrefs.media?.soundEnabled ?? true) && isNotificationSoundSupported()
+                                ? 'text-brand-500 hover:bg-brand-500/10 active:scale-90'
+                                : 'text-surface-400 cursor-not-allowed opacity-40'
+                            }`}
+                          >
+                            <Play className="h-3.5 w-3.5" />
+                          </button>
+                          <Toggle
+                            enabled={notifPrefs.media?.soundEnabled ?? true}
+                            onChange={(v) => setNotifPrefs((prev) => ({ ...prev, media: { ...(prev.media ?? {}), soundEnabled: v } }))}
+                          />
+                        </div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Smartphone className="text-surface-500 h-4 w-4" />
+                          <div>
+                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">Vibration</p>
+                            <p className="text-surface-500 text-xs">Vibrate on new notifications (mobile only)</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              triggerHaptic('light');
+                              toast({
+                                title: '📳 Preview vibration',
+                                description: 'Vibration feedback triggered (mobile devices only).',
+                              });
+                            }}
+                            disabled={!(notifPrefs.media?.hapticEnabled ?? true)}
+                            title="Preview vibration"
+                            aria-label="Preview vibration feedback"
+                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-200 ${
+                              (notifPrefs.media?.hapticEnabled ?? true)
+                                ? 'text-brand-500 hover:bg-brand-500/10 active:scale-90'
+                                : 'text-surface-400 cursor-not-allowed opacity-40'
+                            }`}
+                          >
+                            <Play className="h-3.5 w-3.5" />
+                          </button>
+                          <Toggle
+                            enabled={notifPrefs.media?.hapticEnabled ?? true}
+                            onChange={(v) => setNotifPrefs((prev) => ({ ...prev, media: { ...(prev.media ?? {}), hapticEnabled: v } }))}
+                          />
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </SectionCard>

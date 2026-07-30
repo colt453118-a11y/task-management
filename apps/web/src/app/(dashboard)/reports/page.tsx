@@ -25,6 +25,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -189,6 +190,8 @@ export default function ReportsPage() {
   const [timeReportLoading, setTimeReportLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'quarter'>('week');
   const [activeTab, setActiveTab] = useState<ReportTab>('overview');
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
+  const [generatingAiSummaries, setGeneratingAiSummaries] = useState<Set<string>>(new Set());
 
   // ── Fetch overview data ──────────────────────────────────
   useEffect(() => {
@@ -311,6 +314,47 @@ export default function ReportsPage() {
       });
     } finally {
       setGenerating(false);
+    }
+  }
+
+  // ── AI Summary ──────────────────────────────────────────
+  async function handleGenerateAiSummary(snapshotId: string) {
+    setGeneratingAiSummaries((prev) => {
+      const next = new Set(prev);
+      next.add(snapshotId);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/reports/snapshots/${snapshotId}/ai-summary`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message ?? 'Failed to generate AI summary');
+      }
+      const data = await res.json();
+      // Update the snapshot in local state with the new AI summary
+      setRecentSnapshots((prev) =>
+        prev.map((s) =>
+          s.id === snapshotId ? { ...s, summary: data.summary as Record<string, unknown> } : s,
+        ),
+      );
+      toast({
+        title: 'AI summary generated',
+        description: 'The AI-powered summary has been saved to this snapshot.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Failed to generate AI summary',
+        description: err instanceof Error ? err.message : 'An error occurred',
+        variant: 'error',
+      });
+    } finally {
+      setGeneratingAiSummaries((prev) => {
+        const next = new Set(prev);
+        next.delete(snapshotId);
+        return next;
+      });
     }
   }
 
@@ -569,50 +613,118 @@ export default function ReportsPage() {
                       Recent Report Snapshots
                     </h3>
                     <div className="space-y-2">
-                      {recentSnapshots.map((snap, i) => (
+                      {recentSnapshots.map((snap, i) => {
+                      const summary = snap.summary as Record<string, unknown> | null;
+                      const aiSummary = summary?.aiSummary as string | undefined | null;
+                      const isExpanded = expandedSummaries.has(snap.id);
+                      const summaryText = aiSummary ?? '';
+                      const isLongSummary = summaryText.length > 140;
+                      const isGenerating = generatingAiSummaries.has(snap.id);
+                      const hasSummaryData = summary && typeof summary.totalTasks === 'number';
+
+                      return (
                         <motion.div
                           key={snap.id}
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl p-3 text-sm transition-all duration-200"
+                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 rounded-xl p-3 text-sm transition-all duration-200"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 items-center justify-center rounded-lg">
-                              <Camera className="h-3.5 w-3.5" />
-                            </div>
-                            <div>
-                              <span className="text-surface-900 dark:text-surface-100 font-medium">
-                                {snap.label ?? `Snapshot — ${snap.snapshotDate}`}
-                              </span>
-                              <div className="text-surface-500 mt-0.5 flex items-center gap-2">
-                                <span className="text-[11px]">
-                                  {new Date(snap.createdAt).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                  })}
-                                </span>
-                                <span className="text-surface-300 dark:text-surface-600">·</span>
-                                <Badge variant="default" size="sm" className="text-[9px]">
-                                  {snap.snapshotType.toUpperCase()}
-                                </Badge>
+                          <div className="space-y-2">
+                            <Link
+                              href={`/reports/snapshots/${snap.id}`}
+                              className="flex items-start justify-between group"
+                            >
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                                  <Camera className="h-3.5 w-3.5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-surface-900 dark:text-surface-100 font-medium group-hover:text-brand-500 transition-colors">
+                                    {snap.label ?? `Snapshot — ${snap.snapshotDate}`}
+                                  </span>
+                                  <div className="text-surface-500 mt-0.5 flex items-center gap-2">
+                                    <span className="text-[11px]">
+                                      {new Date(snap.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                      })}
+                                    </span>
+                                    <span className="text-surface-300 dark:text-surface-600">·</span>
+                                    <Badge variant="default" size="sm" className="text-[9px]">
+                                      {snap.snapshotType.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+
+                              {summary && (
+                                <div className="flex shrink-0 items-center gap-3 ml-3">
+                                  <span className="text-surface-500 text-xs whitespace-nowrap">
+                                    <span className="font-medium text-surface-700 dark:text-surface-300">
+                                      {String(summary.totalTasks ?? '—')}
+                                    </span>{' '}
+                                    tasks
+                                  </span>
+                                </div>
+                              )}
+                            </Link>
+
+                            {/* AI Summary — present */}
+                            {aiSummary && (
+                              <div className="pl-11">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Sparkles className="h-3 w-3 text-amber-400" />
+                                  <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-500">
+                                    AI Summary
+                                  </span>
+                                </div>
+                                <p className="text-surface-600 dark:text-surface-400 text-xs leading-relaxed">
+                                  {isLongSummary && !isExpanded
+                                    ? summaryText.slice(0, 140) + '…'
+                                    : summaryText}
+                                </p>
+                                {isLongSummary && (
+                                  <button
+                                    onClick={() => {
+                                      setExpandedSummaries((prev) => {
+                                        const next = new Set(prev);
+                                        if (isExpanded) next.delete(snap.id);
+                                        else next.add(snap.id);
+                                        return next;
+                                      });
+                                    }}
+                                    className="text-amber-500 hover:text-amber-400 mt-0.5 text-[10px] font-medium transition-colors"
+                                  >
+                                    {isExpanded ? 'Show less' : 'Show more'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Generate AI Summary — prompt */}
+                            {!aiSummary && hasSummaryData && (
+                              <div className="pl-11 flex items-center gap-2">
+                                <button
+                                  onClick={() => handleGenerateAiSummary(snap.id)}
+                                  disabled={isGenerating}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 text-[10px] font-medium text-amber-500 transition-all duration-200 hover:bg-amber-500/10 hover:border-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isGenerating ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="h-3 w-3" />
+                                  )}
+                                  {isGenerating ? 'Generating...' : 'Generate AI Summary'}
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          {snap.summary && (
-                            <div className="flex shrink-0 items-center gap-3">
-                              <span className="text-surface-500 text-xs">
-                                <span className="font-medium text-surface-700 dark:text-surface-300">
-                                  {String((snap.summary as Record<string, unknown>).totalTasks ?? '—')}
-                                </span>{' '}
-                                tasks
-                              </span>
-                            </div>
-                          )}
                         </motion.div>
-                      ))}
+                      );
+                    })}
                     </div>
                   </CardContent>
                 </Card>

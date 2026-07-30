@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     port: 3000,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 60_000,
     env: {
       DATABASE_URL: 'postgres://dev:devpassword@localhost:5432/workmanagement',

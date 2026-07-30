@@ -34,6 +34,7 @@ const TYPE_TO_PREF_KEY: Record<string, string> = {
   'task.due_soon': 'task_due_soon',
   'task.overdue': 'task_overdue',
   'task.escalated': 'task_escalated',
+  'report.eod_ready': 'report_eod_ready',
 };
 
 /**
