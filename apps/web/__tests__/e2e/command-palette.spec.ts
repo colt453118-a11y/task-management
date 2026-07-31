@@ -1,7 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mockDashboardApis, MOCK_DASHBOARD_USERS } from './helpers/dashboard-mocks';
 import { mockSearchApi } from './helpers/search-mocks';
-import { setSessionCookie } from './helpers/task-detail-mocks';
+import {
+  TASK_ID,
+  MOCK_TASK,
+  setSessionCookie,
+  mockPageApis,
+} from './helpers/task-detail-mocks';
 
 // ═══════════════════════════════════════════════════════════════
 //  Setup
@@ -113,6 +118,240 @@ test.describe('Command Palette (⌘K)', () => {
     ).toBeAttached();
   });
 
+  test('quick-create form submits and navigates to the new task page', async ({ page }) => {
+    await mockDashboardApis(page);
+    // The task detail page renders after navigation — mock its APIs. Override
+    // the detail GET (registered after mockPageApis, so last-wins) to return a
+    // title unique to this test: MOCK_TASK.title would collide with
+    // MOCK_DASHBOARD_TASKS[0].title during the dashboard→detail transition,
+    // which is a strict-mode ambiguity risk for getByText.
+    await mockPageApis(page);
+    await page.route(`**/api/tasks/${TASK_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { ...MOCK_TASK, title: 'Ship the palette' } }),
+      });
+    });
+    // The create-task dialog fetches users for the assignee dropdown on open
+    await page.route('**/api/users?limit=50', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ users: MOCK_DASHBOARD_USERS }),
+      });
+    });
+
+    // Capture the POST payload and return a created task whose id matches
+    // mockPageApis (TASK_ID) so the detail page renders after navigation.
+    let postedBody: Record<string, unknown> | null = null;
+    await page.route('**/api/tasks', async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      postedBody = JSON.parse(route.request().postData() ?? '{}');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { id: TASK_ID } }),
+      });
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Open palette → run the New Task action → dialog opens
+    await openPalette(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /new task/i })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Fill the form
+    await page.getByPlaceholder(/what needs to be done/i).fill('Ship the palette');
+    await page
+      .getByPlaceholder(/add a description/i)
+      .fill('Created from the command palette quick-create');
+    await page
+      .getByRole('combobox')
+      .filter({ has: page.getByRole('option', { name: 'High' }) })
+      .selectOption('high');
+    await page
+      .getByRole('combobox')
+      .filter({ has: page.getByRole('option', { name: /alice johnson/i }) })
+      .selectOption('user-1');
+
+    // Submit
+    await page.getByRole('button', { name: /^create$/i }).click();
+
+    // The POST carried the filled form data
+    await expect.poll(() => postedBody).toMatchObject({
+      title: 'Ship the palette',
+      description: 'Created from the command palette quick-create',
+      priority: 'high',
+      assignedTo: 'user-1',
+    });
+
+    // Dialog closed and we navigated to the new task's detail page
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).not.toBeVisible();
+    // Generous timeout: on a cold firefox CI runner Next.js compiles the
+    // target route on first navigation, which can exceed the 5s default.
+    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('quick-create shows an inline error and stays open when POST /api/tasks fails', async ({ page }) => {
+    await mockDashboardApis(page);
+    // The create-task dialog fetches users for the assignee dropdown on open
+    await page.route('**/api/users?limit=50', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ users: MOCK_DASHBOARD_USERS }),
+      });
+    });
+
+    // POST /api/tasks fails with 500 → the dialog renders the API error inline
+    await page.route('**/api/tasks', async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { message: 'Mock server error creating task' },
+        }),
+      });
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Open palette → run the New Task action → dialog opens
+    await openPalette(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /new task/i })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Fill the title and submit
+    await page.getByPlaceholder(/what needs to be done/i).fill('This will fail');
+    await page.getByRole('button', { name: /^create$/i }).click();
+
+    // The API error message renders inline in the dialog
+    await expect(page.getByText('Mock server error creating task')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // Dialog stays open — no navigation happened
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+
+    // The typed title is retained so the user can retry
+    await expect(
+      page.getByPlaceholder(/what needs to be done/i),
+    ).toHaveValue('This will fail');
+  });
+
+  test('quick-create form submits with Enter (header: "Press Enter to submit")', async ({ page }) => {
+    await mockDashboardApis(page);
+    // The task detail page renders after navigation — mock its APIs. Override
+    // the detail GET (registered after mockPageApis, so last-wins) to return a
+    // title unique to this test: MOCK_TASK.title would collide with
+    // MOCK_DASHBOARD_TASKS[0].title during the dashboard→detail transition,
+    // which is a strict-mode ambiguity risk for getByText.
+    await mockPageApis(page);
+    await page.route(`**/api/tasks/${TASK_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { ...MOCK_TASK, title: 'Created with Enter' } }),
+      });
+    });
+    // The create-task dialog fetches users for the assignee dropdown on open
+    await page.route('**/api/users?limit=50', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ users: MOCK_DASHBOARD_USERS }),
+      });
+    });
+
+    // Capture the POST payload and return a created task whose id matches
+    // mockPageApis (TASK_ID) so the detail page renders after navigation.
+    let postedBody: Record<string, unknown> | null = null;
+    await page.route('**/api/tasks', async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      postedBody = JSON.parse(route.request().postData() ?? '{}');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { id: TASK_ID } }),
+      });
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Open palette → run the New Task action → dialog opens
+    await openPalette(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /new task/i })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Fill the title and submit with Enter — the header says "Press Enter to
+    // submit", so the native form submit fires (no Create click needed)
+    const titleInput = page.getByPlaceholder(/what needs to be done/i);
+    await titleInput.fill('Created with Enter');
+    await titleInput.press('Enter');
+
+    // The POST carried the filled title
+    await expect.poll(() => postedBody).toMatchObject({
+      title: 'Created with Enter',
+    });
+
+    // Dialog closed and we navigated to the new task's detail page
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).not.toBeVisible();
+    // Generous timeout: on a cold firefox CI runner Next.js compiles the
+    // target route on first navigation, which can exceed the 5s default.
+    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Created with Enter')).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
   test('opens via the topbar search button (mobile path, no keyboard)', async ({ page }) => {
     await mockDashboardApis(page);
     await mockSearchApi(page);
@@ -160,7 +399,7 @@ test.describe('Command Palette (⌘K)', () => {
 
     // Enter runs the selected command → navigates to /tasks
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/tasks/);
+    await expect(page).toHaveURL(/\/tasks/, { timeout: 15_000 });
   });
 
   test('closes on Escape and resets query + results when reopened', async ({ page }) => {
@@ -195,6 +434,6 @@ test.describe('Command Palette (⌘K)', () => {
     // Selection reset — Enter runs the first command (Search → /search)
     await reopenedInput.focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/search/);
+    await expect(page).toHaveURL(/\/search/, { timeout: 15_000 });
   });
 });
