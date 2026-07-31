@@ -352,6 +352,83 @@ test.describe('Command Palette (⌘K)', () => {
     });
   });
 
+  test('quick-create opens via ⌘T shortcut and submits', async ({ page }) => {
+    await mockDashboardApis(page);
+    // The task detail page renders after navigation — mock its APIs. Override
+    // the detail GET (registered after mockPageApis, so last-wins) to return a
+    // title unique to this test: MOCK_TASK.title would collide with
+    // MOCK_DASHBOARD_TASKS[0].title during the dashboard→detail transition,
+    // which is a strict-mode ambiguity risk for getByText.
+    await mockPageApis(page);
+    await page.route(`**/api/tasks/${TASK_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { ...MOCK_TASK, title: 'Created via Cmd-T' } }),
+      });
+    });
+    // The create-task dialog fetches users for the assignee dropdown on open
+    await page.route('**/api/users?limit=50', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ users: MOCK_DASHBOARD_USERS }),
+      });
+    });
+
+    // Capture the POST payload and return a created task whose id matches
+    // mockPageApis (TASK_ID) so the detail page renders after navigation.
+    let postedBody: Record<string, unknown> | null = null;
+    await page.route('**/api/tasks', async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      postedBody = JSON.parse(route.request().postData() ?? '{}');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ task: { id: TASK_ID } }),
+      });
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // ⌘T (Ctrl+T on Linux/Windows) opens the quick-create dialog directly —
+    // the shortcuts-provider dispatches open-quick-create and the topbar
+    // handles the keydown itself; no palette involved.
+    await page.keyboard.press('Control+KeyT');
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Fill the title and submit with Enter
+    const titleInput = page.getByPlaceholder(/what needs to be done/i);
+    await titleInput.fill('Created via Cmd-T');
+    await titleInput.press('Enter');
+
+    // The POST carried the filled title
+    await expect.poll(() => postedBody).toMatchObject({
+      title: 'Created via Cmd-T',
+    });
+
+    // Dialog closed and we navigated to the new task's detail page
+    await expect(
+      page.getByRole('heading', { name: /quick create task/i }),
+    ).not.toBeVisible();
+    // Generous timeout: on a cold firefox CI runner Next.js compiles the
+    // target route on first navigation, which can exceed the 5s default.
+    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Created via Cmd-T')).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
   test('opens via the topbar search button (mobile path, no keyboard)', async ({ page }) => {
     await mockDashboardApis(page);
     await mockSearchApi(page);
