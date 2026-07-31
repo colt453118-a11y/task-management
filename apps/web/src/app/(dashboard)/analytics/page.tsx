@@ -131,7 +131,7 @@ function BurndownTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/95 dark:bg-surface-900/95 rounded-xl border p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -154,7 +154,7 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/95 dark:bg-surface-900/95 rounded-xl border p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -187,7 +187,7 @@ function TrendCard({
     <motion.div
       variants={itemVariants}
       className={cn(
-        'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:shadow-sm',
+        'neon-card relative overflow-hidden rounded-2xl p-4 transition-all duration-200',
       )}
     >
       <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r opacity-60" style={{ background: `linear-gradient(to right, ${color}, ${color}88)` }} />
@@ -555,7 +555,7 @@ export default function AnalyticsPage() {
                     { label: 'Blocked', value: data.trends.blockedTasks, color: '#f87171' },
                     { label: 'Overdue', value: data.trends.overdueTasks, color: '#ef4444' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-100/50 dark:bg-surface-800/30 px-3 py-2">
+                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-200/60 dark:bg-surface-700/30 px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
                         <span className="text-surface-600 dark:text-surface-400 text-xs">{item.label}</span>

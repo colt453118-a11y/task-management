@@ -88,6 +88,8 @@ export interface ApiResponse<T> {
 
 // ─── Notification ────────────────────────────────────────────
 
+export type { LeaveStatus, LeaveType, LeaveBalance, LeaveBalanceSummary, LeaveRequest } from './leave';
+
 export type NotificationChannel = 'in_app' | 'email' | 'push' | 'slack';
 
 export type NotificationType =

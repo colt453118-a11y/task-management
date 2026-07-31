@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
+import os from 'os';
 import fs from 'fs';
 
 const PREVIEW_URL = '/api/email/preview/task-assigned';
@@ -10,7 +11,13 @@ const VIEWPORTS = [
   { name: 'mobile', width: 375, height: 812 },
 ] as const;
 
-const SCREENSHOT_DIR = path.join(process.cwd(), '__tests__/e2e/screenshots');
+// Diagnostic screenshots are test artifacts, not fixtures — write them to a
+// temp dir so local runs never dirty the git-tracked repo (the old committed
+// `__tests__/e2e/screenshots/` PNGs are removed; nothing references them).
+const SCREENSHOT_DIR = path.join(
+  os.tmpdir(),
+  'workmanager-email-preview-screenshots',
+);
 
 // Ensure screenshot directory exists
 fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });

@@ -45,6 +45,87 @@ export const MOCK_SNAPSHOTS = [
   },
 ] as const;
 
+/**
+ * Full mock snapshot detail response (includes snapshotData).
+ * Mirrors the structure returned by GET /api/reports/snapshots/[id].
+ */
+export const MOCK_SNAPSHOT_DETAIL = {
+  id: 'snap-1',
+  snapshotDate: '2026-07-21',
+  snapshotType: 'eod',
+  label: 'EOD Report - Jul 21, 2026',
+  summary: {
+    totalTasks: 8,
+    completedCount: 2,
+    overdueCount: 1,
+    activeProjects: 2,
+    totalUsers: 3,
+    completionRate: 25,
+    aiSummary: 'Team completed 2 of 8 tasks today with a 25% completion rate. 1 task is overdue. 2 active projects ongoing.',
+  },
+  snapshotData: {
+    timestamp: '2026-07-21T17:00:00.000Z',
+    generatedBy: 'user-1',
+    organizationId: 'org-1',
+    date: '2026-07-21',
+    tasks: {
+      total: 8,
+      byStatus: { open: 2, in_progress: 2, completed: 2, closed: 1, blocked: 1 },
+      byPriority: { critical: 2, high: 2, medium: 1, low: 1, none: 2 },
+      overdue: 1,
+      createdThisPeriod: 3,
+      completedThisPeriod: 2,
+      completionRate: 25,
+    },
+    projects: {
+      total: 3,
+      active: 2,
+      byStatus: { active: 2, archived: 1 },
+    },
+    users: { total: 5, active: 3 },
+    teams: { total: 2 },
+  },
+  generatedBy: 'user-1',
+  createdAt: '2026-07-21T17:00:00.000Z',
+} as const;
+
+/**
+ * Mock CSV export content returned by GET /api/reports/snapshots/[id]/export.
+ */
+export const MOCK_SNAPSHOT_EXPORT_CSV = [
+  'Snapshot Export',
+  '',
+  'Field,Value',
+  'Label,EOD Report - Jul 21, 2026',
+  'Date,2026-07-21',
+  'Type,eod',
+  'Snapshot ID,snap-1',
+  '',
+  'Summary Metrics',
+  'Metric,Value',
+  'Total Tasks,8',
+  'Completed,2',
+  'Overdue,1',
+  'Completion Rate,25%',
+  '',
+  'AI Summary',
+  'Team completed 2 of 8 tasks today with a 25% completion rate. 1 task is overdue. 2 active projects ongoing.',
+  '',
+  'Task Status Distribution',
+  'Status,Count',
+  'open,2',
+  'in_progress,2',
+  'completed,2',
+  'closed,1',
+  'blocked,1',
+  '',
+  'Task Activity',
+  'Metric,Value',
+  'Total,8',
+  'Overdue,1',
+  'Completion Rate,25%',
+].join('\n');
+
 /** A mock time report for the Time Tracking tab. */
 export const MOCK_TIME_REPORT = {
   period: 'week',
@@ -115,6 +196,10 @@ export async function mockReportsApis(
     snapshotResponse?: Record<string, unknown>;
     /** Custom session user. */
     session?: { user?: { name?: string; id?: string } } | null;
+    /** Custom snapshot detail response (defaults to MOCK_SNAPSHOT_DETAIL). */
+    snapshotDetail?: Record<string, unknown> | null;
+    /** Custom snapshot export CSV content (defaults to MOCK_SNAPSHOT_EXPORT_CSV). */
+    snapshotExportCsv?: string | null;
   } = {},
 ) {
   const {
@@ -122,6 +207,8 @@ export async function mockReportsApis(
     projects = MOCK_REPORT_PROJECTS as unknown as Record<string, unknown>[],
     snapshots = MOCK_SNAPSHOTS as unknown as Record<string, unknown>[],
     timeReport = MOCK_TIME_REPORT as unknown as Record<string, unknown>,
+    snapshotDetail = MOCK_SNAPSHOT_DETAIL as unknown as Record<string, unknown>,
+    snapshotExportCsv = MOCK_SNAPSHOT_EXPORT_CSV,
     abort: shouldAbort,
     delay,
     snapshotError,
@@ -249,6 +336,105 @@ export async function mockReportsApis(
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(timeReport),
+    });
+  });
+
+  // ── GET /api/reports/snapshots/[id] (snapshot detail) ───
+  // Matches /api/reports/snapshots/snap-1, /api/reports/snapshots/snap-2, etc.
+  await page.route(/\/api\/reports\/snapshots\/[a-zA-Z0-9-]+$/, async (route) => {
+    if (route.request().method() !== 'GET') { await route.fallback(); return; }
+    if (shouldAbort) { await route.abort('connectionrefused'); return; }
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+
+    // Extract the snapshot ID from the URL
+    const url = route.request().url();
+    const snapId = url.split('/').pop()!;
+
+    // Check if we have a matching snapshot from the list
+    const matchingSnapshot = snapshots.find((s) => s.id === snapId);
+    if (matchingSnapshot && snapshotDetail) {
+      // Return full detail with snapshotData merged from the matching snapshot
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          snapshot: {
+            ...snapshotDetail,
+            id: snapId,
+            label: matchingSnapshot.label,
+            snapshotDate: matchingSnapshot.snapshotDate,
+            snapshotType: matchingSnapshot.snapshotType,
+            // Merge summaries so aiSummary from snapshotDetail is preserved
+            summary: {
+              ...(matchingSnapshot.summary as Record<string, unknown>),
+              ...(snapshotDetail.summary as Record<string, unknown>),
+            },
+          },
+        }),
+      });
+    } else if (snapshotDetail) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ snapshot: snapshotDetail }),
+      });
+    } else {
+      await route.fulfill({ status: 404, body: JSON.stringify({ error: { code: 'NOT_FOUND' } }) });
+    }
+  });
+
+  // ── GET /api/reports/snapshots?limit=50&type=eod ───────
+  await page.route('**/api/reports/snapshots?limit=50&type=eod', async (route) => {
+    if (route.request().method() !== 'GET') { await route.fallback(); return; }
+    if (shouldAbort) { await route.abort('connectionrefused'); return; }
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ snapshots, total: snapshots.length, limit: 50, offset: 0 }),
+    });
+  });
+
+  // ── GET /api/reports/snapshots/[id]/export (CSV export) ─
+  await page.route(/\/api\/reports\/snapshots\/[a-zA-Z0-9-]+\/export$/, async (route) => {
+    if (route.request().method() !== 'GET') { await route.fallback(); return; }
+    if (shouldAbort) { await route.abort('connectionrefused'); return; }
+
+    if (snapshotExportCsv) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/csv; charset=utf-8',
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': 'attachment; filename="snapshot-export.csv"',
+        },
+        body: snapshotExportCsv,
+      });
+    } else {
+      // Return a minimal CSV fallback
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/csv; charset=utf-8',
+        body: 'Snapshot Export\n\nField,Value\nTest,Data\n',
+      });
+    }
+  });
+
+  // ── POST /api/reports/snapshots/[id]/ai-summary ────────
+  await page.route(/\/api\/reports\/snapshots\/[a-zA-Z0-9-]+\/ai-summary$/, async (route) => {
+    if (route.request().method() !== 'POST') { await route.fallback(); return; }
+    if (shouldAbort) { await route.abort('connectionrefused'); return; }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: 'AI summary generated',
+        summary: {
+          ...(snapshotDetail?.summary as Record<string, unknown> ?? {}),
+          aiSummary: 'Regenerated: Team completed 2 of 8 tasks today.',
+        },
+      }),
     });
   });
 }

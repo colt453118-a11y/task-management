@@ -74,6 +74,45 @@ export const MOCK_DASHBOARD_USERS = [
   { id: 'user-3', name: 'Carol Williams', email: 'carol@example.com' },
 ] as const;
 
+/**
+ * Mock activity-feed items rendered by the TeamActivityFeed on the dashboard.
+ * Matches the shape returned by GET /api/activity-feed.
+ */
+export const MOCK_ACTIVITY_ITEMS = [
+  {
+    id: 'act-1',
+    type: 'task_update',
+    action: 'task.status_changed',
+    description: null,
+    userId: 'user-1',
+    userName: 'Alice Johnson',
+    userAvatar: null,
+    taskId: 'task-1',
+    taskTitle: 'Implement user authentication',
+    projectId: 'proj-1',
+    entityType: null,
+    entityId: null,
+    metadata: { field: 'status', newValue: 'in_progress' },
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+  },
+  {
+    id: 'act-2',
+    type: 'comment',
+    action: 'comment.added',
+    description: 'Looking good, ship it!',
+    userId: 'user-2',
+    userName: 'Bob Smith',
+    userAvatar: null,
+    taskId: 'task-4',
+    taskTitle: 'Overdue database migration',
+    projectId: null,
+    entityType: null,
+    entityId: null,
+    metadata: null,
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+] as const;
+
 // ═══════════════════════════════════════════════════════════════
 //  Mock Helpers
 // ═══════════════════════════════════════════════════════════════
@@ -93,6 +132,8 @@ export async function mockDashboardApis(
     tasks?: readonly Record<string, unknown>[];
     projects?: readonly Record<string, unknown>[];
     users?: readonly Record<string, unknown>[];
+    /** Activity feed items rendered by the Team Activity feed. Defaults to MOCK_ACTIVITY_ITEMS. */
+    activityItems?: readonly Record<string, unknown>[];
     session?: { user?: { name?: string; id?: string } } | null;
     /** If true, abort ALL API calls to simulate network failure. */
     abort?: boolean;
@@ -104,6 +145,7 @@ export async function mockDashboardApis(
     tasks = MOCK_DASHBOARD_TASKS as unknown as Record<string, unknown>[],
     projects = MOCK_DASHBOARD_PROJECTS as unknown as Record<string, unknown>[],
     users = MOCK_DASHBOARD_USERS as unknown as Record<string, unknown>[],
+    activityItems = MOCK_ACTIVITY_ITEMS as unknown as Record<string, unknown>[],
     session = { user: { name: 'Alice Johnson', id: 'user-1' } },
     abort: shouldAbort,
     delay,
@@ -165,4 +207,18 @@ export async function mockDashboardApis(
       });
     });
   }
+
+  // Activity feed API (Team Activity feed widget)
+  await page.route('**/api/activity-feed', async (route) => {
+    if (shouldAbort) {
+      await route.abort('connectionrefused');
+      return;
+    }
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: activityItems }),
+    });
+  });
 }

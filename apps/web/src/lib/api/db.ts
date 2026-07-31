@@ -12,7 +12,7 @@ export function db() {
   return _db;
 }
 
-export function apiError(message: string, code = 'INTERNAL_ERROR', status = 500) {
+function apiError(message: string, code = 'INTERNAL_ERROR', status = 500) {
   return {
     error: { code, message },
     status,

@@ -123,14 +123,19 @@ export function Topbar() {
     function handleCustomQuickCreate() {
       startTransition(() => setQuickCreateOpen(true));
     }
+    function handleCustomShortcuts() {
+      startTransition(() => setShortcutsOpen(true));
+    }
 
     document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('open-search', handleCustomSearch);
     window.addEventListener('open-quick-create', handleCustomQuickCreate);
+    window.addEventListener('open-shortcuts', handleCustomShortcuts);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('open-search', handleCustomSearch);
       window.removeEventListener('open-quick-create', handleCustomQuickCreate);
+      window.removeEventListener('open-shortcuts', handleCustomShortcuts);
     };
   }, []);
 
@@ -168,7 +173,7 @@ export function Topbar() {
   return (
     <>
       <motion.header
-        className="border-surface-300/20 bg-surface-50/80 sticky top-0 z-30 flex h-12 sm:h-14 items-center justify-between border-b px-3 backdrop-blur-xl sm:px-6"
+        className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 sticky top-0 z-30 flex h-12 sm:h-14 items-center justify-between border-b px-3 backdrop-blur-xl sm:px-6"
         style={{
           y: elementSpring,
         }}
@@ -197,11 +202,11 @@ export function Topbar() {
           <Search className="text-surface-400 absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 sm:h-4 sm:w-4 sm:left-3.5" />
           <button
             onClick={() => setSearchOpen(true)}
-            className="border-surface-300/20 bg-surface-100/50 text-surface-400 hover:border-surface-400/30 hover:text-surface-500 focus:ring-brand-500/20 dark:bg-surface-800/30 dark:hover:bg-surface-700/30 w-full rounded-xl border py-1.5 pl-8 pr-2 text-left text-xs transition-all duration-200 focus:outline-none focus:ring-2 sm:py-2 sm:pl-10 sm:pr-3 sm:text-sm"
+            className="border-surface-500/25 bg-surface-100/60 text-surface-400 hover:border-brand-500/30 hover:text-surface-500 focus:ring-brand-500/20 dark:bg-surface-800/40 dark:hover:bg-surface-700/40 w-full rounded-xl border py-1.5 pl-8 pr-2 text-left text-xs transition-all duration-200 focus:outline-none focus:ring-2 sm:py-2 sm:pl-10 sm:pr-3 sm:text-sm shadow-sm shadow-brand-500/5"
           >
             <span className="hidden sm:inline">Search tasks...</span>
             <span className="sm:hidden">Search...</span>
-            <kbd className="border-surface-300/20 bg-surface-100/80 text-surface-500 dark:bg-surface-800/80 pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[10px] font-medium sm:flex">
+            <kbd className="border-surface-500/20 bg-surface-200/80 text-surface-500 dark:bg-surface-700/80 dark:border-surface-600/30 neon-card pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium sm:flex">
               <span>⌘</span>K
             </kbd>
           </button>
@@ -212,7 +217,7 @@ export function Topbar() {
           {/* Quick Create Button */}
           <button
             onClick={() => setQuickCreateOpen(true)}
-            className="border-brand-500/20 bg-brand-500/5 text-brand-500 hover:bg-brand-500/10 hover:border-brand-500/30 relative mr-0.5 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all duration-200"
+            className="border-brand-500/20 bg-brand-500/5 text-brand-500 hover:bg-brand-500/10 hover:border-brand-500/30 relative mr-0.5 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all duration-200 shadow-sm shadow-brand-500/10"
             title="Quick create task (⌘T)"
           >
             <Sparkles className="h-3.5 w-3.5" />
@@ -226,7 +231,7 @@ export function Topbar() {
           {mounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-xl p-2 transition-all duration-200"
+              className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/40 hover:text-surface-600 rounded-xl p-2 transition-all duration-200"
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? (
@@ -244,7 +249,7 @@ export function Topbar() {
                 setNotifOpen(!notifOpen);
                 if (!notifOpen) refreshNotifs();
               }}
-              className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
+              className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/40 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
@@ -440,11 +445,9 @@ export function Topbar() {
         </div>
       </motion.header>
 
-      <SearchCommand
-        key={searchOpen ? 'open' : 'closed'}
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-      />
+      {/* Palette resets its own state (query/selection) on every open — no
+          remount key needed, which keeps the dialog's close animation intact. */}
+      <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       <CreateTaskDialog open={quickCreateOpen} onOpenChange={setQuickCreateOpen} />
       <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>

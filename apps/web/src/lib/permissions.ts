@@ -9,13 +9,6 @@ export interface Permission {
   module: string;
 }
 
-export interface UserRole {
-  id: string;
-  roleId: string;
-  roleName: string;
-  roleSlug: string;
-}
-
 // ── Request-scoped permission cache via AsyncLocalStorage ──────────────────
 // Each API request gets its own Map<string, Permission[]> so that multiple
 // requirePermission() calls within the same request share the 3-query result.
@@ -26,9 +19,6 @@ export interface UserRole {
 //   - No TTL needed — the cache lives exactly as long as the request
 //   - Falls through to DB query if called outside a withAuth context
 //     (e.g., from a server component or background job)
-//   - Entries can be selectively cleared via clearUserPermissionsCache()
-//     for mid-request role changes
-//
 // How it works:
 //   1. withAuth() creates a new Map and runs the handler inside
 //      permissionStorage.run(new Map(), ...)
@@ -110,57 +100,6 @@ export async function getUserPermissions(userId: string): Promise<Permission[]> 
 }
 
 /**
- * Clear the cached permissions for a specific user from the current request's
- * store. Call this after updating a user's roles or permissions within the
- * same request so that subsequent requirePermission() calls reflect the change.
- *
- * If called outside a request context (no AsyncLocalStorage store), this is a
- * no-op since there's no cache to clear.
- */
-export function clearUserPermissionsCache(userId: string): void {
-  const store = permissionStorage.getStore();
-  if (store) {
-    store.delete(userId);
-  }
-}
-
-/**
- * Clear all cached permissions for the current request.
- * Call this after bulk role/permission changes within the same request.
- */
-export function clearAllPermissionsCache(): void {
-  const store = permissionStorage.getStore();
-  if (store) {
-    store.clear();
-  }
-}
-
-/**
- * Get all roles for a user.
- */
-export async function getUserRoles(userId: string): Promise<UserRole[]> {
-  try {
-    const db = getDb();
-
-    const roles = await db
-      .select({
-        id: schema.userRoles.id,
-        roleId: schema.userRoles.roleId,
-        roleName: schema.roles.name,
-        roleSlug: schema.roles.slug,
-      })
-      .from(schema.userRoles)
-      .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
-      .where(eq(schema.userRoles.userId, userId));
-
-    return roles;
-  } catch (error) {
-    console.error('Failed to get user roles:', error);
-    return [];
-  }
-}
-
-/**
  * Check if a user has a specific permission.
  */
 export async function hasPermission(userId: string, permissionCode: string): Promise<boolean> {
@@ -168,33 +107,3 @@ export async function hasPermission(userId: string, permissionCode: string): Pro
   return permissions.some((p) => p.code === permissionCode);
 }
 
-/**
- * Check if a user has any of the specified permissions.
- */
-export async function hasAnyPermission(
-  userId: string,
-  permissionCodes: string[],
-): Promise<boolean> {
-  const permissions = await getUserPermissions(userId);
-  return permissions.some((p) => permissionCodes.includes(p.code));
-}
-
-/**
- * Check if a user has all of the specified permissions.
- */
-export async function hasAllPermissions(
-  userId: string,
-  permissionCodes: string[],
-): Promise<boolean> {
-  const permissions = await getUserPermissions(userId);
-  const userCodes = new Set(permissions.map((p) => p.code));
-  return permissionCodes.every((code) => userCodes.has(code));
-}
-
-/**
- * Check if a user has a role with the given slug.
- */
-export async function hasRole(userId: string, roleSlug: string): Promise<boolean> {
-  const roles = await getUserRoles(userId);
-  return roles.some((r) => r.roleSlug === roleSlug);
-}

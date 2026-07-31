@@ -82,14 +82,4 @@ export function buildCsv(headers: string[], rows: unknown[][]): string {
   return output;
 }
 
-/**
- * Sanitize an entire row object into an ordered array of cell values,
- * using a key order array or the keys of the first row.
- *
- * @param row - The row object
- * @param keys - Ordered array of keys for the columns
- * @returns Array of sanitized cell values
- */
-export function rowToCells(row: Record<string, unknown>, keys: string[]): unknown[] {
-  return keys.map((key) => row[key]);
-}
+

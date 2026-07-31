@@ -670,7 +670,7 @@ export default function NotificationsPage() {
 
       {/* Notifications list */}
       <motion.div variants={itemVariants}>
-        <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border">
+        <div className="neon-card relative overflow-hidden rounded-2xl">
           <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-600 opacity-40" />
 
           {loading ? (

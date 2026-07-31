@@ -9,7 +9,6 @@ import {
   TaskDeletedEmail,
   TaskMentionEmail,
   TaskDeadlineEmail,
-  WelcomeEmail,
 } from './components';
 import { escapeHtml } from './utils';
 import type { BaseEmailProps } from './components';
@@ -174,16 +173,3 @@ export async function sendNotificationEmail(notif: NotificationEmail): Promise<v
   await sendEmail({ to: notif.to, subject, html });
 }
 
-// ─── Welcome Email ─────────────────────────────────────────────
-
-export async function sendWelcomeEmail(to: string, userName: string): Promise<void> {
-  const html = await renderEmail(
-    <WelcomeEmail userName={escapeHtml(userName)} unsubscribeUrl={UNSUBSCRIBE_URL} />,
-  );
-
-  await sendEmail({
-    to,
-    subject: `Welcome to WorkManager, ${userName}!`,
-    html,
-  });
-}

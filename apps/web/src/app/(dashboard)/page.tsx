@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, lazy, Suspense, startTransition, useMemo } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense, startTransition, useMemo, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,10 @@ import {
   User,
   Sparkles,
 } from 'lucide-react';
+import { TeamActivityFeed } from '@/components/dashboard/team-activity-feed';
+import { EODReportWidget } from '@/components/dashboard/eod-report-widget';
+import { useNotificationSSE } from '@/lib/hooks/use-notification-sse';
+import { useNotificationStore } from '@/stores/notification-store';
 import { cn } from '@/lib/utils';
 
 const RechartsCharts = lazy(() => import('@/components/dashboard/recharts-charts'));
@@ -225,6 +229,23 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // ── Real-time SSE notifications ────────────────────────────
+  useNotificationSSE();
+  const sseUnreadCount = useNotificationStore((s) => s.unreadCount);
+  const [activityRefreshCounter, setActivityRefreshCounter] = useState(0);
+  const prevUnreadRef = useRef(sseUnreadCount);
+
+  // When unreadCount increases via SSE, bump the refresh counter
+  // to trigger an immediate refetch of the TeamActivityFeed.
+  // The notification badge + feed refresh provide feedback without
+  // requiring a toast (which could spam the user on batch events).
+  useEffect(() => {
+    if (prevUnreadRef.current !== 0 && sseUnreadCount > prevUnreadRef.current) {
+      setActivityRefreshCounter((c) => c + 1);
+    }
+    prevUnreadRef.current = sseUnreadCount;
+  }, [sseUnreadCount]);
+
   const urgentThreshold = useMemo(() => Date.now() + 86400000 * 2, []);
 
   useEffect(() => {
@@ -369,13 +390,18 @@ export default function DashboardPage() {
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} variants={itemVariants} custom={i}>
             <motion.div
-              whileHover={{ y: -2 }}
-              className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:shadow-sm sm:rounded-2xl sm:p-5"
+              whileHover={{ y: -3 }}
+              className="neon-card group relative overflow-hidden rounded-xl border p-3 transition-all duration-300 sm:rounded-2xl sm:p-5"
             >
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60`} />
-              <div className="flex items-start justify-between gap-2">
+              {/* Gradient top border */}
+              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+              
+              {/* Subtle glow on hover */}
+              <div className={`absolute -inset-0.5 bg-gradient-to-r ${kpi.gradient} opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-15`} />
+              
+              <div className="relative flex items-start justify-between gap-2">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
+                  <p className="text-surface-700 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-surface-900 text-lg font-bold tracking-tight sm:text-2xl">{kpi.value}</p>
                     {kpi.trend && (
@@ -435,7 +461,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="text-surface-400 h-4 w-4" />
+                <Sparkles className="text-surface-500 h-4 w-4" />
                 Quick Actions
               </CardTitle>
             </CardHeader>
@@ -448,16 +474,15 @@ export default function DashboardPage() {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      'group flex flex-col items-center gap-2 rounded-xl border border-surface-300/20 p-4 text-center transition-all duration-200 hover:shadow-sm',
-                      'hover:border-brand-500/30',
+                      'group neon-card flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-200',
                     )}
                   >
-                    <div className={cn('rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110', action.color)}>
+                    <div className={cn('rounded-xl p-2.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm', action.color)}>
                       <action.icon className="h-5 w-5" />
                     </div>
                     <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{action.label}</span>
                     {action.shortcut && (
-                      <kbd className="border-surface-300/20 bg-surface-200/50 text-surface-500 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
+                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 dark:text-surface-600 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
                         {action.shortcut}
                       </kbd>
                     )}
@@ -630,51 +655,36 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity — Real-time Team Activity Feed */}
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Activity className="text-surface-400 h-4 w-4" />
-                Recent Activity
+                <div className="relative">
+                  <Activity className="text-surface-400 h-4 w-4" />
+                  {sseUnreadCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-brand-500 text-[7px] font-bold text-white">
+                      {sseUnreadCount > 9 ? '9+' : sseUnreadCount}
+                    </span>
+                  )}
+                </div>
+                Team Activity
+                {sseUnreadCount > 0 && (
+                  <span className="bg-brand-500/10 text-brand-500 ml-1 animate-pulse rounded-full px-1.5 py-0 text-[9px] font-semibold">
+                    {sseUnreadCount} new
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {metrics.recentActivity.length === 0 ? (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <Activity className="text-surface-300 dark:text-surface-600 h-8 w-8" />
-                  <p className="text-surface-500 mt-2 text-sm font-medium">No activity yet</p>
-                </div>
-              ) : (
-                <div className="space-y-0.5">
-                  {metrics.recentActivity.map((task, i) => (
-                    <motion.div
-                      key={task.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="hover:bg-surface-200/50 group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className={`h-2 w-2 shrink-0 rounded-full ${statusDotColors[task.status] ?? 'bg-surface-400'}`} />
-                        <span className="text-surface-600 group-hover:text-brand-400 dark:text-surface-400 truncate transition-colors">{task.title}</span>
-                      </div>
-                      <div className="ml-2 flex shrink-0 items-center gap-2">
-                        <Badge variant={statusColors[task.status] ?? 'default'} size="sm">
-                          {task.status.replace(/_/g, ' ')}
-                        </Badge>
-                        <span className="text-surface-500 text-[11px]">
-                          {new Date(task.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+            <CardContent className="px-4 sm:px-6">
+              <TeamActivityFeed maxItems={20} refreshCounter={activityRefreshCounter} />
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      {/* EOD Report Widget */}
+      <EODReportWidget />
     </motion.div>
   );
 }

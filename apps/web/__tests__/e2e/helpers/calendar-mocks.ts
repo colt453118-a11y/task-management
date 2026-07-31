@@ -5,12 +5,35 @@ import type { Page } from '@playwright/test';
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Return the number of calendar days left in the current month.
- * Used to ensure mock due dates always fall within the visible month view.
+ * Return `count` distinct dates within the current calendar month, ordered
+ * today first, then alternating day offsets.
+ *
+ * The calendar only renders the current month view initially, and caps
+ * badges per day cell at 3 (then folds extras into "+N more"), so mock due
+ * dates must (a) never spill into the previous/next month and (b) land on
+ * distinct day cells so every badge title renders.
  */
-function daysLeftInMonth(date: Date = new Date()): number {
-  const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  return endOfMonth.getDate() - date.getDate();
+function pickDistinctDays(count: number): Date[] {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
+
+  // Walk outward from today; skip out-of-month days and already-used days.
+  const offsets = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7];
+  const used = new Set<number>();
+  const result: Date[] = [];
+
+  for (const offset of offsets) {
+    if (result.length >= count) break;
+    const day = today + offset;
+    if (day < 1 || day > daysInMonth) continue;
+    if (used.has(day)) continue;
+    used.add(day);
+    result.push(new Date(year, month, day));
+  }
+  return result;
 }
 
 /**
@@ -24,9 +47,12 @@ function daysLeftInMonth(date: Date = new Date()): number {
  * - task-5: due 2 days ago (overdue) → shows on calendar
  */
 export function getMockCalendarTasks(): Record<string, unknown>[] {
-  const now = Date.now();
-  const msInDay = 86_400_000;
-  const safeOffset = Math.min(2, Math.max(1, daysLeftInMonth() - 1));
+  // Distinct day cells within the current month so every badge renders.
+  // Tuple cast is safe: pickDistinctDays always returns `count` dates
+  // (min 8 valid candidates from any day-of-month position).
+  const [dueToday, dueTomorrow, dueLater, dueOverdue] = pickDistinctDays(4) as [
+    Date, Date, Date, Date,
+  ];
 
   return [
     {
@@ -34,21 +60,21 @@ export function getMockCalendarTasks(): Record<string, unknown>[] {
       title: 'Review Q3 roadmap',
       status: 'in_progress',
       priority: 'high',
-      dueDate: new Date(now).toISOString(),
+      dueDate: dueToday.toISOString(),
     },
     {
       id: 'task-2',
       title: 'Update onboarding docs',
       status: 'open',
       priority: 'medium',
-      dueDate: new Date(now + msInDay).toISOString(),
+      dueDate: dueTomorrow.toISOString(),
     },
     {
       id: 'task-3',
       title: 'Security audit findings',
       status: 'in_progress',
       priority: 'urgent',
-      dueDate: new Date(now + msInDay * safeOffset).toISOString(),
+      dueDate: dueLater.toISOString(),
     },
     {
       id: 'task-4',
@@ -62,7 +88,7 @@ export function getMockCalendarTasks(): Record<string, unknown>[] {
       title: 'Past due API migration',
       status: 'blocked',
       priority: 'critical',
-      dueDate: new Date(now - msInDay * 2).toISOString(),
+      dueDate: dueOverdue.toISOString(),
     },
   ];
 }
@@ -74,9 +100,10 @@ export function getMockCalendarTasks(): Record<string, unknown>[] {
  * - milestone-3: no due date → hidden from calendar
  */
 export function getMockMilestones(): Record<string, unknown>[] {
-  const now = Date.now();
-  const msInDay = 86_400_000;
-  const safeOffset = Math.min(2, Math.max(1, daysLeftInMonth() - 1));
+  // Distinct day cells within the current month so every badge renders.
+  // Tuple cast is safe: pickDistinctDays always returns `count` dates
+  // (min 8 valid candidates from any day-of-month position).
+  const [dueToday, dueLater] = pickDistinctDays(2) as [Date, Date];
 
   return [
     {
@@ -86,7 +113,7 @@ export function getMockMilestones(): Record<string, unknown>[] {
       name: 'Beta launch milestone',
       description: 'Complete beta launch of the new website',
       status: 'in_progress',
-      dueDate: new Date(now).toISOString(),
+      dueDate: dueToday.toISOString(),
       completedDate: null,
     },
     {
@@ -96,7 +123,7 @@ export function getMockMilestones(): Record<string, unknown>[] {
       name: 'Database migration complete',
       description: 'All data migrated to new schema',
       status: 'pending',
-      dueDate: new Date(now + msInDay * safeOffset).toISOString(),
+      dueDate: dueLater.toISOString(),
       completedDate: null,
     },
     {

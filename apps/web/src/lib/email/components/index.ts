@@ -11,3 +11,4 @@ export type { TaskDeadlineEmailProps } from './task-deadline';
 export { TaskMentionEmail } from './task-mention';
 export { WelcomeEmail } from './welcome';
 export type { WelcomeEmailProps } from './welcome';
+export { AutomationTriggeredEmail } from './automation-triggered';

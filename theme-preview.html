@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkManager — Rich Dark Theme Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #08080b;
+      color: #d0d0dc;
+      padding: 32px;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .subtitle { color: #9a9ab2; margin-bottom: 32px; font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(640px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #1e1e26;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(99,102,241,0.08);
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(99,102,241,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header h2 { font-size: 14px; font-weight: 600; color: #d0d0dc; }
+    .card-header .badge {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .badge-ok { background: rgba(52,211,153,0.15); color: #34d399; }
+    .badge-err { background: rgba(248,113,113,0.15); color: #f87171; }
+    .card img { width: 100%; display: block; border-bottom: 1px solid rgba(99,102,241,0.06); }
+    .card-footer {
+      padding: 10px 18px;
+      color: #7a7a96;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .card-footer .url { color: #50506e; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .summary {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat {
+      background: #1e1e26;
+      border-radius: 12px;
+      padding: 16px 24px;
+      text-align: center;
+      flex: 1;
+      border: 1px solid rgba(99,102,241,0.06);
+    }
+    .stat .value { font-size: 28px; font-weight: 700; color: #d0d0dc; }
+    .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a96; margin-top: 4px; }
+    .error-list { padding: 8px 18px; background: rgba(248,113,113,0.05); }
+    .error-list p { color: #f87171; font-size: 11px; padding: 2px 0; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>🎨 WorkManager — Rich Dark Theme Preview</h1>
+  <p class="subtitle">Captured with Playwright Chromium · 7/29/2026, 10:45:24 PM</p>
+
+  <div class="summary">
+    <div class="stat"><div class="value">5</div><div class="label">Pages</div></div>
+    <div class="stat"><div class="value">5</div><div class="label">Clean</div></div>
+    <div class="stat"><div class="value">0</div><div class="label">With Errors</div></div>
+  </div>
+
+  <div class="grid">
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>Login Page</h2>
+        <span class="badge badge-ok">
+          ✅ Clean
+        </span>
+      </div>
+      <img src="theme-screenshots/01-login.png" alt="Login Page" loading="lazy">
+      <div class="card-footer">
+        <span>http://localhost:3000/auth/login</span>
+        <span>01-login.png</span>
+      </div>
+      
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Register Page</h2>
+        <span class="badge badge-ok">
+          ✅ Clean
+        </span>
+      </div>
+      <img src="theme-screenshots/02-register.png" alt="Register Page" loading="lazy">
+      <div class="card-footer">
+        <span>http://localhost:3000/auth/register</span>
+        <span>02-register.png</span>
+      </div>
+      
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Forgot Password</h2>
+        <span class="badge badge-ok">
+          ✅ Clean
+        </span>
+      </div>
+      <img src="theme-screenshots/03-forgot-password.png" alt="Forgot Password" loading="lazy">
+      <div class="card-footer">
+        <span>http://localhost:3000/auth/forgot-password</span>
+        <span>03-forgot-password.png</span>
+      </div>
+      
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Reset Password</h2>
+        <span class="badge badge-ok">
+          ✅ Clean
+        </span>
+      </div>
+      <img src="theme-screenshots/04-reset-password.png" alt="Reset Password" loading="lazy">
+      <div class="card-footer">
+        <span>http://localhost:3000/auth/reset-password?token=demo-token-123</span>
+        <span>04-reset-password.png</span>
+      </div>
+      
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Dashboard (authenticated)</h2>
+        <span class="badge badge-ok">
+          ✅ Clean
+        </span>
+      </div>
+      <img src="theme-screenshots/05-dashboard.png" alt="Dashboard (authenticated)" loading="lazy">
+      <div class="card-footer">
+        <span>http://localhost:3000/</span>
+        <span>05-dashboard.png</span>
+      </div>
+      
+    </div>
+  </div>
+
+  <p style="margin-top: 32px; color: #50506e; font-size: 12px; text-align: center;">
+    Generated with Playwright · Rich Dark Theme v2
+  </p>
+</body>
+</html>

@@ -406,7 +406,7 @@ export default function MilestonesPage() {
       ) : viewMode === 'timeline' ? (
         /* ── TIMELINE VIEW ── */
         <motion.div variants={itemVariants}>
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border">
+          <div className="neon-card relative overflow-hidden rounded-2xl">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-600 opacity-40" />
 
             {/* Month headers */}
@@ -574,7 +574,7 @@ export default function MilestonesPage() {
                   return (
                     <div
                       key={m.id}
-                      className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 group relative overflow-hidden rounded-xl border transition-all hover:shadow-sm"
+                      className="neon-card group relative overflow-hidden rounded-xl transition-all"
                     >
                       <div className={cn('absolute left-0 top-0 bottom-0 w-1', config.barColor)} />
                       <div className="p-4 pl-5">

@@ -52,6 +52,7 @@ test.describe('Dashboard', () => {
       tasks: [],
       projects: [],
       users: [],
+      activityItems: [],
     });
 
     await page.goto('/');
@@ -67,7 +68,7 @@ test.describe('Dashboard', () => {
     await expect(page.getByText(/all caught up/i)).toBeVisible();
     await expect(page.getByText(/no upcoming deadlines/i)).toBeVisible();
 
-    // Recent activity should show "No activity yet"
+    // Team activity feed should show "No activity yet"
     await expect(page.getByText(/no activity yet/i)).toBeVisible();
   });
 
@@ -110,7 +111,9 @@ test.describe('Dashboard', () => {
     await page.goto('/');
 
     await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/alice johnson/i)).toBeVisible();
+    // The session name appears in the welcome header; `.first()` disambiguates
+    // from the same name rendered in the Team Activity feed items.
+    await expect(page.getByText(/alice johnson/i).first()).toBeVisible();
   });
 
   test('shows "All systems operational" status indicator', async ({ page }) => {
@@ -150,7 +153,7 @@ test.describe('Dashboard', () => {
     await expect(page.getByText(/Overdue database migration/i).first()).toBeVisible();
   });
 
-  test('renders recent activity with recently updated tasks', async ({ page }) => {
+  test('renders team activity feed with recent updates', async ({ page }) => {
     await mockDashboardApis(page);
 
     await page.goto('/');
@@ -159,15 +162,15 @@ test.describe('Dashboard', () => {
       timeout: 15_000,
     });
 
-    // Recent Activity section should exist
-    await expect(page.getByText(/recent activity/i)).toBeVisible();
+    // Team Activity section should exist
+    await expect(page.getByText(/team activity/i)).toBeVisible();
 
-    // Most recently updated tasks should be visible (sorted by updatedAt descending)
-    // task-4 (updated 30m ago), task-1 (updated 1h ago), task-5 (updated 1h ago)
-    await expect(page.getByText(/Overdue database migration/i).first()).toBeVisible();
-    // Note: task titles appear in both deadlines AND recent activity sections
+    // Mock activity items should render (user + action + task)
+    await expect(page.getByText(/Alice Johnson/i).first()).toBeVisible();
+    await expect(page.getByText(/changed status of/i).first()).toBeVisible();
     await expect(page.getByText(/Implement user authentication/i).first()).toBeVisible();
-    await expect(page.getByText(/Blocked by third-party API/i).first()).toBeVisible();
+    await expect(page.getByText(/Bob Smith/i).first()).toBeVisible();
+    await expect(page.getByText(/Looking good, ship it!/i).first()).toBeVisible();
   });
 
   test('shows no deadlines message when no tasks have due dates', async ({ page }) => {
@@ -188,7 +191,7 @@ test.describe('Dashboard', () => {
 
   test('shows no activity message when only completed tasks exist (empty recent)', async ({ page }) => {
     // Empty tasks array — no activity
-    await mockDashboardApis(page, { tasks: [] });
+    await mockDashboardApis(page, { tasks: [], activityItems: [] });
 
     await page.goto('/');
 
@@ -196,7 +199,7 @@ test.describe('Dashboard', () => {
       timeout: 15_000,
     });
 
-    // Should show "No activity yet"
+    // Team activity feed should show "No activity yet"
     await expect(page.getByText(/no activity yet/i)).toBeVisible();
   });
 

@@ -61,14 +61,14 @@ export const verificationTokens = pgTable(
   {
     id: text('id').primaryKey(),
     identifier: varchar('identifier', { length: 255 }).notNull(),
-    token: varchar('token', { length: 255 }).notNull().unique(),
+    token: varchar('token', { length: 255 }),
+    value: text('value'),
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     identifierIdx: index('idx_verification_identifier').on(table.identifier),
-    tokenIdx: uniqueIndex('idx_verification_token_unique').on(table.token),
   }),
 );
 

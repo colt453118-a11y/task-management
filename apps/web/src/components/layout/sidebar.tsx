@@ -25,12 +25,14 @@ import {
   Search as SearchIcon,
   Milestone,
   Layers,
+  CalendarDays,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { motion, AnimatePresence, useTransform } from 'framer-motion';
 import { useScrollShadow } from '@/lib/hooks/use-scroll-shadow';
+import { useNotificationStore } from '@/stores/notification-store';
 
-const navItems = [
+export const navItems = [
   { label: 'Search', href: '/search', icon: SearchIcon },
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Milestones', href: '/milestones', icon: Milestone },
@@ -41,9 +43,11 @@ const navItems = [
   { label: 'People', href: '/users', icon: UserRoundCog },
   { label: 'Time Tracking', href: '/timer', icon: Clock },
   { label: 'Corrections', href: '/corrections', icon: FileEdit },
+  { label: 'Time Off', href: '/leave', icon: CalendarDays },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Analytics', href: '/analytics', icon: TrendingUp },
   { label: 'Calendar', href: '/calendar', icon: Calendar },
+  { label: 'Gantt Chart', href: '/gantt', icon: CalendarDays },
   { label: 'Notifications', href: '/notifications', icon: Bell },
   { label: 'Automation', href: '/automation', icon: Bot },
   { label: 'Settings', href: '/settings', icon: Settings },
@@ -96,6 +100,7 @@ export function Sidebar() {
   const [isMobile, setIsMobile] = useState(true); // Assume mobile until proven otherwise — prevents flash
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   useEffect(() => {
     const check = () => startTransition(() => setIsMobile(window.innerWidth < 768));
@@ -147,13 +152,13 @@ export function Sidebar() {
   const sidebarContent = (
     <aside
       className={cn(
-        'border-surface-300/20 bg-surface-50/90 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
+        'border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
         collapsed && !isMobile ? 'w-16' : 'w-60',
         isMobile && 'w-60',
       )}
     >
       {/* Logo */}
-      <div className="border-surface-300/20 flex h-14 shrink-0 items-center justify-between border-b px-4">
+      <div className="border-surface-500/20 dark:border-surface-700/30 flex h-14 shrink-0 items-center justify-between border-b px-4">
         {(!collapsed || isMobile) && (
           <Link href="/" className="group flex items-center gap-2.5">
             <div className="from-brand-400 to-brand-600 group-hover:shadow-brand-500/20 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-all duration-200 group-hover:shadow-md">
@@ -211,12 +216,12 @@ export function Sidebar() {
                 href={item.href}
                 onMouseEnter={() => setHoveredItem(item.href)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={cn(
-                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-brand-500/10 text-brand-400 active-neon'
-                    : 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-300/10 dark:hover:text-surface-300',
-                )}
+            className={cn(
+              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+              isActive
+                ? 'bg-brand-500/10 text-brand-400 active-neon shadow-sm shadow-brand-500/10'
+                : 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-700/30 dark:hover:text-surface-300',
+            )}
                 title={collapsed && !isMobile ? item.label : undefined}
               >
                 <div className="relative">
@@ -232,6 +237,12 @@ export function Sidebar() {
                     <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
                       <span className="bg-brand-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
                       <span className="bg-brand-500 relative inline-flex h-1.5 w-1.5 rounded-full" />
+                    </span>
+                  )}
+                  {/* Unread notification badge on the Notifications icon */}
+                  {item.href === '/notifications' && unreadCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 dark:ring-surface-900">
+                      {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </div>
@@ -271,7 +282,7 @@ export function Sidebar() {
       </nav>
 
       {/* Quick create */}
-      <div className="border-surface-300/20 shrink-0 border-t p-3">
+      <div className="border-surface-500/20 dark:border-surface-700/30 shrink-0 border-t p-3">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-quick-create'))}
           className={cn(

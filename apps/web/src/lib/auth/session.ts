@@ -46,7 +46,7 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
  * Get the current authenticated user.
  * Returns null if not authenticated.
  */
-export async function getCurrentUser(): Promise<SessionUser | null> {
+async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await getCurrentSession();
   return session?.user ?? null;
 }
@@ -61,15 +61,6 @@ export async function requireAuth(): Promise<SessionUser> {
   if (!user) {
     throw new AuthError('Unauthorized', 'UNAUTHORIZED', 401);
   }
-  return user;
-}
-
-/**
- * Require the user to be active (not suspended/deactivated).
- */
-export async function requireActiveUser(): Promise<SessionUser> {
-  const user = await requireAuth();
-  // Active check happens via the database/org logic in the permission helper
   return user;
 }
 

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkManager — Visual Tour</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #08080b;
+      color: #d4d4e2;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, #818cf8, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: #7a7a96;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: #15151a;
+      border: 1px solid #2c2c3e;
+      border-radius: 12px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.85rem;
+    }
+    .stat span { color: #818cf8; font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 680px), 1fr));
+      gap: 1.5rem;
+    }
+    .screenshot-card {
+      background: #0e0e12;
+      border: 1px solid rgb(99 102 241 / 0.06);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .screenshot-card:hover {
+      border-color: rgb(99 102 241 / 0.25);
+      box-shadow: 0 0 16px rgb(99 102 241 / 0.08);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1e1e26;
+    }
+    .card-number {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #50506e;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-label {
+      flex: 1;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .card-status {
+      font-size: 1rem;
+    }
+    .status-ok { color: #34d399; }
+    .status-fail { color: #f87171; }
+    .card-footer {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: #50506e;
+      font-family: 'JetBrains Mono', monospace;
+      border-top: 1px solid #1e1e26;
+    }
+    img {
+      width: 100%;
+      display: block;
+      border: none;
+    }
+    .errors {
+      margin-top: 2rem;
+      background: #1a0e0e;
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    .errors h3 { color: #f87171; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .errors pre {
+      font-size: 0.75rem;
+      color: #fca5a5;
+      white-space: pre-wrap;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>WorkManager — Visual Tour</h1>
+  <p class="subtitle">Full app walkthrough after dark theme polish & CSS cleanup</p>
+  <div class="stats">
+    <div class="stat">Pages captured: <span>14</span></div>
+    <div class="stat">Console errors: <span>1</span></div>
+  </div>
+  <div class="grid">
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#01</span>
+        <span class="card-label">Login Page</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/01-login.png" target="_blank">
+        <img src="explore-screenshots/01-login.png" alt="Login Page" loading="lazy" />
+      </a>
+      <div class="card-footer">01-login.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#02</span>
+        <span class="card-label">Register Page</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/02-register.png" target="_blank">
+        <img src="explore-screenshots/02-register.png" alt="Register Page" loading="lazy" />
+      </a>
+      <div class="card-footer">02-register.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#03</span>
+        <span class="card-label">Forgot Password</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/03-forgot-password.png" target="_blank">
+        <img src="explore-screenshots/03-forgot-password.png" alt="Forgot Password" loading="lazy" />
+      </a>
+      <div class="card-footer">03-forgot-password.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#04</span>
+        <span class="card-label">Dashboard</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/05-dashboard.png" target="_blank">
+        <img src="explore-screenshots/05-dashboard.png" alt="Dashboard" loading="lazy" />
+      </a>
+      <div class="card-footer">05-dashboard.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#05</span>
+        <span class="card-label">Tasks</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/06-tasks.png" target="_blank">
+        <img src="explore-screenshots/06-tasks.png" alt="Tasks" loading="lazy" />
+      </a>
+      <div class="card-footer">06-tasks.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#06</span>
+        <span class="card-label">Projects</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/07-projects.png" target="_blank">
+        <img src="explore-screenshots/07-projects.png" alt="Projects" loading="lazy" />
+      </a>
+      <div class="card-footer">07-projects.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#07</span>
+        <span class="card-label">Teams</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/08-teams.png" target="_blank">
+        <img src="explore-screenshots/08-teams.png" alt="Teams" loading="lazy" />
+      </a>
+      <div class="card-footer">08-teams.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#08</span>
+        <span class="card-label">Settings</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/09-settings.png" target="_blank">
+        <img src="explore-screenshots/09-settings.png" alt="Settings" loading="lazy" />
+      </a>
+      <div class="card-footer">09-settings.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#09</span>
+        <span class="card-label">Reports</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/10-reports.png" target="_blank">
+        <img src="explore-screenshots/10-reports.png" alt="Reports" loading="lazy" />
+      </a>
+      <div class="card-footer">10-reports.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#10</span>
+        <span class="card-label">Calendar</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/11-calendar.png" target="_blank">
+        <img src="explore-screenshots/11-calendar.png" alt="Calendar" loading="lazy" />
+      </a>
+      <div class="card-footer">11-calendar.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#11</span>
+        <span class="card-label">Analytics</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/12-analytics.png" target="_blank">
+        <img src="explore-screenshots/12-analytics.png" alt="Analytics" loading="lazy" />
+      </a>
+      <div class="card-footer">12-analytics.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#12</span>
+        <span class="card-label">Notifications</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/13-notifications.png" target="_blank">
+        <img src="explore-screenshots/13-notifications.png" alt="Notifications" loading="lazy" />
+      </a>
+      <div class="card-footer">13-notifications.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#13</span>
+        <span class="card-label">Automation</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/14-automation.png" target="_blank">
+        <img src="explore-screenshots/14-automation.png" alt="Automation" loading="lazy" />
+      </a>
+      <div class="card-footer">14-automation.png</div>
+    </div>
+  
+
+    <div class="screenshot-card">
+      <div class="card-header">
+        <span class="card-number">#14</span>
+        <span class="card-label">Search</span>
+        <span class="card-status status-ok">✅</span>
+      </div>
+      <a href="explore-screenshots/15-search.png" target="_blank">
+        <img src="explore-screenshots/15-search.png" alt="Search" loading="lazy" />
+      </a>
+      <div class="card-footer">15-search.png</div>
+    </div>
+  </div>
+  
+  <div class="errors">
+    <h3>⚠️ Console Errors (1)</h3>
+    <pre>• Failed to load resource: the server responded with a status of 500 (Internal Server Error)</pre>
+  </div>
+</body>
+</html>

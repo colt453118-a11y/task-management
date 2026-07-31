@@ -23,7 +23,7 @@ function getSearchClient(): MeiliSearch {
 
 // ─── Index Names ───────────────────────────────────────────────
 
-export const INDEXES = {
+const INDEXES = {
   TASKS: 'tasks',
   PROJECTS: 'projects',
   USERS: 'users',

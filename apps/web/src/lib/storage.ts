@@ -81,25 +81,6 @@ export async function deleteFile(key: string): Promise<void> {
   await client.send(command);
 }
 
-// ─── Generate Presigned Upload URL ──────────────────────────────
-
-export async function getPresignedUploadUrl(
-  key: string,
-  contentType: string,
-  expiresInSeconds = 300,
-): Promise<string> {
-  const client = getS3Client();
-  const bucket = getBucket();
-
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    ContentType: contentType,
-  });
-
-  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
-}
-
 // ─── Generate Presigned Download URL ────────────────────────────
 
 export async function getPresignedDownloadUrl(

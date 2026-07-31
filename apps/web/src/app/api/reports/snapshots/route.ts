@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
-import { eq, desc, and, isNull, sql } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
+import { generateEODSnapshotData, storeEODSnapshot } from '@/lib/reports/snapshots';
+import { generateEODAISummary } from '@/lib/ai/eod-summary';
 
 export const runtime = 'nodejs';
 
@@ -65,192 +67,18 @@ export const POST = withAuth(
       const body = await request.json().catch(() => ({}));
       const { label, snapshotType = 'eod' } = body;
 
-      const today = new Date();
-      const dateStr = today.toISOString().split('T')[0]!;
-
-      // ── Gather snapshot data ──────────────────────────────
-
-      // Task counts by status
-      const taskStatusCounts = await db()
-        .select({
-          status: schema.tasks.status,
-          count: sql<number>`COUNT(*)::int`.as('count'),
-        })
-        .from(schema.tasks)
-        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)))
-        .groupBy(schema.tasks.status);
-
-      // Task counts by priority
-      const taskPriorityCounts = await db()
-        .select({
-          priority: schema.tasks.priority,
-          count: sql<number>`COUNT(*)::int`.as('count'),
-        })
-        .from(schema.tasks)
-        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)))
-        .groupBy(schema.tasks.priority);
-
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-
-      // Tasks overdue (past due date and not completed/closed/cancelled/archived)
-      const [overdueResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-            sql`${schema.tasks.dueDate} < ${todayStart}`,
-            sql`${schema.tasks.status} NOT IN ('completed', 'closed', 'cancelled', 'archived')`,
-          ),
-        );
-
-      // Tasks created today
-      const [createdTodayResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-            sql`${schema.tasks.createdAt} >= ${todayStart}`,
-            sql`${schema.tasks.createdAt} < ${todayEnd}`,
-          ),
-        );
-
-      // Tasks completed today
-      const [completedTodayResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.tasks)
-        .where(
-          and(
-            eq(schema.tasks.organizationId, orgId!),
-            isNull(schema.tasks.deletedAt),
-            sql`${schema.tasks.status} = 'completed'`,
-            sql`${schema.tasks.completedAt} >= ${todayStart}`,
-            sql`${schema.tasks.completedAt} < ${todayEnd}`,
-          ),
-        );
-
-      // Total task count
-      const [totalTasksResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.tasks)
-        .where(and(eq(schema.tasks.organizationId, orgId!), isNull(schema.tasks.deletedAt)));
-
-      // Project counts by status
-      const projectStatusCounts = await db()
-        .select({
-          status: schema.projects.status,
-          count: sql<number>`COUNT(*)::int`.as('count'),
-        })
-        .from(schema.projects)
-        .where(and(eq(schema.projects.organizationId, orgId!), isNull(schema.projects.deletedAt)))
-        .groupBy(schema.projects.status);
-
-      // Total projects
-      const [totalProjectsResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.projects)
-        .where(and(eq(schema.projects.organizationId, orgId!), isNull(schema.projects.deletedAt)));
-
-      // User counts
-      const [activeUsersResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.users)
-        .where(
-          and(
-            eq(schema.users.organizationId, orgId!),
-            isNull(schema.users.deletedAt),
-            eq(schema.users.isActive, true),
-            eq(schema.users.isSuspended, false),
-          ),
-        );
-
-      const [totalUsersResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.users)
-        .where(and(eq(schema.users.organizationId, orgId!), isNull(schema.users.deletedAt)));
-
-      // Team count
-      const [totalTeamsResult] = await db()
-        .select({ count: sql<number>`COUNT(*)::int`.as('count') })
-        .from(schema.teams)
-        .where(and(eq(schema.teams.organizationId, orgId!), isNull(schema.teams.deletedAt)));
-
-      // ── Build snapshot data ───────────────────────────────
-
-      const byStatus: Record<string, number> = {};
-      for (const row of taskStatusCounts) {
-        byStatus[row.status ?? 'unknown'] = row.count;
-      }
-
-      const byPriority: Record<string, number> = {};
-      for (const row of taskPriorityCounts) {
-        byPriority[row.priority ?? 'none'] = row.count;
-      }
-
-      const byProjectStatus: Record<string, number> = {};
-      for (const row of projectStatusCounts) {
-        byProjectStatus[row.status ?? 'unknown'] = row.count;
-      }
-
-      const completedCount = byStatus['completed'] ?? 0;
-      const totalTasks = totalTasksResult?.count ?? 0;
-      const totalProjects = totalProjectsResult?.count ?? 0;
-
-      const snapshotData = {
-        timestamp: now.toISOString(),
-        generatedBy: user.id,
-        organizationId: orgId,
-        date: dateStr,
-        tasks: {
-          total: totalTasks,
-          byStatus,
-          byPriority,
-          overdue: overdueResult?.count ?? 0,
-          createdThisPeriod: createdTodayResult?.count ?? 0,
-          completedThisPeriod: completedTodayResult?.count ?? 0,
-          completionRate: totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0,
-        },
-        projects: {
-          total: totalProjects,
-          active: byProjectStatus['active'] ?? 0,
-          byStatus: byProjectStatus,
-        },
-        users: {
-          total: totalUsersResult?.count ?? 0,
-          active: activeUsersResult?.count ?? 0,
-        },
-        teams: {
-          total: totalTeamsResult?.count ?? 0,
-        },
-      };
+      // ── Gather snapshot data using shared library ─────────
+      const { snapshotData, summary } = await generateEODSnapshotData(orgId!, user.id);
 
       // ── Store immutable snapshot ──────────────────────────
-      const summary = {
-        totalTasks,
-        completedCount,
-        overdueCount: overdueResult?.count ?? 0,
-        activeProjects: byProjectStatus['active'] ?? 0,
-        totalUsers: totalUsersResult?.count ?? 0,
-        completionRate: totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0,
-      };
-
-      const [snapshot] = await db()
-        .insert(schema.reportSnapshots)
-        .values({
-          organizationId: orgId!,
-          snapshotDate: dateStr,
-          snapshotType,
-          label: label ?? null,
-          snapshotData,
-          summary,
-          generatedBy: user.id,
-        })
-        .returning();
+      const snapshot = await storeEODSnapshot({
+        organizationId: orgId!,
+        snapshotType,
+        label: label ?? null,
+        snapshotData,
+        summary,
+        generatedBy: user.id,
+      });
 
       if (!snapshot) {
         return NextResponse.json(
@@ -259,6 +87,25 @@ export const POST = withAuth(
         );
       }
 
+      // ── Fire-and-forget: generate AI summary ────────────────
+      // Runs in the background so the response is not blocked.
+      // The client-side EODReportWidget also generates AI summaries
+      // via useAIEODSummary, so this is a bonus pre-population.
+      generateEODAISummary(orgId, summary).then(async (aiSummary) => {
+        if (!aiSummary) return;
+        try {
+          const updatedSummary = { ...summary, aiSummary };
+          await db()
+            .update(schema.reportSnapshots)
+            .set({ summary: updatedSummary as unknown as Record<string, unknown> })
+            .where(eq(schema.reportSnapshots.id, snapshot.id));
+        } catch {
+          // Non-critical — snapshot already stored
+        }
+      }).catch(() => {
+        // AI summary generation failure is non-critical
+      });
+
       // Audit log
       await createAuditEntry({
         organizationId: orgId,
@@ -266,7 +113,12 @@ export const POST = withAuth(
         action: 'report.generated',
         entityType: 'report_snapshot',
         entityId: snapshot.id,
-        newValues: { date: dateStr, type: snapshotType, totalTasks, completedCount },
+        newValues: {
+          date: snapshotData.date,
+          type: snapshotType,
+          totalTasks: summary.totalTasks,
+          completedCount: summary.completedCount,
+        },
         metadata: { summary },
       });
 
