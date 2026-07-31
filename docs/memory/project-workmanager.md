@@ -14,7 +14,7 @@ alert-service, drizzle ORM + Postgres.
 
 ## Current baseline (post PR #46, 2026-07-31)
 
-- **E2E (Playwright):** 266 tests — 266 passed · 0 failed · 0 skipped · 0 flaky
+- **E2E (Playwright):** 268 tests — 268 passed · 0 failed · 0 skipped · 0 flaky
   (chromium; firefox + Mobile Chrome also green in CI)
 - **Unit tests:** full suite green (typecheck 3/3 packages, 0 errors; lint clean)
 - **Branch workflow:** everything ships via PR + squash-merge; CI gates are
