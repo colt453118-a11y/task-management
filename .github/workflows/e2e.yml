@@ -75,12 +75,16 @@ jobs:
         env:
           DATABASE_URL: postgres://dev:devpassword@localhost:5432/workmanagement
 
+      # NOTE: The cache key must include the browser being installed — a
+      # shared key across the matrix meant a chromium-populated cache satisfied
+      # the firefox job's cache-hit check, skipping `playwright install firefox`
+      # and failing every firefox test with "Executable doesn't exist".
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('apps/web/pnpm-lock.yaml', 'apps/web/package.json') }}
+          key: playwright-${{ runner.os }}-${{ matrix.install }}-${{ hashFiles('apps/web/pnpm-lock.yaml', 'apps/web/package.json') }}
 
       - name: Install Playwright browser
         if: steps.playwright-cache.outputs.cache-hit != 'true'
