@@ -202,7 +202,11 @@ test.describe('Command Palette (⌘K)', () => {
     await expect(
       page.getByRole('heading', { name: /quick create task/i }),
     ).not.toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`));
+    // Generous timeout: on a cold firefox CI runner Next.js compiles the
+    // target route on first navigation, which can exceed the 5s default.
+    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
+      timeout: 15_000,
+    });
     await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 15_000 });
   });
 
@@ -338,7 +342,11 @@ test.describe('Command Palette (⌘K)', () => {
     await expect(
       page.getByRole('heading', { name: /quick create task/i }),
     ).not.toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`));
+    // Generous timeout: on a cold firefox CI runner Next.js compiles the
+    // target route on first navigation, which can exceed the 5s default.
+    await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
+      timeout: 15_000,
+    });
     await expect(page.getByText('Created with Enter')).toBeVisible({
       timeout: 15_000,
     });
@@ -391,7 +399,7 @@ test.describe('Command Palette (⌘K)', () => {
 
     // Enter runs the selected command → navigates to /tasks
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/tasks/);
+    await expect(page).toHaveURL(/\/tasks/, { timeout: 15_000 });
   });
 
   test('closes on Escape and resets query + results when reopened', async ({ page }) => {
@@ -426,6 +434,6 @@ test.describe('Command Palette (⌘K)', () => {
     // Selection reset — Enter runs the first command (Search → /search)
     await reopenedInput.focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/search/);
+    await expect(page).toHaveURL(/\/search/, { timeout: 15_000 });
   });
 });
