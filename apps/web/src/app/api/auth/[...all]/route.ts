@@ -3,6 +3,7 @@ import { getAuth } from '@/lib/auth';
 import { checkRateLimit, rateLimitKey, ipFromRequest } from '@/lib/api/rate-limit';
 import { getDb, schema } from '@workmanagement/database';
 import { eq, and } from 'drizzle-orm';
+import logger from '@/lib/logger';
 
 let _handler: {
   POST: (req: Request) => Promise<Response>;
@@ -71,7 +72,7 @@ async function assignNewUserToOrg(userId: string): Promise<void> {
         .onConflictDoNothing();
     }
 
-    console.log(`[auth] New user ${userId} assigned to default org and member role`);
+    logger.info(`[auth] New user ${userId} assigned to default org and member role`);
   } catch (err) {
     // Log but never fail the signup — this is a best-effort assignment
     console.error('[auth] Failed to assign org/role to new user:', err);

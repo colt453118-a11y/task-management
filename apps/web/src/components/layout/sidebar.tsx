@@ -32,7 +32,7 @@ import { motion, AnimatePresence, useTransform } from 'framer-motion';
 import { useScrollShadow } from '@/lib/hooks/use-scroll-shadow';
 import { useNotificationStore } from '@/stores/notification-store';
 
-const navItems = [
+export const navItems = [
   { label: 'Search', href: '/search', icon: SearchIcon },
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Milestones', href: '/milestones', icon: Milestone },

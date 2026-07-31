@@ -364,7 +364,11 @@ export async function mockReportsApis(
             label: matchingSnapshot.label,
             snapshotDate: matchingSnapshot.snapshotDate,
             snapshotType: matchingSnapshot.snapshotType,
-            summary: matchingSnapshot.summary,
+            // Merge summaries so aiSummary from snapshotDetail is preserved
+            summary: {
+              ...(matchingSnapshot.summary as Record<string, unknown>),
+              ...(snapshotDetail.summary as Record<string, unknown>),
+            },
           },
         }),
       });

@@ -46,11 +46,11 @@ export function getAuth(): ReturnType<typeof betterAuth> {
 
         // In development, log the reset URL so devs can copy-paste it
         if (process.env.NODE_ENV !== 'production') {
-          console.log('\n═══════════════════════════════════════════════════════════════');
-          console.log('🔑 PASSWORD RESET LINK (dev mode):');
-          console.log(`   ${data.url}`);
-          console.log('   Copy and paste this URL into your browser to reset your password.');
-          console.log('═══════════════════════════════════════════════════════════════\n');
+          logger.info('\n═══════════════════════════════════════════════════════════════');
+          logger.info('🔑 PASSWORD RESET LINK (dev mode):');
+          logger.info(`   ${data.url}`);
+          logger.info('   Copy and paste this URL into your browser to reset your password.');
+          logger.info('═══════════════════════════════════════════════════════════════\n');
         }
 
         // If RESEND_API_KEY is configured, send the email

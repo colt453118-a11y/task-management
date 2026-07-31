@@ -123,14 +123,19 @@ export function Topbar() {
     function handleCustomQuickCreate() {
       startTransition(() => setQuickCreateOpen(true));
     }
+    function handleCustomShortcuts() {
+      startTransition(() => setShortcutsOpen(true));
+    }
 
     document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('open-search', handleCustomSearch);
     window.addEventListener('open-quick-create', handleCustomQuickCreate);
+    window.addEventListener('open-shortcuts', handleCustomShortcuts);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('open-search', handleCustomSearch);
       window.removeEventListener('open-quick-create', handleCustomQuickCreate);
+      window.removeEventListener('open-shortcuts', handleCustomShortcuts);
     };
   }, []);
 
@@ -440,11 +445,9 @@ export function Topbar() {
         </div>
       </motion.header>
 
-      <SearchCommand
-        key={searchOpen ? 'open' : 'closed'}
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-      />
+      {/* Palette resets its own state (query/selection) on every open — no
+          remount key needed, which keeps the dialog's close animation intact. */}
+      <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       <CreateTaskDialog open={quickCreateOpen} onOpenChange={setQuickCreateOpen} />
       <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>

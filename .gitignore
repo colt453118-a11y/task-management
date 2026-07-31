@@ -34,6 +34,8 @@ logs/
 coverage/
 playwright-report/
 test-results/
+# E2E diagnostic screenshots — test artifacts, never commit these
+apps/web/__tests__/e2e/screenshots/
 
 # Docker
 docker/data/

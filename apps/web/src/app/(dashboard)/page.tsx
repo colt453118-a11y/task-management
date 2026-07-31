@@ -244,7 +244,6 @@ export default function DashboardPage() {
       setActivityRefreshCounter((c) => c + 1);
     }
     prevUnreadRef.current = sseUnreadCount;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sseUnreadCount]);
 
   const urgentThreshold = useMemo(() => Date.now() + 86400000 * 2, []);

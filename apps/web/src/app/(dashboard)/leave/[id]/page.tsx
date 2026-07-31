@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, startTransition } from 'react';
+import { useEffect, useState, startTransition, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -73,7 +73,7 @@ export default function LeaveRequestDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState('');
 
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async () => {
     try {
       const res = await fetch(`/api/leave-requests/${params.id}`);
       if (!res.ok) throw new Error('Failed to load request');
@@ -84,11 +84,11 @@ export default function LeaveRequestDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
 
   useEffect(() => {
     startTransition(() => { fetchRequest(); });
-  }, [params.id]);
+  }, [fetchRequest]);
 
   const handleAction = async (action: 'approve' | 'reject') => {
     setActionLoading(action);
@@ -246,7 +246,7 @@ export default function LeaveRequestDetailPage() {
               {request.reviewedAt && formatDateTime(request.reviewedAt)}
             </p>
             {request.reviewNote && (
-              <p className="text-surface-500 mt-1 text-xs italic">"{request.reviewNote}"</p>
+              <p className="text-surface-500 mt-1 text-xs italic">&quot;{request.reviewNote}&quot;</p>
             )}
           </div>
         )}

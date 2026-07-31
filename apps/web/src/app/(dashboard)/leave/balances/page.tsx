@@ -107,7 +107,7 @@ export default function LeaveBalancesPage() {
             </div>
             <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">No balances allocated yet</h3>
             <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
-              Your admin hasn't allocated leave balances for this year yet.
+              Your admin hasn&apos;t allocated leave balances for this year yet.
             </p>
           </div>
         ) : (
