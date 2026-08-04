@@ -78,6 +78,19 @@ services:
       - key: MEILISEARCH_API_KEY
         sync: false
 
+      # ── Email (Resend) ──
+      # Set RESEND_API_KEY in the Render dashboard (sync: false so it stays
+      # out of the blueprint). Verify the sending domain (SPF + DKIM) at
+      # https://resend.com/domains before relying on it in production.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@workmanager.com
+      - key: EMAIL_FROM_NAME
+        value: WorkManager
+      - key: EMAIL_UNSUBSCRIBE_URL
+        value: https://app.workmanager.com/settings/notifications
+
 # ─── Managed PostgreSQL ─────────────────────────────────────
 databases:
   - name: workmanager-db
