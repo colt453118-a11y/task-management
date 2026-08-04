@@ -187,3 +187,117 @@ export async function mockSettingsApis(
     });
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Slack Integration Mocks
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * A connected Slack integration as returned by GET/POST /api/settings/slack.
+ */
+export const MOCK_SLACK_INTEGRATION = {
+  id: 'slack-int-1',
+  organizationId: 'org-1',
+  createdBy: 'user-1',
+  channelName: '#general',
+  isActive: true,
+  hasWebhookUrl: true,
+  lastUsedAt: '2026-08-01T12:00:00.000Z',
+  lastError: null,
+  createdAt: '2026-07-15T09:30:00.000Z',
+} as const;
+
+export interface SlackMockOptions {
+  /** Payload for GET /api/settings/slack (default: null — not connected). */
+  integration?: Record<string, unknown> | null;
+  /** Body for POST /api/settings/slack/test (default: { success: true }). */
+  testResult?: { success: boolean; error?: string };
+  /** Body for POST /api/settings/slack/preview (default: { success: true }). */
+  previewResult?: { success: boolean; error?: string };
+  /** Full response for POST /api/settings/slack (save/connect). */
+  saveResponse?: { status: number; body: Record<string, unknown> };
+  /** Full response for DELETE /api/settings/slack (disconnect). */
+  deleteResponse?: { status: number; body: Record<string, unknown> };
+}
+
+/**
+ * Mock the Slack settings endpoints for the Slack tab in E2E tests.
+ *
+ * Intercepts:
+ *   - GET  /api/settings/slack          → integration status
+ *   - POST /api/settings/slack          → save/connect webhook
+ *   - DELETE /api/settings/slack        → disconnect
+ *   - POST /api/settings/slack/test     → webhook test result
+ *   - POST /api/settings/slack/preview  → preview send result
+ *
+ * Call this alongside mockSettingsApis() (the settings page needs the
+ * organization/preferences mocks too).
+ */
+export async function mockSlackSettingsApis(page: Page, options: SlackMockOptions = {}) {
+  const {
+    integration = null,
+    testResult = { success: true },
+    previewResult = { success: true },
+    saveResponse = {
+      status: 200,
+      body: { integration: { ...MOCK_SLACK_INTEGRATION } },
+    },
+    deleteResponse = { status: 200, body: { success: true } },
+  } = options;
+
+  // ── CRUD /api/settings/slack ────────────────────────────
+  await page.route('**/api/settings/slack', async (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ integration }),
+      });
+      return;
+    }
+    if (method === 'POST') {
+      await route.fulfill({
+        status: saveResponse.status,
+        contentType: 'application/json',
+        body: JSON.stringify(saveResponse.body),
+      });
+      return;
+    }
+    if (method === 'DELETE') {
+      await route.fulfill({
+        status: deleteResponse.status,
+        contentType: 'application/json',
+        body: JSON.stringify(deleteResponse.body),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  // ── POST /api/settings/slack/test ───────────────────────
+  await page.route('**/api/settings/slack/test', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(testResult),
+    });
+  });
+
+  // ── POST /api/settings/slack/preview ────────────────────
+  await page.route('**/api/settings/slack/preview', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(previewResult),
+    });
+  });
+}
