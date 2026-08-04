@@ -303,6 +303,7 @@ export * from './webhooks';
 export * from './automation';
 export * from './saved-searches';
 export * from './leave';
+export * from './slack';
 
 // ─── Import domain tables for relations ──────────────────────
 

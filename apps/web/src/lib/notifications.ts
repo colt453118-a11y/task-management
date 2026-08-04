@@ -3,6 +3,7 @@ import { getDb, schema } from '@workmanagement/database';
 import { eq, sql } from 'drizzle-orm';
 import { sendNotificationEmail } from './email';
 import { emitNotification } from './notifications/listener';
+import { sendSlackNotification } from './slack/webhook';
 
 export type CreateNotificationInput = {
   organizationId: string;
@@ -15,10 +16,6 @@ export type CreateNotificationInput = {
   entityType?: string | null;
   entityId?: string | null;
   metadata?: Record<string, unknown> | null;
-  /**
-   * If true, skip the user's notification preference check and send regardless.
-   * Used for critical notifications like security alerts.
-   */
   force?: boolean;
 };
 
@@ -37,15 +34,7 @@ const TYPE_TO_PREF_KEY: Record<string, string> = {
   'report.eod_ready': 'report_eod_ready',
 };
 
-/**
- * Check if the user has enabled email notifications for a given type.
- *
- * Preference resolution order (most specific wins):
- * 1. `typeChannels[prefKey].email` — per-type, per-channel explicit override
- * 2. `types[prefKey] && channels.email` — legacy: global type toggle + global channel toggle
- * 3. Defaults to `true` if nothing is set
- */
-async function shouldSendEmailForType(
+export async function shouldSendEmailForType(
   userId: string,
   type: string,
   force?: boolean,
@@ -53,7 +42,7 @@ async function shouldSendEmailForType(
   if (force) return true;
 
   const prefKey = TYPE_TO_PREF_KEY[type];
-  if (!prefKey) return true; // Unknown type — send by default
+  if (!prefKey) return true;
 
   try {
     const db = getDb();
@@ -69,8 +58,6 @@ async function shouldSendEmailForType(
     const notifications = prefs.notifications as Record<string, unknown> | undefined;
     if (!notifications) return true;
 
-    // ── Step 1: Check per-type channel overrides (typeChannels) ──
-    // If the user has explicitly set email per notification type, respect that.
     const typeChannels = notifications.typeChannels as
       | Record<string, Record<string, boolean>>
       | undefined;
@@ -79,9 +66,6 @@ async function shouldSendEmailForType(
       return channelPrefs.email;
     }
 
-    // ── Step 2: Fall back to the legacy combined check ──
-    // types[prefKey] controls whether the notification type fires at all,
-    // and channels.email is the global email toggle.
     const types = notifications.types as Record<string, boolean> | undefined;
     const channels = notifications.channels as Record<string, boolean> | undefined;
 
@@ -90,17 +74,56 @@ async function shouldSendEmailForType(
 
     return typeEnabled && emailEnabled;
   } catch {
-    // If we can't read preferences, send the email to be safe
     return true;
   }
 }
 
+export async function shouldSendSlackForType(
+  userId: string,
+  type: string,
+  force?: boolean,
+): Promise<boolean> {
+  if (force) return true;
+
+  const prefKey = TYPE_TO_PREF_KEY[type];
+  if (!prefKey) return true;
+
+  try {
+    const db = getDb();
+    const [user] = await db
+      .select({ preferences: schema.users.preferences })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
+    if (!user?.preferences) return false;
+
+    const prefs = user.preferences as Record<string, unknown>;
+    const notifications = prefs.notifications as Record<string, unknown> | undefined;
+    if (!notifications) return false;
+
+    const typeChannels = notifications.typeChannels as
+      | Record<string, Record<string, boolean>>
+      | undefined;
+    const channelPrefs = typeChannels?.[prefKey];
+    if (channelPrefs !== undefined && channelPrefs.slack !== undefined) {
+      return channelPrefs.slack;
+    }
+
+    const types = notifications.types as Record<string, boolean> | undefined;
+    const channels = notifications.channels as Record<string, boolean> | undefined;
+
+    const typeEnabled = types ? types[prefKey] !== false : true;
+    const slackEnabled = channels ? channels.slack === true : false;
+
+    return typeEnabled && slackEnabled;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Create and persist a notification in the database, then send an email
- * notification asynchronously (non-blocking) if the user has not disabled it.
- * The email send is fire-and-forget — failures are logged but never bubble up.
- *
- * Call this from API routes after relevant mutations (task assigned, comment added, etc.).
+ * Create and persist a notification, then send email + Slack asynchronously.
  */
 export async function createNotification(data: CreateNotificationInput) {
   const db = getDb();
@@ -122,18 +145,12 @@ export async function createNotification(data: CreateNotificationInput) {
 
   const notification = notif!;
 
-  // Fire-and-forget email notification — never block the API response
+  // Fire-and-forget
   sendEmailNotificationAsync(data).catch(() => {});
+  sendSlackNotificationAsync(data).catch(() => {});
 
-  // ── In-process push (instant, ~0.1ms) ───────────────────
-  // Deliver directly to SSE controllers within this Node.js process
-  // via the EventEmitter bus. No DB round-trip needed — the full
-  // notification object is already in memory.
   emitNotification(notification as unknown as NotificationEvent);
 
-  // ── Cross-process push (~5ms) ───────────────────────────
-  // Fire a PostgreSQL notification so SSE listeners in OTHER
-  // server instances also receive this notification in real-time.
   try {
     await db.execute(
       sql`SELECT pg_notify(
@@ -146,22 +163,14 @@ export async function createNotification(data: CreateNotificationInput) {
       )`,
     );
   } catch {
-    // Non-critical — the in-process push already delivered it locally
+    // Non-critical
   }
 
   return notification;
 }
 
-/**
- * Fetch the user's email and name from the database, then send the email.
- * Checks the user's preferences first before sending.
- * This runs asynchronously after the API response is sent.
- */
-async function sendEmailNotificationAsync(
-  data: CreateNotificationInput,
-): Promise<void> {
+async function sendEmailNotificationAsync(data: CreateNotificationInput): Promise<void> {
   try {
-    // Check if user wants email for this notification type
     const shouldSend = await shouldSendEmailForType(data.userId, data.type, data.force);
     if (!shouldSend) return;
 
@@ -172,10 +181,7 @@ async function sendEmailNotificationAsync(
       .where(eq(schema.users.id, data.userId))
       .limit(1);
 
-    if (!user?.email) {
-      console.warn(`[notifications] No email found for user ${data.userId}, skipping email`);
-      return;
-    }
+    if (!user?.email) return;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const fullLink = data.link ? `${appUrl}${data.link}` : appUrl;
@@ -189,10 +195,49 @@ async function sendEmailNotificationAsync(
       link: fullLink,
     });
   } catch (error) {
-    // Email failures are non-critical — just log and move on
-    console.error(
-      '[notifications] Failed to send email notification:',
-      error instanceof Error ? error.message : error,
-    );
+    console.error('[notifications] Email failed:', error);
+  }
+}
+
+/**
+ * Send a simple Slack notification. Fire-and-forget.
+ */
+async function sendSlackNotificationAsync(data: CreateNotificationInput): Promise<void> {
+  try {
+    const shouldSend = await shouldSendSlackForType(data.userId, data.type, data.force);
+    if (!shouldSend) return;
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const fullLink = data.link ? `${appUrl}${data.link}` : appUrl;
+
+    // Build simple message
+    const text = data.message
+      ? `*${data.title}*\n${data.message}`
+      : data.title;
+
+    const blocks: Array<Record<string, unknown>> = [
+      {
+        type: 'section',
+        text: { type: 'mrkdwn', text },
+      },
+    ];
+
+    if (data.link) {
+      blocks.push({
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: 'View', emoji: true },
+            url: fullLink,
+            style: 'primary',
+          },
+        ],
+      });
+    }
+
+    await sendSlackNotification(data.organizationId, { text, blocks });
+  } catch {
+    // Non-critical
   }
 }

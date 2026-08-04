@@ -22,6 +22,7 @@ const TypeChannelSchema = z.object({
   inApp: z.boolean().optional(),
   email: z.boolean().optional(),
   push: z.boolean().optional(),
+  slack: z.boolean().optional(),
 });
 
 const NotificationPreferencesSchema = z.object({
@@ -30,6 +31,7 @@ const NotificationPreferencesSchema = z.object({
       inApp: z.boolean().default(true),
       email: z.boolean().default(true),
       push: z.boolean().default(false),
+      slack: z.boolean().default(false),
     })
     .optional(),
   types: z
@@ -105,6 +107,10 @@ export const PATCH = withAuth(
         .limit(1);
 
       const currentPrefs = (existing?.preferences as Record<string, unknown>) ?? {};
+      // Note: `channels` is replaced wholesale by parsed.data.channels (schema
+      // defaults fill any absent keys). The settings page always sends the full
+      // channel set, so this preserves existing values in practice — but partial
+      // PATCH bodies will reset channels they omit to their defaults.
       const updatedPrefs = {
         ...currentPrefs,
         notifications: {
