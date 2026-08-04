@@ -20,11 +20,10 @@ services:
       S3_BUCKET: "workmanagement-files"
       MEILISEARCH_HOST: "http://meilisearch:7700"
       MEILISEARCH_API_KEY: "${MEILI_MASTER_KEY}"
-      SMTP_HOST: "${SMTP_HOST}"
-      SMTP_PORT: "587"
-      SMTP_USER: "${SMTP_USER}"
-      SMTP_PASS: "${SMTP_PASS}"
-      EMAIL_FROM: "${EMAIL_FROM}"
+      RESEND_API_KEY: "${RESEND_API_KEY}"
+      EMAIL_FROM: "${EMAIL_FROM:-noreply@workmanager.com}"
+      EMAIL_FROM_NAME: "${EMAIL_FROM_NAME:-WorkManager}"
+      EMAIL_UNSUBSCRIBE_URL: "${EMAIL_UNSUBSCRIBE_URL:-https://app.workmanager.com/settings/notifications}"
     depends_on:
       postgres:
         condition: service_healthy
