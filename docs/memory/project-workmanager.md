@@ -14,17 +14,48 @@ alert-service, drizzle ORM + Postgres.
 
 ## Current baseline (post PR #47, 2026-07-31)
 
-- **E2E (Playwright):** 268 tests — 268 passed · 0 failed · 0 skipped · 0 flaky
+- **E2E (Playwright):** 294 tests — 294 passed · 0 failed · 0 skipped · 0 flaky
   (chromium; firefox + Mobile Chrome also green in CI)
-- **Unit tests:** full suite green (typecheck 3/3 packages, 0 errors; lint clean)
+- **Unit tests:** full suite green (typecheck 3/3 packages, 0 errors; lint clean).
+  Web package baseline now **1526 tests** (Slack integration coverage added).
 - **Branch workflow:** everything ships via PR + squash-merge; CI gates are
   Typecheck → Test → Lint, then E2E on chromium/firefox/mobile-chrome.
   Direct pushes to `main` are off-limits.
+
+## Slack integration — shipped (#55, 2026-08-05)
+
+Slack Incoming-Webhook integration is **live**:
+
+- `slack_integrations` table (migration `0001_add_slack_integrations.sql`, hand-written
+  — matches `drizzle-kit check`), `packages/database/src/schema/slack.ts`.
+- API: `GET/POST/DELETE /api/settings/slack`, `POST /api/settings/slack/test`,
+  `POST /api/settings/slack/preview`; lib `apps/web/src/lib/slack/webhook.ts`
+  (`sendSlackNotification` no-ops without an active integration).
+- Settings page: new **Slack tab** (tab key `5`, notifications moved to `7`),
+  `slackConnected` badge on the Notifications tab, Slack channel + per-event
+  toggles; `notifications.ts` gains `shouldSendSlackForType` + fire-and-forget
+  Slack send alongside email.
+- **Critical fix shipped:** `api/users/me/preferences` Zod schema previously
+  stripped `channels.slack` and `typeChannels[*].slack` (unknown-key strip),
+  silently dropping Slack prefs on every save. Added `slack` to both schemas;
+  regression tests added (`preferences-api.test.ts`).
+- Settings page PATCH replaces `channels` wholesale (defaults fill absent keys) —
+  the settings UI always sends the full channel set, so this is safe; documented
+  in a code comment. Slack toggle is disabled until an integration is connected.
+- 26-test E2E spec `notification-preferences.spec.ts` (channel toggles, Slack
+  status badges, Configure navigation, save flow, digest, keyboard shortcuts).
+- Also shipped: MinIO dev image pinned to `latest` (dated RELEASE tags get pruned
+  on Docker Hub), `preview.html` + Slack screenshots 31/32.
+
+## In-flight (uncommitted, working tree)
+
+Nothing — tree is clean as of #55.
 
 ## PR history
 
 | PR | Squash SHA | Shipped |
 |---|---|---|
+| #55 | `5fa01e0` | Slack Incoming-Webhook integration + Slack notification channel: `slack_integrations` table + migration 0001; `/api/settings/slack` CRUD + test/preview; Slack settings tab (key 5, notifications → 7); per-event Slack toggles; `shouldSendSlackForType`; critical fix — preferences Zod schema no longer strips `channels.slack`/`typeChannels[*].slack`; 8 new unit test files (web baseline 1526); 26-test E2E spec (baseline 268→294); MinIO dev pin → latest; preview.html + screenshots 31/32. CI green on chromium/firefox/mobile-chrome. |
 | #47 | `983f0f6` | Topbar Quick button E2E test (12th palette test — clicks the topbar Quick button, viewport-aware regex locator matching desktop "Quick ⌘T" and mobile "Quick create task (⌘T)", fills title, submits with Enter, verifies POST + navigation). Memory baseline bump 266→268. |
 | #46 | `da771f1` | ⌘T quick-create shortcut E2E test (10th palette test — opens dialog via Control+KeyT, shortcuts-provider dispatch + topbar keydown, no palette involved). Memory record for PR #45 and baseline bump 265→266. |
 | #45 | `bac9311` | Three quick-create E2E tests (submit via Create click, POST-500 inline error path, Enter-submit) taking the palette spec to 9 tests. Plus: fixed `e2e.yml` Playwright browser cache key (was shared across the matrix → a chromium-populated cache skipped `playwright install firefox`, failing every firefox test with "Executable doesn't exist"; key now includes `matrix.install`), and bumped palette nav `toHaveURL` timeouts 5s→15s for cold-firefox route compilation. Also created `docs/memory/` project memory. |
