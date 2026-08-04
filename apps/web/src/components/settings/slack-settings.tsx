@@ -272,6 +272,8 @@ export function SlackSettings() {
                   )}
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
+                    aria-label="Disconnect Slack"
+                    title="Disconnect Slack"
                     className="text-surface-500 hover:text-error hover:bg-error/5 rounded-lg p-1.5 transition-all"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
