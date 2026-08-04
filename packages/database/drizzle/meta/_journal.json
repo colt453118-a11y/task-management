@@ -8,6 +8,13 @@
       "when": 1783436714478,
       "tag": "0000_equal_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785763014393,
+      "tag": "0001_add_slack_integrations",
+      "breakpoints": true
     }
   ]
 }

@@ -9,7 +9,7 @@ import type { Page } from '@playwright/test';
  * Includes the `media` field for sound/haptic toggles.
  */
 export const MOCK_NOTIFICATION_PREFS = {
-  channels: { inApp: true, email: true, push: false },
+  channels: { inApp: true, email: true, push: false, slack: false },
   types: {
     task_assigned: true,
     task_comment: true,

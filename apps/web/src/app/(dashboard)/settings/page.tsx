@@ -40,12 +40,13 @@ import {
 import { AISettings } from '@/components/settings/ai-settings';
 import { WebhookSettings } from '@/components/settings/webhook-settings';
 import { EODScheduleSettings } from '@/components/settings/eod-schedule-settings';
+import { SlackSettings } from '@/components/settings/slack-settings';
 import { setMediaPrefs } from '@/lib/notification-media';
 import { useToast } from '@/hooks/use-toast';
 import { playNotificationChime, isNotificationSoundSupported } from '@/lib/notification-sound';
 import { triggerHaptic } from '@/lib/haptics';
 
-type Tab = 'general' | 'roles' | 'ai' | 'security' | 'notifications' | 'webhooks';
+type Tab = 'general' | 'roles' | 'ai' | 'security' | 'notifications' | 'webhooks' | 'slack';
 type Organization = {
   id: string;
   name: string;
@@ -102,13 +103,14 @@ const moduleColors: Record<string, string> = {
   organization: 'bg-indigo-500/10 text-indigo-400',
 };
 
-type ChannelKey = 'inApp' | 'email' | 'push';
+type ChannelKey = 'inApp' | 'email' | 'push' | 'slack';
 
 type NotifPreferences = {
   channels?: {
     inApp?: boolean;
     email?: boolean;
     push?: boolean;
+    slack?: boolean;
   };
   types?: {
     task_assigned?: boolean;
@@ -144,7 +146,7 @@ type NotifPreferences = {
 };
 
 const DEFAULT_NOTIF_PREFS: NotifPreferences = {
-  channels: { inApp: true, email: true, push: false },
+  channels: { inApp: true, email: true, push: false, slack: false },
   types: {
     task_assigned: true,
     task_comment: true,
@@ -179,6 +181,7 @@ const channelMeta: Record<ChannelKey, { label: string; description: string; icon
   inApp: { label: 'In-app', description: 'Notification bell in the top bar', icon: <Monitor className="h-4 w-4" /> },
   email: { label: 'Email', description: 'Send email notifications', icon: <Mail className="h-4 w-4" /> },
   push: { label: 'Push', description: 'Push notifications (coming soon)', icon: <Smartphone className="h-4 w-4" /> },
+  slack: { label: 'Slack', description: 'Send notifications to Slack channel', icon: <MessageSquare className="h-4 w-4" /> },
 };
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -232,6 +235,7 @@ const CARD_GRADIENTS: Record<string, string> = {
   roles: 'from-amber-500 to-yellow-400',
   ai: 'from-purple-500 to-pink-400',
   webhooks: 'from-cyan-500 to-teal-400',
+  slack: 'from-[#4A154B] to-[#611f69]',
   security: 'from-emerald-500 to-teal-400',
   notifications: 'from-purple-500 to-violet-400',
 } as const;
@@ -243,6 +247,7 @@ const TABS: { id: Tab; label: string; gradient: string }[] = [
   { id: 'roles', label: 'Roles & Permissions', gradient: 'from-amber-500 to-yellow-400' },
   { id: 'ai', label: 'AI', gradient: 'from-purple-500 to-pink-400' },
   { id: 'webhooks', label: 'Webhooks', gradient: 'from-cyan-500 to-teal-400' },
+  { id: 'slack', label: 'Slack', gradient: 'from-[#4A154B] to-[#611f69]' },
   { id: 'security', label: 'Security', gradient: 'from-emerald-500 to-teal-400' },
   { id: 'notifications', label: 'Notifications', gradient: 'from-purple-500 to-violet-400' },
 ];
@@ -288,6 +293,7 @@ export default function SettingsPage() {
   const [roleError, setRoleError] = useState<string | null>(null);
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [slackConnected, setSlackConnected] = useState<boolean | null>(null);
 
   // ── Keyboard shortcuts ──────────────────────────────────
   useEffect(() => {
@@ -297,8 +303,9 @@ export default function SettingsPage() {
       else if (e.key === '2') setTab('roles');
       else if (e.key === '3') setTab('security');
       else if (e.key === '4') setTab('webhooks');
-      else if (e.key === '5') setTab('ai');
-      else if (e.key === '6') setTab('notifications');
+      else if (e.key === '5') setTab('slack');
+      else if (e.key === '6') setTab('ai');
+      else if (e.key === '7') setTab('notifications');
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -404,6 +411,19 @@ export default function SettingsPage() {
           // Use defaults
         } finally {
           setNotifPrefsLoading(false);
+        }
+      })();
+
+      // Fetch Slack connection status
+      (async () => {
+        try {
+          const res = await fetch('/api/settings/slack');
+          if (res.ok) {
+            const data = await res.json();
+            setSlackConnected(!!data.integration?.isActive);
+          }
+        } catch {
+          setSlackConnected(false);
         }
       })();
     }
@@ -901,6 +921,26 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
+        {tab === 'slack' && (
+          <motion.div
+            key="slack"
+            variants={tabContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <SectionCard gradient={CARD_GRADIENTS.slack ?? 'from-[#4A154B] to-[#611f69]'}>
+              <div className="p-5">
+                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                  <MessageSquare className="text-[#4A154B] h-4 w-4" />
+                  Slack Integration
+                </h2>
+                <SlackSettings />
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
+
         {tab === 'security' && (
           <motion.div
             key="security"
@@ -938,7 +978,7 @@ export default function SettingsPage() {
                   Notification Channels
                 </h2>
                 <div className="space-y-2">
-                  {(['inApp', 'email', 'push'] as const).map((key) => (
+                  {(['inApp', 'email', 'push', 'slack'] as const).map((key) => (
                     <motion.div
                       key={key}
                       initial={{ opacity: 0, x: -8 }}
@@ -948,16 +988,32 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-3">
                         <div className="text-surface-500">{channelMeta[key]!.icon}</div>
                         <div>
-                          <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
-                            {channelMeta[key]!.label}
+                          <div className="flex items-center gap-2">
+                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                              {channelMeta[key]!.label}
+                            </p>
+                            {key === 'slack' && slackConnected !== null && (
+                              <Badge
+                                variant={slackConnected ? 'success' : 'default'}
+                                size="sm"
+                                className="px-1.5 py-0 text-[9px]"
+                              >
+                                {slackConnected ? 'Connected' : 'Not connected'}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-surface-500 text-xs">
+                            {channelMeta[key]!.description}
+                            {key === 'slack' && !slackConnected && (
+                              <> · <a href="#" onClick={(e) => { e.preventDefault(); setTab('slack'); }} className="text-brand-500 hover:underline">Configure Slack</a></>
+                            )}
                           </p>
-                          <p className="text-surface-500 text-xs">{channelMeta[key]!.description}</p>
                         </div>
                       </div>
                       <Toggle
                         enabled={notifPrefs.channels?.[key] ?? false}
                         onChange={(v) => setNotifPrefs((prev) => ({ ...prev, channels: { ...(prev.channels ?? {}), [key]: v } }))}
-                        disabled={key === 'push'}
+                        disabled={key === 'push' || (key === 'slack' && slackConnected === false)}
                       />
                     </motion.div>
                   ))}
@@ -1106,6 +1162,14 @@ export default function SettingsPage() {
                               enabled={tc.push ?? false}
                               onChange={(v) => updateTypeChannel(k, 'push', v)}
                               disabled
+                            />
+                          </div>
+                          {/* Slack */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Slack</span>
+                            <Toggle
+                              enabled={tc.slack ?? (notifPrefs.channels?.slack ?? false)}
+                              onChange={(v) => updateTypeChannel(k, 'slack', v)}
                             />
                           </div>
                         </div>
