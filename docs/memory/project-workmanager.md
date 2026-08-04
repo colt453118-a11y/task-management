@@ -12,10 +12,10 @@ charts, automation emails, reports, teams, kanban, calendar, dashboard). Repo:
 Monorepo: pnpm + Turbo; `apps/web` (Next.js App Router + Tailwind + Radix UI),
 alert-service, drizzle ORM + Postgres.
 
-## Current baseline (post PR #47, 2026-07-31)
+## Current baseline (post #57/#58, 2026-08-05)
 
-- **E2E (Playwright):** 294 tests — 294 passed · 0 failed · 0 skipped · 0 flaky
-  (chromium; firefox + Mobile Chrome also green in CI)
+- **E2E (Playwright):** 311 tests — 311 passed · 0 failed · 0 skipped · 0 flaky
+  (chromium; firefox + Mobile Chrome also green in CI; +17 slack-settings spec)
 - **Unit tests:** full suite green (typecheck 3/3 packages, 0 errors; lint clean).
   Web package baseline now **1526 tests** (Slack integration coverage added).
 - **Branch workflow:** everything ships via PR + squash-merge; CI gates are
@@ -47,14 +47,47 @@ Slack Incoming-Webhook integration is **live**:
 - Also shipped: MinIO dev image pinned to `latest` (dated RELEASE tags get pruned
   on Docker Hub), `preview.html` + Slack screenshots 31/32.
 
+## Slack settings tab E2E — shipped (#57, 2026-08-05)
+
+17-test spec `slack-settings.spec.ts` covering the Slack tab itself (complements
+`notification-preferences.spec.ts`): Connect flow (setup form, instructions,
+Test/Connect disabled-until-URL, test success/failure, connect save → active
+card, invalid-URL error state + Retry), connected state (Active/Disabled badges,
+last-used/last-error indicators), Send Preview success/failure, Disconnect modal
+(open/cancel/confirm/failure), keyboard shortcut 5. New `mockSlackSettingsApis()`
+helper + `MOCK_SLACK_INTEGRATION` fixture in `settings-mocks.ts`; aria-label on
+the disconnect trash button (was unlabeled). E2E baseline 294→311. Verified
+locally 51/51 across chromium/firefox/mobile-chrome before CI.
+
+## Resend production email config — shipped (#58, 2026-08-05)
+
+Email path is 100% Resend (`lib/email/send.tsx`, `resend@6.17.2`); `sendEmail`
+no-ops when `RESEND_API_KEY` is unset. Configured: `render.yaml` (RESEND_API_KEY
+`sync:false` + EMAIL_FROM/EMAIL_FROM_NAME/EMAIL_UNSUBSCRIBE_URL),
+`docker-compose.prod.yml` (dead SMTP_* vars replaced), `.env.production.example`
+(Resend section), and `scripts/send-test-email.mjs` (dependency-free live
+verification: sends via Resend API + polls delivery status; links built from
+`NEXT_PUBLIC_APP_URL`). **Live-verified:** test email delivered to the
+account-owner inbox via sandbox sender `onboarding@resend.dev`. The real key
+lives only in the gitignored `.env` (set in the Render dashboard at go-live).
+**Deployment pending** — `app.workmanager.com` has no DNS record and the app is
+not deployed, so email links don't resolve yet. Resend account: only domain
+`mindhives.co` (status `failed`); `workmanager.com` not registered → verify a
+domain before real multi-recipient sending.
+
 ## In-flight (uncommitted, working tree)
 
-Nothing — tree is clean as of #55.
+Nothing — tree clean as of #58. Outstanding operational items (not code):
+- **Deploy the app (go-live)** so email/notification links resolve; set
+  RESEND_API_KEY + EMAIL_FROM* in the Render dashboard; verify a Resend sending
+  domain (DNS: SPF/DKIM).
 
 ## PR history
 
 | PR | Squash SHA | Shipped |
 |---|---|---|
+| #58 | `269e8e8` | Resend production email provider config + verification tool: render.yaml email env vars (RESEND_API_KEY `sync:false`), docker-compose.prod.yml SMTP→Resend swap, .env.production.example Resend section, `scripts/send-test-email.mjs` (live verify + delivery polling, links from NEXT_PUBLIC_APP_URL). Live email delivered via Resend sandbox — proven outside Mailpit. |
+| #57 | `b6cc3f6` | Slack settings tab E2E spec — 17 tests (connect → test → preview → disconnect + keyboard-5 nav); `mockSlackSettingsApis` helper + `MOCK_SLACK_INTEGRATION`; aria-label on disconnect button. Baseline 294→311. |
 | #55 | `5fa01e0` | Slack Incoming-Webhook integration + Slack notification channel: `slack_integrations` table + migration 0001; `/api/settings/slack` CRUD + test/preview; Slack settings tab (key 5, notifications → 7); per-event Slack toggles; `shouldSendSlackForType`; critical fix — preferences Zod schema no longer strips `channels.slack`/`typeChannels[*].slack`; 8 new unit test files (web baseline 1526); 26-test E2E spec (baseline 268→294); MinIO dev pin → latest; preview.html + screenshots 31/32. CI green on chromium/firefox/mobile-chrome. |
 | #47 | `983f0f6` | Topbar Quick button E2E test (12th palette test — clicks the topbar Quick button, viewport-aware regex locator matching desktop "Quick ⌘T" and mobile "Quick create task (⌘T)", fills title, submits with Enter, verifies POST + navigation). Memory baseline bump 266→268. |
 | #46 | `da771f1` | ⌘T quick-create shortcut E2E test (10th palette test — opens dialog via Control+KeyT, shortcuts-provider dispatch + topbar keydown, no palette involved). Memory record for PR #45 and baseline bump 265→266. |
@@ -77,3 +110,18 @@ Nothing — tree is clean as of #55.
   failure; regenerate via `next typegen` or run after the dev server stops.
 - **E2E count parity:** the "262" baseline is deterministic; new specs must land
   green with 0 flaky/retries before merge.
+- **GitHub push protection:** blocks any commit containing `hooks.slack.com`
+  token segments — even fake placeholder webhook URLs (e.g.
+  `services/T00000000/B00000000/XXXXXXXX`). Use hyphens in placeholders
+  (`services/not-a-real-token/...`) so the secret pattern can't match.
+- **Branch must be up-to-date before squash-merge:** if a PR is BEHIND after a
+  sibling PR merges, run `gh pr update-branch <n>`, wait for CI, then merge with
+  `gh pr merge <n> --squash --delete-branch --auto` (auto-merges once green).
+- **Parallel gh CLI on a shared checkout:** `gh pr create` infers the branch from
+  the checked-out working tree — running two in parallel can create a PR for the
+  wrong branch. Run gh commands sequentially.
+- **Email (Resend):** RESEND_API_KEY lives only in the gitignored `.env`; prod
+  sets it in the Render dashboard. Live test:
+  `node scripts/send-test-email.mjs --to <inbox>` (override sender via
+  `EMAIL_FROM=...` env). App links come from NEXT_PUBLIC_APP_URL; unsubscribe
+  from EMAIL_UNSUBSCRIBE_URL.
