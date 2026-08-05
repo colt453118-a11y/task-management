@@ -3,11 +3,29 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 
+// Credentials come from the environment — NEVER hardcode them here.
+//   ADMIN_EMAIL      (optional; defaults below)
+//   ADMIN_PASSWORD   (required; rotate to a fresh random value, e.g.
+//                    `openssl rand -base64 18`)
+//
+// Run with:
+//   ADMIN_PASSWORD=... node --import tsx scripts/fix-password.ts
+// (set DATABASE_URL to the target database first)
+
 async function fixPassword() {
   console.log('🔧 Fixing admin password hash...');
 
-  const email = 'colt453118@gmail.com';
-  const password = 'Colt@180731';
+  const email = process.env.ADMIN_EMAIL ?? 'colt453118@gmail.com';
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    console.error(
+      '❌ ADMIN_PASSWORD environment variable is required (never commit a default).\n' +
+        '   Generate one with: openssl rand -base64 18\n' +
+        '   Then: ADMIN_PASSWORD=... DATABASE_URL=... node --import tsx scripts/fix-password.ts',
+    );
+    process.exit(1);
+  }
 
   // Hash using scrypt with same parameters as @better-auth/utils/password:
   // N=16384, r=16, p=1, dkLen=64, salt=16 random bytes
@@ -61,9 +79,9 @@ async function fixPassword() {
     process.exit(1);
   }
 
-  console.log(`\n✅ Password fixed!`);
+  console.log(`\n✅ Password updated!`);
   console.log(`   Email:    ${email}`);
-  console.log(`   Password: ${password}`);
+  console.log(`   (ADMIN_PASSWORD value is never printed)`);
   process.exit(0);
 }
 

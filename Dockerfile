@@ -20,7 +20,12 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm --filter @workmanagement/web build
+# NEXT_PUBLIC_* vars are inlined into client AND server bundles at build time
+# (runtime overrides are ignored), so the app URL must be baked in here — Render
+# passes it via BUILDARG_NEXT_PUBLIC_APP_URL. Export it only when provided:
+# an empty value would bypass every `?? https://...` fallback in the codebase.
+ARG NEXT_PUBLIC_APP_URL
+RUN if [ -n "${NEXT_PUBLIC_APP_URL}" ]; then export NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}"; fi && pnpm --filter @workmanagement/web build
 
 # ─── Runner Stage ─────────────────────────────────────────────
 FROM node:24-alpine AS runner
@@ -40,6 +45,19 @@ COPY --from=builder --chown=app:app /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
 # Copy public assets (if they exist — may be empty/untracked)
 COPY --from=builder --chown=app:app /app/apps/web/public/ ./apps/web/public/
+
+# Copy the database package (schema + migration SQL) so the Render
+# preDeployCommand can run `drizzle-kit migrate` + `tsx seed` inside
+# this image — the standalone output does not include it.
+# Toolchain versions are pinned to what pnpm-lock.yaml resolves, and
+# installed with --no-save so package.json/package-lock stay untouched.
+COPY --from=builder --chown=app:app /app/packages/database ./packages/database
+# Install into a clean dir (rm -rf guards against any stray node_modules from
+# the builder copy) so the pinned toolchain is guaranteed present and usable.
+# --include=dev is required: NODE_ENV=production otherwise makes npm omit
+# devDependencies, and drizzle-kit/tsx (the migrate/seed toolchain) are devDeps.
+RUN rm -rf packages/database/node_modules && cd packages/database && npm install --no-save --no-package-lock --include=dev --no-audit --no-fund \
+    drizzle-kit@0.30.6 drizzle-orm@0.45.2 postgres@3.4.9 zod@3.25.76 tsx@4.23.0
 
 # Switch to non-root user
 USER app
