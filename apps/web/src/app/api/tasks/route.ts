@@ -155,7 +155,15 @@ export const POST = withAuth(
     try {
       await requirePermission(user.id, 'task:create');
 
-      const body = await request.json();
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json(
+          { error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON' } },
+          { status: 400 },
+        );
+      }
       const parsed = TaskCreateSchema.safeParse(body);
       if (!parsed.success) {
         const { error: err, status } = validationError(parsed.error);

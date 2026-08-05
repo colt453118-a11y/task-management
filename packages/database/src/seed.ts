@@ -94,6 +94,26 @@ async function seed() {
     // Organization permissions
     { code: 'org:view', name: 'View Organization', module: 'org' },
     { code: 'org:edit', name: 'Edit Organization', module: 'org' },
+    { code: 'org:settings', name: 'Manage Organization Settings', module: 'org' },
+    // Milestone permissions
+    { code: 'milestone:view', name: 'View Milestones', module: 'milestone' },
+    { code: 'milestone:create', name: 'Create Milestones', module: 'milestone' },
+    { code: 'milestone:edit', name: 'Edit Milestones', module: 'milestone' },
+    { code: 'milestone:delete', name: 'Delete Milestones', module: 'milestone' },
+    // Integration (webhooks) permissions
+    { code: 'integration:view', name: 'View Integrations', module: 'integration' },
+    { code: 'integration:create', name: 'Create Integrations', module: 'integration' },
+    { code: 'integration:edit', name: 'Edit Integrations', module: 'integration' },
+    { code: 'integration:delete', name: 'Delete Integrations', module: 'integration' },
+    // Settings (plural codes used by settings/ai + automation routes)
+    { code: 'settings:view', name: 'View Settings', module: 'settings' },
+    { code: 'settings:manage', name: 'Manage Settings', module: 'settings' },
+    // Role assignment
+    { code: 'role:assign', name: 'Assign Roles', module: 'role' },
+    // Report snapshot creation
+    { code: 'report:create', name: 'Create Report Snapshots', module: 'report' },
+    // Team member management
+    { code: 'team:manage', name: 'Manage Team Members', module: 'team' },
   ];
 
   // Insert permissions that don't exist yet
@@ -212,6 +232,11 @@ async function seed() {
       'report:export',
       'time:manage',
       'setting:view',
+      'settings:view',
+      'report:create',
+      'team:manage',
+      'role:assign',
+      'milestone:view',
     ],
   });
   console.log('  ✓ Role: Manager');
@@ -234,6 +259,7 @@ async function seed() {
       'task:complete',
       'task:review',
       'report:view',
+      'milestone:view',
     ],
   });
   console.log('  ✓ Role: Team Lead');
@@ -254,6 +280,7 @@ async function seed() {
       'task:change_status',
       'task:complete',
       'report:view',
+      'milestone:view',
     ],
   });
   console.log('  ✓ Role: Member');
@@ -263,7 +290,7 @@ async function seed() {
     name: 'Viewer',
     description: 'Read-only access',
     priority: 20,
-    permissionCodes: ['user:view', 'team:view', 'project:view', 'task:view', 'report:view'],
+    permissionCodes: ['user:view', 'team:view', 'project:view', 'task:view', 'report:view', 'milestone:view'],
   });
   console.log('  ✓ Role: Viewer');
 

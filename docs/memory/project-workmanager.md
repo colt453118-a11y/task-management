@@ -75,9 +75,34 @@ not deployed, so email links don't resolve yet. Resend account: only domain
 `mindhives.co` (status `failed`); `workmanager.com` not registered → verify a
 domain before real multi-recipient sending.
 
+## Delivery audit + missing-feature tables — shipped (2026-08-05)
+
+Full pre-delivery audit (typecheck/lint green, 1526 unit tests, full E2E
+885 passed / 0 failed on chromium/firefox/mobile-chrome, live API smoke):
+
+- **Migrations were stale vs the schema.** `drizzle-kit generate` reported "no
+  changes" (meta snapshots already claimed the full schema) but the hand-written
+  SQL (0000/0001) created only ~27 tables — leave_*, time_correction_requests,
+  webhooks, automation_*, notifications, task_templates, saved_searches were
+  missing → 500s on those features (and would have on a fresh Render DB too).
+  Added `0002_add_missing_domain_tables.sql` (11 tables / 36 indexes / 34 FKs,
+  generated from pg_dump of the pushed schema) + journal entry + snapshot.
+  Verified: fresh Postgres migrate 0000→0002 → all 38 tables; seed; create-admin.
+- **seed.ts missing permission codes** the routes require: milestone:*,
+  integration:*, settings:view/settings:manage, role:assign, report:create,
+  team:manage, org:settings → now 64 permissions (admin: all; manager subset;
+  every role gets milestone:view).
+- **activity-feed 500**: audit-logs select had an empty `sql` fragment → SQL
+  syntax error (`, ,`); now `NULL`.
+- **analytics 500**: overdue query interpolated a raw `Date` into a `sql`
+  template (postgres driver rejects Date); now `now.toISOString()`.
+- **tasks POST**: malformed/empty body → 400 INVALID_JSON (was 500).
+- Live smoke: all core GETs 200; project/task/leave-request/webhook creates
+  201; cron endpoints 200; no-auth blocked.
+
 ## In-flight (uncommitted, working tree)
 
-Nothing — tree clean as of #58. Outstanding operational items (not code):
+Nothing — tree clean as of #60. Outstanding operational items (not code):
 - **Deploy the app (go-live)** so email/notification links resolve; set
   RESEND_API_KEY + EMAIL_FROM* in the Render dashboard; verify a Resend sending
   domain (DNS: SPF/DKIM).
