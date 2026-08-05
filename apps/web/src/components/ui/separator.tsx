@@ -20,6 +20,7 @@ const Separator = React.forwardRef<
     {...props}
   />
 ));
-Separator.displayName = SeparatorPrimitive.Root.displayName;
+// Radix ≥1.1.15 no longer sets displayName on its primitives, so set it explicitly.
+Separator.displayName = 'Separator';
 
 export { Separator };

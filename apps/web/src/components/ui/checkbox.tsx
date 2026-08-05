@@ -27,6 +27,7 @@ const Checkbox = React.forwardRef<
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));
-Checkbox.displayName = CheckboxPrimitive.Root.displayName;
+// Radix ≥1.3.11 no longer sets displayName on its primitives, so set it explicitly.
+Checkbox.displayName = 'Checkbox';
 
 export { Checkbox };
