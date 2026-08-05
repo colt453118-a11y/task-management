@@ -5,12 +5,30 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 
+// Credentials come from the environment — NEVER hardcode them here.
+//   ADMIN_EMAIL      (optional; defaults below)
+//   ADMIN_PASSWORD   (required; use a fresh random value, e.g.
+//                    `openssl rand -base64 18`)
+//
+// Run against a database with:
+//   ADMIN_PASSWORD=... node --import tsx scripts/create-admin.ts
+// (set DATABASE_URL to the target database first)
+
 async function createAdmin() {
   const db = getDb();
   console.log('🔧 Creating admin user...');
 
-  const email = 'colt453118@gmail.com';
-  const password = 'Colt@180731';
+  const email = process.env.ADMIN_EMAIL ?? 'colt453118@gmail.com';
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    console.error(
+      '❌ ADMIN_PASSWORD environment variable is required (never commit a default).\n' +
+        '   Generate one with: openssl rand -base64 18\n' +
+        '   Then: ADMIN_PASSWORD=... DATABASE_URL=... node --import tsx scripts/create-admin.ts',
+    );
+    process.exit(1);
+  }
 
   // ─── Check if user already exists ──────────────────────
   const [existingUser] = await db
@@ -21,6 +39,7 @@ async function createAdmin() {
 
   if (existingUser) {
     console.log(`  ✓ Admin user already exists (id: ${existingUser.id})`);
+    console.log('  (use scripts/fix-password.ts with ADMIN_PASSWORD to rotate its password)');
     return;
   }
 
@@ -60,7 +79,7 @@ async function createAdmin() {
   })) as Buffer;
   const passwordHash = `${salt}:${hashBuf.toString('hex')}`;
 
-  console.log(`  ✓ Password hashed with scrypt`);
+  console.log(`  ✓ Password hashed with scrypt (never printed)`);
 
   // ─── Create user ────────────────────────────────────────
   await db.insert(schema.users).values({
@@ -96,8 +115,9 @@ async function createAdmin() {
   console.log(`  ✓ Admin role assigned`);
   console.log(`\n✅ Admin user created successfully!`);
   console.log(`   Email:    ${email}`);
-  console.log(`   Password: ${password}`);
-  console.log(`   URL:      http://localhost:3000/auth/login`);
+  console.log(`   (set ADMIN_PASSWORD to a new random value for each environment)`);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  console.log(`   URL:      ${appUrl}/auth/login`);
 
   process.exit(0);
 }

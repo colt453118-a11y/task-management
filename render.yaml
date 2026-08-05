@@ -21,9 +21,10 @@ services:
     # Render polls this endpoint to determine service health
     healthCheckPath: /api/health
 
-    # Run database migrations before deploying the new version
-    # Uses npx directly (drizzle-kit may not be in the standalone Docker image)
-    preDeployCommand: corepack enable && corepack prepare pnpm@10 --activate && cd packages/database && npx drizzle-kit migrate
+    # Run database migrations + idempotent seed before deploying the new version.
+    # packages/database (with pinned drizzle-kit/tsx/drizzle-orm/postgres/zod) is
+    # baked into the Docker image by the runner stage, so `npx` resolves locally.
+    preDeployCommand: cd packages/database && npx drizzle-kit migrate && npx tsx src/seed.ts
 
     # Auto-deploy from main branch
     branch: main
@@ -34,12 +35,27 @@ services:
       # ── Application ──
       - key: NODE_ENV
         value: production
+      # NEXT_PUBLIC_APP_URL / AUTH_URL default to the *.onrender.com URL.
+      # Once DNS points app.workmanager.com at this service, override BOTH in
+      # the Render dashboard to https://app.workmanager.com so email links,
+      # auth trust, and CSRF origin checks use the real custom domain.
       - key: NEXT_PUBLIC_APP_URL
         fromService:
           type: web
           name: workmanager
           envVarKey: RENDER_EXTERNAL_URL
       - key: AUTH_URL
+        fromService:
+          type: web
+          name: workmanager
+          envVarKey: RENDER_EXTERNAL_URL
+
+      # Build arg: baked into the client bundle at build time (Dockerfile
+      # ARG NEXT_PUBLIC_APP_URL) — runtime env vars don't reach the client.
+      # Render passes any BUILDARG_* var as a Docker build arg. After DNS,
+      # override this too (alongside NEXT_PUBLIC_APP_URL) with
+      # https://app.workmanager.com and redeploy.
+      - key: BUILDARG_NEXT_PUBLIC_APP_URL
         fromService:
           type: web
           name: workmanager
@@ -56,6 +72,18 @@ services:
       # ── Auth ──
       # Generate with: openssl rand -base64 32
       - key: AUTH_SECRET
+        sync: false
+
+      # ── Secret encryption (Slack webhook secrets etc.) ──
+      # AES-256-GCM key derivation input; REQUIRED in production or
+      # lib/encryption.ts throws. Generate with: openssl rand -base64 32
+      - key: ENCRYPTION_KEY
+        sync: false
+
+      # ── Cron automation (overdue checks, EOD snapshots) ──
+      # Bearer token for /api/automation/check-overdue and
+      # /api/cron/generate-eod-snapshot. Generate with: openssl rand -hex 32
+      - key: CRON_SECRET
         sync: false
 
       # ── Storage (S3-compatible) ──
@@ -97,5 +125,7 @@ databases:
     plan: free
     databaseName: workmanager
     databaseUser: wmuser
-    # Free tier: auto-deletes after 90 days. Upgrade to a paid
-    # plan for persistent storage with automated backups.
+    # Free tier caveats: no automated backups, auto-deletes after 90 days
+    # (set a calendar reminder to export via `pg_dump` and/or upgrade), and
+    # the free web service sleeps after ~15 min of inactivity (cold start
+    # on wake). Upgrade to Starter before relying on it for real users.

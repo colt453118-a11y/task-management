@@ -1,0 +1,27 @@
+# Dependencies — never copy the host's 1.2GB node_modules into the build
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build output
+.next
+**/.next
+out
+dist
+build
+coverage
+
+# VCS / env / secrets — .env.* is gitignored; keep example files
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Logs / local artifacts
+*.log
+playwright-report
+test-results
+__tests__/e2e/screenshots
+*.sql.gz
