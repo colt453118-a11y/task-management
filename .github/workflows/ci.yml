@@ -90,7 +90,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          # No pnpm cache here: this job runs `pnpm audit` (reads the lockfile
+          # only) and never installs, so there is no pnpm store to cache — and
+          # the cache-save post-step would fail on the missing path.
 
       - name: Dependency vulnerability audit (fail on high/critical)
         run: pnpm audit --audit-level high
