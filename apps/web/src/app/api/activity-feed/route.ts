@@ -114,7 +114,7 @@ export const GET = withAuth(
             id: schema.auditLogs.id,
             type: sql<string>`'audit'`.as('type'),
             action: schema.auditLogs.action,
-            description: sql<string | null>``,
+            description: sql<string | null>`NULL`,
             userId: schema.auditLogs.userId,
             userName: schema.users.name,
             userAvatar: schema.users.avatarUrl,

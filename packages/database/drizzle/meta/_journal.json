@@ -15,6 +15,13 @@
       "when": 1785763014393,
       "tag": "0001_add_slack_integrations",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785945378303,
+      "tag": "0002_add_missing_domain_tables",
+      "breakpoints": true
     }
   ]
 }

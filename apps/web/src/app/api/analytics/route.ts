@@ -124,7 +124,9 @@ async function computeTrends(
         ...baseConditions,
         isNull(schema.tasks.deletedAt),
         sql`${schema.tasks.dueDate} IS NOT NULL`,
-        sql`${schema.tasks.dueDate} < ${now}`,
+        // toISOString(): the postgres driver rejects a raw Date interpolated
+        // into a sql template — must be a string param.
+        sql`${schema.tasks.dueDate} < ${now.toISOString()}`,
         sql`${schema.tasks.status} NOT IN ('completed', 'closed', 'cancelled', 'archived')`,
       ),
     );
