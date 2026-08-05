@@ -114,7 +114,8 @@ export function RichTextEditor({
     if (editor && content) {
       const currentHtml = editor.getHTML();
       if (content !== currentHtml) {
-        editor.commands.setContent(content, false);
+        // TipTap v3: the boolean `emitUpdate` arg became a SetContentOptions object.
+        editor.commands.setContent(content, { emitUpdate: false });
       }
     }
   }, [editor, content]);
