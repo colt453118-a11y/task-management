@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-brand-500 text-white shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 hover:brightness-110 active:brightness-90 active:scale-[0.97]',
+          'bg-gradient-to-b from-brand-500 to-brand-400 text-white shadow-lg shadow-brand-500/30 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:shadow-brand-500/40 hover:brightness-110 active:brightness-90 active:scale-[0.97]',
         destructive:
           'bg-error text-white shadow-md shadow-error/20 hover:shadow-lg hover:shadow-error/30 hover:brightness-110 active:brightness-90 active:scale-[0.97]',
         outline:
