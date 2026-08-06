@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { streamText } from 'ai';
+import { generateText } from 'ai';
 import { withAuth } from '@/lib/auth/api-auth';
-import { getDbModel, PROMPTS } from '@/lib/ai';
+import { getDbModel, PROMPTS, AINotConfiguredError } from '@/lib/ai';
 import type { ApiHandlerContext } from '@/lib/auth/api-auth';
 
 export const runtime = 'nodejs';
@@ -41,16 +41,22 @@ export const POST = withAuth(
 
       const model = await getDbModel(orgId);
 
-      const result = await streamText({
+      const { text } = await generateText({
         model,
         prompt,
         temperature: 0.7,
       });
 
-      return new NextResponse(result.stream, {
+      return new NextResponse(text, {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       });
     } catch (error) {
+      if (error instanceof AINotConfiguredError) {
+        return NextResponse.json(
+          { error: { code: 'AI_NOT_CONFIGURED', message: 'AI features are not set up yet. Add an AI API key in Settings → AI.' } },
+          { status: 503 },
+        );
+      }
       console.error('[ai] Summarize error:', error);
       return NextResponse.json(
         { error: { code: 'AI_ERROR', message: 'Failed to generate summary' } },

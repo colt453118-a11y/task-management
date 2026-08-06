@@ -197,3 +197,61 @@ export const PATCH = withAuth(
   },
   { windowMs: 60_000, max: 60, namespace: 'departments:update' },
 );
+
+// DELETE /api/departments/[id] - Soft-delete a department (admin, 30 req/min)
+export const DELETE = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      await requirePermission(user.id, 'department:delete');
+      const id = getIdFromPath(request);
+
+      const [dept] = await db()
+        .select({
+          id: schema.departments.id,
+          name: schema.departments.name,
+          organizationId: schema.departments.organizationId,
+        })
+        .from(schema.departments)
+        .where(and(eq(schema.departments.id, id), isNull(schema.departments.deletedAt)))
+        .limit(1);
+
+      if (!dept) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'Department not found' } },
+          { status: 404 },
+        );
+      }
+      if (dept.organizationId !== orgId) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'Cross-organization access denied' } },
+          { status: 403 },
+        );
+      }
+
+      // Detach child teams (they become unassigned rather than orphaned), then soft-delete.
+      await db()
+        .update(schema.teams)
+        .set({ departmentId: null })
+        .where(and(eq(schema.teams.departmentId, id), isNull(schema.teams.deletedAt)));
+      await db()
+        .update(schema.departments)
+        .set({ deletedAt: new Date(), isActive: false })
+        .where(eq(schema.departments.id, id));
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'department.deleted',
+        entityType: 'department',
+        entityId: id,
+        oldValues: { name: dept.name },
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const { error: err, status } = handleApiError(error, 'Failed to delete department');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 30, namespace: 'departments:delete' },
+);

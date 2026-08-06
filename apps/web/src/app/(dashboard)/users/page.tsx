@@ -55,6 +55,24 @@ export default function UsersPage() {
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+
+  const handleDeactivate = async (userId: string) => {
+    if (!window.confirm('Deactivate this user? They will lose access immediately.')) return;
+    setDeactivatingId(userId);
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to deactivate user');
+      }
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, isActive: false } : u)));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to deactivate user');
+    } finally {
+      setDeactivatingId(null);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -258,6 +276,17 @@ export default function UsersPage() {
                     )}
                   </div>
                 </div>
+                {user.isActive && (
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      onClick={() => handleDeactivate(user.id)}
+                      disabled={deactivatingId === user.id}
+                      className="rounded-md px-2 py-1 text-xs font-medium text-red-400 opacity-0 transition hover:bg-red-500/10 group-hover:opacity-100 disabled:opacity-50"
+                    >
+                      {deactivatingId === user.id ? 'Deactivating…' : 'Deactivate'}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           ))}

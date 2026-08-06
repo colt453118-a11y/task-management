@@ -47,8 +47,21 @@ export function getModel(config?: AIConfig) {
 }
 
 /**
+ * Thrown when an AI feature is invoked but no API key is configured (neither in
+ * the organization's AI settings nor in the environment). Routes catch this to
+ * return a clean "AI not configured" response instead of failing mid-stream.
+ */
+export class AINotConfiguredError extends Error {
+  constructor() {
+    super('AI is not configured: add an AI API key in Settings → AI.');
+    this.name = 'AINotConfiguredError';
+  }
+}
+
+/**
  * Get a language model using the API key stored in the organization's
  * AI settings (with decryption), falling back to environment variables.
+ * Throws {@link AINotConfiguredError} when no key is available anywhere.
  *
  * This should be called within an authenticated API route context
  * where `orgId` is available from `withAuth`.
@@ -85,19 +98,24 @@ export async function getDbModel(
     }
   }
 
-  // Create model with the resolved API key
-  if (cfg.provider === 'anthropic') {
-    if (apiKey) {
-      return createAnthropic({ apiKey })(cfg.model);
-    }
-    return anthropic(cfg.model); // uses ANTHROPIC_API_KEY env var
+  // Fall back to the provider's environment variable.
+  if (!apiKey) {
+    apiKey =
+      (cfg.provider === 'anthropic'
+        ? process.env.ANTHROPIC_API_KEY
+        : process.env.OPENAI_API_KEY) ?? null;
   }
 
-  // Default: OpenAI
-  if (apiKey) {
-    return createOpenAI({ apiKey })(cfg.model);
+  // No key anywhere → fail fast with a typed error the routes can handle
+  // cleanly, BEFORE any streaming response has started.
+  if (!apiKey) {
+    throw new AINotConfiguredError();
   }
-  return openai(cfg.model); // uses OPENAI_API_KEY env var
+
+  if (cfg.provider === 'anthropic') {
+    return createAnthropic({ apiKey })(cfg.model);
+  }
+  return createOpenAI({ apiKey })(cfg.model);
 }
 
 // ─── Prompt Templates ──────────────────────────────────────
