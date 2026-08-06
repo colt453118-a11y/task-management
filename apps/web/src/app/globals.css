@@ -157,6 +157,7 @@
 
   /* Font */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Sora', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Border Radius - consistent scale */
@@ -265,6 +266,14 @@
       40px 40px;
     background-attachment: fixed, scroll;
     background-repeat: no-repeat, repeat;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   *:focus-visible {
