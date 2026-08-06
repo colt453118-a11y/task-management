@@ -7,7 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Building2, GitBranch, AlertCircle, Plus, X, Loader2, Check } from 'lucide-react';
+import {
+  Users,
+  Building2,
+  GitBranch,
+  AlertCircle,
+  Plus,
+  X,
+  Loader2,
+  Check,
+  Trash2,
+} from 'lucide-react';
 
 type Team = {
   id: string;
@@ -103,6 +113,66 @@ export default function TeamsPage() {
     }
   };
 
+  // ── Department create/delete ──────────────────────────────
+  const [showDept, setShowDept] = useState(false);
+  const [deptForm, setDeptForm] = useState({ name: '', code: '', description: '' });
+  const [creatingDept, setCreatingDept] = useState(false);
+  const [deptError, setDeptError] = useState<string | null>(null);
+  const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
+
+  const openDept = () => {
+    setDeptForm({ name: '', code: '', description: '' });
+    setDeptError(null);
+    setShowDept(true);
+  };
+
+  const createDept = async () => {
+    if (!deptForm.name.trim()) {
+      setDeptError('Department name is required');
+      return;
+    }
+    setCreatingDept(true);
+    setDeptError(null);
+    try {
+      const body: Record<string, unknown> = { name: deptForm.name.trim() };
+      if (deptForm.code.trim()) body.code = deptForm.code.trim();
+      if (deptForm.description.trim()) body.description = deptForm.description.trim();
+      const res = await fetch('/api/departments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error?.message ?? 'Failed to create department');
+      }
+      const data = await res.json();
+      setDepartments((prev) => [data.department, ...prev]);
+      setShowDept(false);
+    } catch (err) {
+      setDeptError(err instanceof Error ? err.message : 'Failed to create department');
+    } finally {
+      setCreatingDept(false);
+    }
+  };
+
+  const deleteDept = async (id: string) => {
+    if (!window.confirm('Delete this department? Its teams will become unassigned.')) return;
+    setDeletingDeptId(id);
+    try {
+      const res = await fetch(`/api/departments/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error?.message ?? 'Failed to delete department');
+      }
+      setDepartments((prev) => prev.filter((dp) => dp.id !== id));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to delete department');
+    } finally {
+      setDeletingDeptId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -162,9 +232,14 @@ export default function TeamsPage() {
             {departments.length !== 1 ? 's' : ''}
           </p>
         </div>{' '}
-        <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
-          <Plus className="mr-2 h-4 w-4" /> Create Team
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={openDept} variant="outline">
+            <Building2 className="mr-2 h-4 w-4" /> New Department
+          </Button>
+          <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
+            <Plus className="mr-2 h-4 w-4" /> Create Team
+          </Button>
+        </div>
       </motion.div>
 
       {departments.length > 0 && (
@@ -181,11 +256,25 @@ export default function TeamsPage() {
                   className="neon-card group relative overflow-hidden rounded-2xl p-5"
                 >
                   <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
-                  <div className="mb-2 flex items-start justify-between">
+                  <div className="mb-2 flex items-start justify-between gap-2">
                     <h3 className="text-surface-900 truncate font-semibold">{dept.name}</h3>
-                    <Badge variant={dept.isActive ? 'success' : 'default'} size="sm">
-                      {dept.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Badge variant={dept.isActive ? 'success' : 'default'} size="sm">
+                        {dept.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteDept(dept.id);
+                        }}
+                        disabled={deletingDeptId === dept.id}
+                        aria-label="Delete department"
+                        className="rounded-md p-1 text-surface-400 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                   {dept.code && (
                     <p className="text-surface-500 mb-2 font-mono text-xs">{dept.code}</p>
@@ -333,6 +422,93 @@ export default function TeamsPage() {
                   </Button>
                   <Button onClick={createTeam} disabled={creating} className="rounded-xl">
                     {creating ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1 h-4 w-4" />
+                    )}
+                    Create
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Department Modal */}
+      <AnimatePresence>
+        {showDept && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="gradient-border-card w-full max-w-md p-6"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-surface-900 text-lg font-semibold">New Department</h3>
+                <button
+                  onClick={() => setShowDept(false)}
+                  className="text-surface-500 hover:bg-surface-200 rounded-lg p-1"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Name <span className="text-error">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={deptForm.name}
+                    onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                    placeholder="e.g. Marketing"
+                    autoFocus
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Code
+                  </label>
+                  <input
+                    type="text"
+                    value={deptForm.code}
+                    onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
+                    placeholder="e.g. MKT"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Description
+                  </label>
+                  <textarea
+                    value={deptForm.description}
+                    onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
+                    placeholder="Optional description"
+                    rows={3}
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                {deptError && (
+                  <div className="bg-error/5 text-error flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {deptError}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setShowDept(false)} className="rounded-xl">
+                    Cancel
+                  </Button>
+                  <Button onClick={createDept} disabled={creatingDept} className="rounded-xl">
+                    {creatingDept ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Check className="mr-1 h-4 w-4" />
