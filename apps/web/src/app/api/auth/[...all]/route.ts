@@ -21,9 +21,10 @@ async function getHandler() {
 // ─── New User Org Assignment ────────────────────────────────────
 
 /**
- * Assign a newly registered user to the default organization and
- * grant them the "member" role so they can immediately access
- * org-scoped data (tasks, projects, etc.).
+ * Assign a newly registered user to the default organization and grant a
+ * role so they can immediately access org-scoped data. The FIRST user to
+ * sign up into an org that has no administrator yet becomes the admin
+ * (workspace owner); everyone after that gets the standard "member" role.
  *
  * Runs fire-and-forget after a successful signup — never blocks
  * the auth response.
@@ -50,29 +51,49 @@ async function assignNewUserToOrg(userId: string): Promise<void> {
       .set({ organizationId: org.id })
       .where(eq(schema.users.id, userId));
 
-    // Find the "member" role for this org
-    const [memberRole] = await db
+    // ── Role assignment (with first-admin bootstrap) ──────────
+    // If this org has no administrator yet, the FIRST user to sign up
+    // becomes the Administrator (they own the workspace). Everyone who
+    // registers after that gets the standard "member" role.
+    const [adminRole] = await db
       .select({ id: schema.roles.id })
       .from(schema.roles)
-      .where(
-        and(
-          eq(schema.roles.slug, 'member'),
-          eq(schema.roles.organizationId, org.id),
-        ),
-      )
+      .where(and(eq(schema.roles.slug, 'admin'), eq(schema.roles.organizationId, org.id)))
       .limit(1);
 
-    if (memberRole) {
+    let existingAdmin: { userId: string } | undefined;
+    if (adminRole) {
+      [existingAdmin] = await db
+        .select({ userId: schema.userRoles.userId })
+        .from(schema.userRoles)
+        .where(eq(schema.userRoles.roleId, adminRole.id))
+        .limit(1);
+    }
+
+    const bootstrapAsAdmin = Boolean(adminRole) && !existingAdmin;
+    const targetSlug = bootstrapAsAdmin ? 'admin' : 'member';
+
+    let roleId: string | undefined = bootstrapAsAdmin ? adminRole!.id : undefined;
+    if (!roleId) {
+      const [memberRole] = await db
+        .select({ id: schema.roles.id })
+        .from(schema.roles)
+        .where(and(eq(schema.roles.slug, 'member'), eq(schema.roles.organizationId, org.id)))
+        .limit(1);
+      roleId = memberRole?.id;
+    }
+
+    if (roleId) {
       await db
         .insert(schema.userRoles)
-        .values({
-          userId,
-          roleId: memberRole.id,
-        })
+        .values({ userId, roleId })
         .onConflictDoNothing();
     }
 
-    logger.info(`[auth] New user ${userId} assigned to default org and member role`);
+    logger.info(
+      `[auth] New user ${userId} assigned to default org with '${targetSlug}' role` +
+        (bootstrapAsAdmin ? ' (bootstrap: first user → admin)' : ''),
+    );
   } catch (err) {
     // Log but never fail the signup — this is a best-effort assignment
     console.error('[auth] Failed to assign org/role to new user:', err);

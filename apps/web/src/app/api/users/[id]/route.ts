@@ -138,3 +138,65 @@ export const PATCH = withAuth(
   },
   { windowMs: 60_000, max: 60, namespace: 'users:update' },
 );
+
+// DELETE /api/users/[id] - Deactivate/soft-delete a user (admin, 30 req/min)
+export const DELETE = withAuth(
+  async (request: NextRequest, { user, orgId }) => {
+    try {
+      await requirePermission(user.id, 'user:delete');
+      const id = getIdFromPath(request);
+
+      if (id === user.id) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'You cannot deactivate your own account' } },
+          { status: 403 },
+        );
+      }
+
+      const [target] = await db()
+        .select({
+          id: schema.users.id,
+          email: schema.users.email,
+          organizationId: schema.users.organizationId,
+        })
+        .from(schema.users)
+        .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
+        .limit(1);
+
+      if (!target) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'User not found' } },
+          { status: 404 },
+        );
+      }
+      if (target.organizationId !== orgId) {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'Cross-organization access denied' } },
+          { status: 403 },
+        );
+      }
+
+      // Soft-delete + deactivate, then revoke all active sessions.
+      await db()
+        .update(schema.users)
+        .set({ deletedAt: new Date(), isActive: false })
+        .where(eq(schema.users.id, id));
+      await db().delete(schema.sessions).where(eq(schema.sessions.userId, id));
+
+      await createAuditEntry({
+        organizationId: orgId,
+        userId: user.id,
+        action: 'user.deactivated',
+        entityType: 'user',
+        entityId: id,
+        oldValues: { email: target.email },
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const { error: err, status } = handleApiError(error, 'Failed to deactivate user');
+      return NextResponse.json(err, { status });
+    }
+  },
+  { windowMs: 60_000, max: 30, namespace: 'users:delete' },
+);
