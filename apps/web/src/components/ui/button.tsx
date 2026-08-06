@@ -9,16 +9,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-brand-500 to-brand-400 text-white shadow-lg shadow-brand-500/30 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:shadow-brand-500/40 hover:brightness-110 active:brightness-90 active:scale-[0.97]',
+          'btn-shine bg-gradient-to-br from-brand-400 to-brand-500 text-white shadow-lg shadow-brand-500/30 ring-1 ring-inset ring-white/15 hover:to-brand-600 hover:shadow-xl hover:shadow-brand-500/45 active:brightness-95 active:scale-[0.97]',
         destructive:
-          'bg-error text-white shadow-md shadow-error/20 hover:shadow-lg hover:shadow-error/30 hover:brightness-110 active:brightness-90 active:scale-[0.97]',
+          'bg-error text-white shadow-md shadow-error/25 hover:shadow-lg hover:shadow-error/35 hover:brightness-110 active:brightness-95 active:scale-[0.97]',
         outline:
-          'border border-surface-400/30 bg-transparent text-surface-300 hover:bg-surface-300/15 hover:text-surface-100 hover:border-surface-500/40 active:bg-surface-300/25 active:scale-[0.97]',
+          'border border-surface-500/35 bg-transparent text-surface-800 hover:bg-brand-500/10 hover:text-surface-900 hover:border-brand-500/40 active:scale-[0.97]',
         secondary:
-          'bg-surface-700/70 text-surface-300 shadow-sm hover:bg-surface-600/70 hover:text-surface-100 active:bg-surface-600 active:scale-[0.97]',
+          'bg-surface-200/80 text-surface-800 shadow-sm hover:bg-surface-300/80 hover:text-surface-900 active:scale-[0.97]',
         ghost:
-          'text-surface-400 hover:bg-surface-300/15 hover:text-surface-200 active:bg-surface-300/25',
-        link: 'text-brand-400 underline-offset-4 hover:underline hover:text-brand-300',
+          'text-surface-700 hover:bg-surface-200/60 hover:text-surface-900 active:bg-surface-200/80',
+        link: 'text-brand-500 underline-offset-4 hover:underline hover:text-brand-600',
       },
       size: {
         default: 'h-9 px-4 py-2 rounded-xl',
