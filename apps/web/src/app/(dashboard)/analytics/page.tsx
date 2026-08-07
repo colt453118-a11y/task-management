@@ -199,7 +199,7 @@ function TrendCard({
           </div>
           <div>
             <p className="text-surface-500 text-[10px] font-medium uppercase tracking-wider">{label}</p>
-            <p className="text-surface-900 dark:text-surface-100 text-lg font-bold">{value}</p>
+            <p className="stat-value text-surface-900 text-xl">{value}</p>
           </div>
         </div>
         {trend && (
