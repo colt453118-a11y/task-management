@@ -413,10 +413,10 @@ export function WebhookSettings() {
         </div>
       ) : subscriptions.length === 0 ? (
         <div className="flex flex-col items-center py-16">
-          <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+          <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
             <Webhook className="text-surface-400 h-7 w-7" />
           </div>
-          <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+          <h3 className="text-surface-900 text-base font-semibold">
             No webhooks configured
           </h3>
           <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -441,7 +441,7 @@ export function WebhookSettings() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
               className={cn(
-                'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm',
+                'border-surface-300/20 bg-surface-100/80 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm',
                 !sub.isActive && 'opacity-60',
               )}
             >
@@ -467,7 +467,7 @@ export function WebhookSettings() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                        <h3 className="text-surface-900 text-sm font-semibold">
                           {sub.name}
                         </h3>
                         <Badge
@@ -491,7 +491,7 @@ export function WebhookSettings() {
                         {sub.events.slice(0, 4).map((event) => (
                           <span
                             key={event}
-                            className="bg-surface-200/40 dark:bg-surface-700/30 text-surface-500 inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[9px] font-medium"
+                            className="bg-surface-200/40 text-surface-500 inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[9px] font-medium"
                           >
                             {event}
                           </span>
@@ -558,7 +558,7 @@ export function WebhookSettings() {
                     </button>
                     <button
                       onClick={() => openEditForm(sub)}
-                      className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/50 rounded-lg p-1.5 transition-all"
+                      className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 rounded-lg p-1.5 transition-all"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                     </button>
@@ -609,7 +609,7 @@ export function WebhookSettings() {
                 )}
 
                 {/* Meta */}
-                <div className="text-surface-400 mt-2 flex items-center gap-3 border-t border-surface-300/10 dark:border-surface-700/30 pt-2 text-[10px]">
+                <div className="text-surface-400 mt-2 flex items-center gap-3 border-t border-surface-300/10 pt-2 text-[10px]">
                   <span>Created {formatDate(sub.createdAt)}</span>
                   <span>·</span>
                   <span>Retries: {sub.retryCount}</span>
@@ -630,7 +630,7 @@ export function WebhookSettings() {
     <div>
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+          <h3 className="text-surface-900 text-lg font-semibold">
             {editingId ? 'Edit Webhook' : 'Create Webhook'}
           </h3>
           <p className="text-surface-500 mt-0.5 text-sm">
@@ -641,7 +641,7 @@ export function WebhookSettings() {
         </div>
         <button
           onClick={() => setViewMode('list')}
-          className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+          className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
         >
           <X className="h-4 w-4" />
         </button>
@@ -663,7 +663,7 @@ export function WebhookSettings() {
               <p className="success-500 mt-1 text-xs">
                 Your webhook signing secret is shown below. <strong>Save it now — it will not be shown again.</strong>
               </p>
-              <div className="bg-surface-100 dark:bg-surface-800 mt-3 flex items-center gap-2 rounded-xl border p-2">
+              <div className="bg-surface-100 mt-3 flex items-center gap-2 rounded-xl border p-2">
                 <code className="flex-1 truncate text-xs font-mono">{createdSecret}</code>
                 <button
                   onClick={() => copyToClipboard(createdSecret)}
@@ -677,7 +677,7 @@ export function WebhookSettings() {
                 </button>
               </div>
               <p className="text-surface-400 mt-2 text-[10px]">
-                Use this secret to verify webhook payloads via HMAC-SHA256 signatures in the <code className="bg-surface-200/50 dark:bg-surface-700/50 rounded px-1">X-Webhook-Signature</code> header.
+                Use this secret to verify webhook payloads via HMAC-SHA256 signatures in the <code className="bg-surface-200/50 rounded px-1">X-Webhook-Signature</code> header.
               </p>
             </div>
           </div>
@@ -699,7 +699,7 @@ export function WebhookSettings() {
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="e.g., Slack notifications"
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
             />
           </div>
 
@@ -713,7 +713,7 @@ export function WebhookSettings() {
               value={form.url}
               onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
               placeholder="https://hooks.example.com/webhook"
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
             />
           </div>
 
@@ -730,7 +730,7 @@ export function WebhookSettings() {
                     'flex cursor-pointer items-center gap-2 rounded-xl border p-2.5 transition-all',
                     form.events.includes(evt.value)
                       ? 'border-brand-500 bg-brand-500/10'
-                      : 'border-surface-300/20 dark:border-surface-700/30 hover:border-surface-300/40 bg-surface-100/50 dark:bg-surface-800/50',
+                      : 'border-surface-300/20 hover:border-surface-300/40 bg-surface-100/50 ',
                   )}
                 >
                   <input
@@ -740,7 +740,7 @@ export function WebhookSettings() {
                     className="border-surface-400 text-brand-500 focus:ring-brand-500 rounded"
                   />
                   <div>
-                    <p className="text-surface-700 dark:text-surface-300 text-xs font-medium">{evt.label}</p>
+                    <p className="text-surface-700 text-xs font-medium">{evt.label}</p>
                     <p className="text-surface-500 text-[9px]">{evt.description}</p>
                   </div>
                 </label>
@@ -768,7 +768,7 @@ export function WebhookSettings() {
                 onChange={(e) => setForm((p) => ({ ...p, headers: e.target.value }))}
                 placeholder={'Authorization: Bearer xxx\nX-Custom-Header: value'}
                 rows={3}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-xs font-mono transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-xs font-mono transition-all focus:outline-none focus:ring-2"
               />
             )}
           </div>
@@ -783,7 +783,7 @@ export function WebhookSettings() {
                 max={10}
                 value={form.retryCount}
                 onChange={(e) => setForm((p) => ({ ...p, retryCount: Math.max(0, Number(e.target.value)) }))}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
               />
             </div>
             <div>
@@ -797,7 +797,7 @@ export function WebhookSettings() {
                 step={1000}
                 value={form.retryIntervalMs}
                 onChange={(e) => setForm((p) => ({ ...p, retryIntervalMs: Math.max(1000, Number(e.target.value)) }))}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
               />
             </div>
             <div>
@@ -811,7 +811,7 @@ export function WebhookSettings() {
                 step={1000}
                 value={form.timeoutMs}
                 onChange={(e) => setForm((p) => ({ ...p, timeoutMs: Math.max(1000, Number(e.target.value)) }))}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
               />
             </div>
           </div>
@@ -825,7 +825,7 @@ export function WebhookSettings() {
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+          <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
             <Button
               variant="outline"
               size="sm"
@@ -863,7 +863,7 @@ export function WebhookSettings() {
       <div>
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+            <h3 className="text-surface-900 text-lg font-semibold">
               Delivery Logs
             </h3>
             <p className="text-surface-500 mt-0.5 flex items-center gap-1.5 text-sm">
@@ -875,13 +875,13 @@ export function WebhookSettings() {
           </div>
           <button
             onClick={() => setViewMode('list')}
-            className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+            className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border">
+        <div className="border-surface-300/20 bg-surface-100/80 relative overflow-hidden rounded-2xl border">
           <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-surface-300 to-surface-400 opacity-40" />
 
           {logsLoading ? (
@@ -897,7 +897,7 @@ export function WebhookSettings() {
               <p className="text-surface-400 mt-1 text-xs">Logs appear after events are sent or you test the webhook.</p>
             </div>
           ) : (
-            <div className="divide-surface-300/10 dark:divide-surface-700/20 divide-y">
+            <div className="divide-surface-300/10 divide-y">
               {logs.map((log) => (
                 <div key={log.id} className="px-4 py-3">
                   <div className="flex items-start gap-3">
@@ -915,7 +915,7 @@ export function WebhookSettings() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-surface-900 dark:text-surface-100 text-xs font-medium">
+                        <span className="text-surface-900 text-xs font-medium">
                           {log.eventType}
                         </span>
                         <span className={cn('text-xs font-mono font-medium', getStatusColor(log.responseStatusCode))}>
@@ -944,7 +944,7 @@ export function WebhookSettings() {
                           <summary className="text-surface-500 hover:text-surface-700 cursor-pointer text-[10px]">
                             View response
                           </summary>
-                          <pre className="bg-surface-100 dark:bg-surface-800 mt-1 max-h-32 overflow-auto rounded-lg p-2 text-[9px] font-mono">
+                          <pre className="bg-surface-100 mt-1 max-h-32 overflow-auto rounded-lg p-2 text-[9px] font-mono">
                             {log.responseBody}
                           </pre>
                         </details>
@@ -957,7 +957,7 @@ export function WebhookSettings() {
           )}
 
           {logsTotal > logs.length && (
-            <div className="border-surface-300/10 dark:border-surface-700/20 flex items-center justify-center border-t p-3">
+            <div className="border-surface-300/10 flex items-center justify-center border-t p-3">
               <span className="text-surface-500 text-[10px]">
                 Showing {logs.length} of {logsTotal} logs
               </span>
@@ -1000,14 +1000,14 @@ export function WebhookSettings() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="bg-error/10 flex h-10 w-10 items-center justify-center rounded-full">
                   <AlertCircle className="text-error h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Delete Webhook</h3>
+                  <h3 className="text-surface-900 text-lg font-semibold">Delete Webhook</h3>
                   <p className="text-surface-500 text-sm">Are you sure? This action cannot be undone.</p>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -301,50 +302,50 @@ export default function MilestonesPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Milestone className="h-4 w-4 text-white" />
             </div>
-            Milestones
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            {milestones.length} milestone{milestones.length !== 1 ? 's' : ''} across {groupedByProject.length} project{groupedByProject.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode('timeline')}
-              className={cn(
-                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                viewMode === 'timeline' ? 'bg-surface-50 dark:bg-surface-700 shadow-sm' : 'text-surface-500',
-              )}
-            >
-              Timeline
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                viewMode === 'list' ? 'bg-surface-50 dark:bg-surface-700 shadow-sm' : 'text-surface-500',
-              )}
-            >
-              List
-            </button>
-          </div>
-          <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            New Milestone
-          </Button>
-        </div>
+          }
+          title="Milestones"
+          subtitle={`${milestones.length} milestone${milestones.length !== 1 ? 's' : ''} across ${groupedByProject.length} project${groupedByProject.length !== 1 ? 's' : ''}`}
+          actions={
+            <>
+              <div className="bg-surface-200/60 inline-flex items-center gap-0.5 rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={cn(
+                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                    viewMode === 'timeline' ? 'bg-surface-300 text-surface-900 shadow-sm' : 'text-surface-500',
+                  )}
+                >
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                    viewMode === 'list' ? 'bg-surface-300 text-surface-900 shadow-sm' : 'text-surface-500',
+                  )}
+                >
+                  List
+                </button>
+              </div>
+              <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                New Milestone
+              </Button>
+            </>
+          }
+        />
       </motion.div>
 
       {/* Status filter */}
       <motion.div variants={itemVariants}>
-        <div className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5">
+        <div className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5">
           {[
             { value: 'all', label: 'All', count: milestones.length },
             { value: 'pending', label: 'Pending', count: milestones.filter((m) => m.status === 'pending').length },
@@ -358,15 +359,15 @@ export default function MilestonesPage() {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                 statusFilter === tab.value
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                  ? 'bg-surface-50 text-surface-900 shadow-sm'
+                  : 'text-surface-500 hover:text-surface-700 ',
               )}
             >
               {tab.label}
               {tab.count > 0 && (
                 <span className={cn(
                   'ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]',
-                  statusFilter === tab.value ? 'bg-brand-500/10 text-brand-500' : 'bg-surface-300/30 dark:bg-surface-600/30',
+                  statusFilter === tab.value ? 'bg-brand-500/10 text-brand-500' : 'bg-surface-300/30 ',
                 )}>
                   {tab.count}
                 </span>
@@ -391,10 +392,10 @@ export default function MilestonesPage() {
         </div>
       ) : milestones.length === 0 ? (
         <motion.div variants={itemVariants} className="flex flex-col items-center py-16">
-          <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+          <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
             <Flag className="text-surface-400 h-7 w-7" />
           </div>
-          <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">No milestones yet</h3>
+          <h3 className="text-surface-900 text-base font-semibold">No milestones yet</h3>
           <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
             Create milestones to track key dates and progress across your projects.
           </p>
@@ -412,14 +413,14 @@ export default function MilestonesPage() {
             {/* Month headers */}
             <div className="overflow-x-auto" ref={scrollRef}>
               <div className="min-w-[600px]">
-                <div className="border-surface-300/10 dark:border-surface-700/20 flex border-b">
-                  <div className="w-48 shrink-0 border-r border-surface-300/10 dark:border-surface-700/20 px-4 py-3">
+                <div className="border-surface-300/10 flex border-b">
+                  <div className="w-48 shrink-0 border-r border-surface-300/10 px-4 py-3">
                     <span className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">Milestone</span>
                   </div>
                   {months.map((m, i) => (
                     <div
                       key={i}
-                      className="flex-1 border-r border-surface-300/10 dark:border-surface-700/20 px-2 py-3 text-center last:border-r-0"
+                      className="flex-1 border-r border-surface-300/10 px-2 py-3 text-center last:border-r-0"
                       style={{ flexBasis: `${(m.days / totalDays) * 100}%` }}
                     >
                       <span className="text-surface-500 text-[10px] font-semibold">{m.month}</span>
@@ -429,19 +430,19 @@ export default function MilestonesPage() {
                 </div>
 
                 {/* Milestone bars */}
-                <div className="divide-surface-300/10 dark:divide-surface-700/20 divide-y">
+                <div className="divide-surface-300/10 divide-y">
                   {filteredMilestones.map((m) => {
                     const config = getStatusConfig(m.status);
                     const bar = getBarPosition(m.dueDate);
                     const progress = getProgress(m);
 
                     return (
-                      <div key={m.id} className="group flex transition-colors hover:bg-surface-200/30 dark:hover:bg-surface-800/30">
+                      <div key={m.id} className="group flex transition-colors hover:bg-surface-200/30 ">
                         {/* Left label */}
-                        <div className="w-48 shrink-0 border-r border-surface-300/10 dark:border-surface-700/20 px-4 py-3">
+                        <div className="w-48 shrink-0 border-r border-surface-300/10 px-4 py-3">
                           <div className="flex items-start justify-between">
                             <div className="min-w-0">
-                              <p className="text-surface-900 dark:text-surface-100 truncate text-sm font-medium">
+                              <p className="text-surface-900 truncate text-sm font-medium">
                                 {m.name}
                               </p>
                               <p className="text-surface-500 truncate text-xs">{m.projectName}</p>
@@ -469,7 +470,7 @@ export default function MilestonesPage() {
                           {/* Progress */}
                           {m._taskCount > 0 && (
                             <div className="mt-1.5 flex items-center gap-1.5">
-                              <div className="bg-surface-300/30 dark:bg-surface-700/30 h-1 flex-1 overflow-hidden rounded-full">
+                              <div className="bg-surface-300/30 h-1 flex-1 overflow-hidden rounded-full">
                                 <div
                                   className={cn('h-full rounded-full transition-all', config.barColor)}
                                   style={{ width: `${progress}%` }}
@@ -487,7 +488,7 @@ export default function MilestonesPage() {
                           {months.map((month, mi) => (
                             <div
                               key={mi}
-                              className="absolute inset-y-0 border-r border-surface-300/5 dark:border-surface-700/10"
+                              className="absolute inset-y-0 border-r border-surface-300/5 "
                               style={{ left: `${months.slice(0, mi).reduce((sum, m) => sum + (m.days / totalDays) * 100, 0)}%`, width: `${(month.days / totalDays) * 100}%` }}
                             />
                           ))}
@@ -536,7 +537,7 @@ export default function MilestonesPage() {
             </div>
 
             {/* Legend */}
-            <div className="border-surface-300/10 dark:border-surface-700/20 flex items-center justify-center gap-4 border-t px-4 py-2 text-[9px] text-surface-400">
+            <div className="border-surface-300/10 flex items-center justify-center gap-4 border-t px-4 py-2 text-[9px] text-surface-400">
               {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                 <span key={key} className="flex items-center gap-1">
                   <span className={cn('inline-block h-2 w-2 rounded-full', cfg.barColor)} />
@@ -545,7 +546,7 @@ export default function MilestonesPage() {
               ))}
               {filteredMilestones.length > 0 && (
                 <>
-                  <span className="text-surface-300 dark:text-surface-600">·</span>
+                  <span className="text-surface-300 ">·</span>
                   <span className="flex items-center gap-1">
                     <span className="bg-error/50 inline-block h-3 w-0.5" />
                     Today
@@ -560,8 +561,8 @@ export default function MilestonesPage() {
         <motion.div variants={itemVariants} className="space-y-6">
           {groupedByProject.map(([projectId, group]) => (
             <div key={projectId}>
-              <h3 className="text-surface-700 dark:text-surface-300 mb-3 flex items-center gap-2 text-sm font-semibold">
-                <span className="bg-surface-200/50 dark:bg-surface-700/50 flex h-6 w-6 items-center justify-center rounded-lg">
+              <h3 className="text-surface-700 mb-3 flex items-center gap-2 text-sm font-semibold">
+                <span className="bg-surface-200/50 flex h-6 w-6 items-center justify-center rounded-lg">
                   <Flag className="text-surface-500 h-3 w-3" />
                 </span>
                 {group.projectName}
@@ -585,7 +586,7 @@ export default function MilestonesPage() {
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <h4 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">{m.name}</h4>
+                                <h4 className="text-surface-900 text-sm font-semibold">{m.name}</h4>
                                 <Badge variant={m.status === 'completed' ? 'success' : m.status === 'delayed' ? 'danger' : 'default'} size="sm" className="px-1.5 py-0 text-[9px]">
                                   {config.label}
                                 </Badge>
@@ -613,7 +614,7 @@ export default function MilestonesPage() {
                               </div>
                               {m._taskCount > 0 && (
                                 <div className="mt-2 flex items-center gap-2">
-                                  <div className="bg-surface-300/30 dark:bg-surface-700/30 h-1.5 w-32 overflow-hidden rounded-full">
+                                  <div className="bg-surface-300/30 h-1.5 w-32 overflow-hidden rounded-full">
                                     <div className={cn('h-full rounded-full transition-all', config.barColor)} style={{ width: `${progress}%` }} />
                                   </div>
                                   <span className="text-surface-500 text-[10px]">{progress}%</span>
@@ -654,14 +655,14 @@ export default function MilestonesPage() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-lg rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-lg rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   {editingId ? 'Edit Milestone' : 'New Milestone'}
                 </h3>
-                <button onClick={() => setShowForm(false)} className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all">
+                <button onClick={() => setShowForm(false)} className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -674,7 +675,7 @@ export default function MilestonesPage() {
                     <select
                       value={form.projectId}
                       onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value }))}
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     >
                       <option value="">Select project...</option>
                       {projects.map((p) => (
@@ -692,7 +693,7 @@ export default function MilestonesPage() {
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="e.g., MVP Launch"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -704,7 +705,7 @@ export default function MilestonesPage() {
                     onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                     placeholder="Optional description"
                     rows={2}
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -715,7 +716,7 @@ export default function MilestonesPage() {
                     type="date"
                     value={form.dueDate}
                     onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))}
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -726,7 +727,7 @@ export default function MilestonesPage() {
                     <select
                       value={form.status}
                       onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -743,7 +744,7 @@ export default function MilestonesPage() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
                   <Button variant="outline" size="sm" onClick={() => setShowForm(false)} className="h-8 rounded-lg px-3 text-xs">Cancel</Button>
                   <Button onClick={saveMilestone} disabled={saving} size="sm" className="h-8 rounded-lg px-3 text-xs">
                     {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}
@@ -769,9 +770,9 @@ export default function MilestonesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
-              <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Delete Milestone</h3>
+              <h3 className="text-surface-900 text-lg font-semibold">Delete Milestone</h3>
               <p className="text-surface-500 mt-2 text-sm">Are you sure? This action cannot be undone.</p>
               <div className="mt-4 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowDeleteConfirm(null)} className="rounded-lg">Cancel</Button>

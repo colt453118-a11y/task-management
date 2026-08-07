@@ -39,27 +39,27 @@ const priorityOptions = [
   {
     value: 'low',
     label: 'Low',
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    color: 'bg-green-100 text-green-700 ',
   },
   {
     value: 'medium',
     label: 'Medium',
-    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    color: 'bg-amber-100 text-amber-700 ',
   },
   {
     value: 'high',
     label: 'High',
-    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    color: 'bg-orange-100 text-orange-700 ',
   },
   {
     value: 'urgent',
     label: 'Urgent',
-    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    color: 'bg-red-100 text-red-700 ',
   },
   {
     value: 'critical',
     label: 'Critical',
-    color: 'bg-red-200 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+    color: 'bg-red-200 text-red-800 ',
   },
 ];
 
@@ -176,13 +176,12 @@ export default function NewTaskPage() {
 
   const getInputClasses = (fieldName: string, hasError = false) =>
     cn(
-      'h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200',
-      'dark:bg-surface-900 dark:text-surface-100',
+      'h-10 w-full rounded-lg border bg-surface-300 text-surface-800 px-3 py-2 text-sm shadow-sm transition-all duration-200',
       focusedField === fieldName
         ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-glow'
         : hasError
           ? 'border-red-300 ring-1 ring-red-500/20'
-          : 'border-surface-300 hover:border-surface-400 dark:border-surface-600 dark:hover:border-surface-500',
+          : 'border-surface-300 hover:border-surface-400 ',
       'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',
     );
 
@@ -198,7 +197,7 @@ export default function NewTaskPage() {
             <div className="shimmer h-4 w-56 rounded-md" />
           </div>
         </div>
-        <div className="border-surface-200 dark:border-surface-700 dark:bg-surface-900 rounded-xl border bg-white p-6">
+        <div className="border-surface-500/20 rounded-xl border bg-surface-200 p-6">
           <div className="space-y-5">
             {[1, 2, 3].map((i) => (
               <div key={i} className="shimmer h-10 rounded-lg" />
@@ -220,7 +219,7 @@ export default function NewTaskPage() {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-surface-900 dark:text-surface-50 text-xl font-bold tracking-tight">
+          <h1 className="text-surface-900 text-xl font-bold tracking-tight">
             New Task
           </h1>
           <p className="text-surface-500 mt-0.5 text-sm">Create a new task for your team</p>
@@ -273,7 +272,7 @@ export default function NewTaskPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe what needs to be done..."
-                className="border-surface-300/30 dark:border-surface-600/30 focus:border-brand-500 focus:ring-brand-500/20 min-h-[120px] rounded-xl transition-all duration-200 focus:ring-2"
+                className="border-surface-300/30 focus:border-brand-500 focus:ring-brand-500/20 min-h-[120px] rounded-xl transition-all duration-200 focus:ring-2"
               />
             </div>
 
@@ -287,7 +286,7 @@ export default function NewTaskPage() {
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   {priorityOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -305,7 +304,7 @@ export default function NewTaskPage() {
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -320,7 +319,7 @@ export default function NewTaskPage() {
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   <option value="">Unassigned</option>
                   {users.map((u) => (
@@ -338,7 +337,7 @@ export default function NewTaskPage() {
                 <select
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:text-surface-100 dark:border-surface-600/30 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
                 >
                   <option value="">No project</option>
                   {projects.map((p) => (

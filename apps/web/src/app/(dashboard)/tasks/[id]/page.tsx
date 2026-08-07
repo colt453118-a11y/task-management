@@ -777,7 +777,7 @@ export default function TaskDetailPage() {
                           stiffness: 200,
                           damping: 20,
                         }}
-                        className="hover:bg-surface-200/30 dark:hover:bg-surface-800/30 group -mx-2 flex gap-3 rounded-xl px-2 py-2 transition-all duration-200"
+                        className="hover:bg-surface-200/30 group -mx-2 flex gap-3 rounded-xl px-2 py-2 transition-all duration-200"
                       >
                         <motion.div
                           whileHover={{ scale: 1.05 }}
@@ -787,7 +787,7 @@ export default function TaskDetailPage() {
                         </motion.div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                            <span className="text-surface-900 text-sm font-medium">
                               {comment.user?.name ?? 'Unknown user'}
                             </span>
                             <span className="text-surface-500 text-xs">
@@ -806,7 +806,7 @@ export default function TaskDetailPage() {
                           <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-surface-700 dark:text-surface-300 mt-1 whitespace-pre-wrap text-sm"
+                            className="text-surface-700 mt-1 whitespace-pre-wrap text-sm"
                           >
                             <TaskMentionText text={comment.content} />
                           </motion.p>
@@ -905,7 +905,7 @@ export default function TaskDetailPage() {
                         <div className="flex min-w-0 items-center gap-3">
                           <FileText className="text-surface-500 h-4 w-4 shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-surface-900 dark:text-surface-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 truncate text-sm font-medium transition-colors">
+                            <p className="text-surface-900 group-hover:text-brand-600 truncate text-sm font-medium transition-colors">
                               {att.fileName}
                             </p>
                             <p className="text-surface-500 text-xs">
@@ -947,7 +947,7 @@ export default function TaskDetailPage() {
                   value={task.status}
                   onChange={(e) => updateField('status', e.target.value)}
                   disabled={updating === 'status'}
-                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
+                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
                 >
                   {statusOptions.map((s) => (
                     <option key={s} value={s}>
@@ -964,7 +964,7 @@ export default function TaskDetailPage() {
                   value={task.priority}
                   onChange={(e) => updateField('priority', e.target.value)}
                   disabled={updating === 'priority'}
-                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
+                  className="border-surface-300/20 bg-surface-200/50 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50"
                 >
                   {priorityOptions.map((p) => (
                     <option key={p} value={p}>
@@ -1201,7 +1201,7 @@ export default function TaskDetailPage() {
                       {estimated > 0 && <span>{estimated}h estimated</span>}
                     </div>
                     {estimated > 0 && (
-                      <div className="bg-surface-300/30 dark:bg-surface-700/30 h-1 w-full overflow-hidden rounded-full">
+                      <div className="bg-surface-300/30 h-1 w-full overflow-hidden rounded-full">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${pct}%` }}
@@ -1249,7 +1249,7 @@ export default function TaskDetailPage() {
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
                                   transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                                  className="text-surface-900 dark:text-surface-100 font-mono text-xs font-medium"
+                                  className="text-surface-900 font-mono text-xs font-medium"
                                 >
                                   {entry.durationMinutes
                                     ? formatDuration(entry.durationMinutes)

@@ -32,26 +32,54 @@ import { motion, AnimatePresence, useTransform } from 'framer-motion';
 import { useScrollShadow } from '@/lib/hooks/use-scroll-shadow';
 import { useNotificationStore } from '@/stores/notification-store';
 
-export const navItems = [
-  { label: 'Search', href: '/search', icon: SearchIcon },
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { label: 'Milestones', href: '/milestones', icon: Milestone },
-  { label: 'Tasks', href: '/tasks', icon: ListTodo },
-  { label: 'Task Templates', href: '/task-templates', icon: Layers },
-  { label: 'Projects', href: '/projects', icon: FolderKanban },
-  { label: 'Teams', href: '/teams', icon: Users },
-  { label: 'People', href: '/users', icon: UserRoundCog },
-  { label: 'Time Tracking', href: '/timer', icon: Clock },
-  { label: 'Corrections', href: '/corrections', icon: FileEdit },
-  { label: 'Time Off', href: '/leave', icon: CalendarDays },
-  { label: 'Reports', href: '/reports', icon: BarChart3 },
-  { label: 'Analytics', href: '/analytics', icon: TrendingUp },
-  { label: 'Calendar', href: '/calendar', icon: Calendar },
-  { label: 'Gantt Chart', href: '/gantt', icon: CalendarDays },
-  { label: 'Notifications', href: '/notifications', icon: Bell },
-  { label: 'Automation', href: '/automation', icon: Bot },
-  { label: 'Settings', href: '/settings', icon: Settings },
+/**
+ * Grouped navigation (Work / Team / Insights / System) for the redesigned
+ * sidebar. `navItems` below is derived by flattening these groups so existing
+ * consumers (the ⌘K command palette in search-command.tsx, tests) keep the
+ * same flat list of every destination.
+ */
+export const navGroups = [
+  {
+    label: 'Work',
+    items: [
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { label: 'Tasks', href: '/tasks', icon: ListTodo },
+      { label: 'Task Templates', href: '/task-templates', icon: Layers },
+      { label: 'Projects', href: '/projects', icon: FolderKanban },
+      { label: 'Milestones', href: '/milestones', icon: Milestone },
+      { label: 'Time Tracking', href: '/timer', icon: Clock },
+      { label: 'Calendar', href: '/calendar', icon: Calendar },
+      { label: 'Gantt Chart', href: '/gantt', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Team',
+    items: [
+      { label: 'Teams', href: '/teams', icon: Users },
+      { label: 'People', href: '/users', icon: UserRoundCog },
+      { label: 'Time Off', href: '/leave', icon: CalendarDays },
+      { label: 'Corrections', href: '/corrections', icon: FileEdit },
+    ],
+  },
+  {
+    label: 'Insights',
+    items: [
+      { label: 'Reports', href: '/reports', icon: BarChart3 },
+      { label: 'Analytics', href: '/analytics', icon: TrendingUp },
+      { label: 'Automation', href: '/automation', icon: Bot },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Search', href: '/search', icon: SearchIcon },
+      { label: 'Notifications', href: '/notifications', icon: Bell },
+      { label: 'Settings', href: '/settings', icon: Settings },
+    ],
+  },
 ];
+
+export const navItems = navGroups.flatMap((group) => group.items);
 
 const sidebarItemVariants = {
   hidden: { opacity: 0, x: -16 },
@@ -152,13 +180,13 @@ export function Sidebar() {
   const sidebarContent = (
     <aside
       className={cn(
-        'border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
+        'border-surface-500/15 bg-surface-100/80 flex h-full flex-col border-r backdrop-blur-xl transition-all duration-300 ease-in-out',
         collapsed && !isMobile ? 'w-16' : 'w-60',
         isMobile && 'w-60',
       )}
     >
       {/* Logo */}
-      <div className="border-surface-500/20 dark:border-surface-700/30 flex h-14 shrink-0 items-center justify-between border-b px-4">
+      <div className="border-surface-500/20 flex h-14 shrink-0 items-center justify-between border-b px-4">
         {(!collapsed || isMobile) && (
           <Link href="/" className="group flex items-center gap-2.5">
             <div className="from-brand-400 to-brand-600 group-hover:shadow-brand-500/20 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-all duration-200 group-hover:shadow-md">
@@ -199,90 +227,113 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="scrollbar-thin flex-1 space-y-0.5 overflow-y-auto p-3">
-        {navItems.map((item, index) => {
-          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-          const isHovered = hoveredItem === item.href;
-
-          return (
-            <motion.div
-              key={item.href}
-              custom={index}
-              variants={sidebarItemVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <Link
-                href={item.href}
-                onMouseEnter={() => setHoveredItem(item.href)}
-                onMouseLeave={() => setHoveredItem(null)}
-            className={cn(
-              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-              isActive
-                ? 'bg-brand-500/10 text-brand-400 active-neon shadow-sm shadow-brand-500/10'
-                : 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-700/30 dark:hover:text-surface-300',
-            )}
-                title={collapsed && !isMobile ? item.label : undefined}
-              >
-                <div className="relative">
-                  <item.icon
-                    className={cn(
-                      'h-4 w-4 shrink-0 transition-all duration-200',
-                      isActive && 'text-brand-400',
-                      !isActive && 'group-hover:text-brand-400 group-hover:scale-110',
-                    )}
-                  />
-                  {/* Ripple dot for active */}
-                  {isActive && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
-                      <span className="bg-brand-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
-                      <span className="bg-brand-500 relative inline-flex h-1.5 w-1.5 rounded-full" />
-                    </span>
+      <nav className="scrollbar-thin flex-1 overflow-y-auto p-3">
+        {(() => {
+          let runningIndex = 0;
+          return navGroups.map((group, groupIndex) => (
+            <div key={group.label} className="space-y-0.5">
+              {/* Group header — collapses to a divider on desktop */}
+              {!collapsed || isMobile ? (
+                <div
+                  className={cn(
+                    'text-surface-500 px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em]',
+                    groupIndex === 0 ? 'pt-1' : 'pt-4',
                   )}
-                  {/* Unread notification badge on the Notifications icon */}
-                  {item.href === '/notifications' && unreadCount > 0 && (
-                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 dark:ring-surface-900">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
+                >
+                  {group.label}
                 </div>
-                {(!collapsed || isMobile) && (
-                  <span className="relative">
-                    {item.label}
-                    {/* Active indicator underline */}
-                    {isActive && (
-                      <motion.span
-                        layoutId="activeNavIndicator"
-                        className="bg-brand-500 absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full"
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                  </span>
-                )}
+              ) : (
+                groupIndex > 0 && <div className="border-surface-500/15 mx-2 my-2 border-t" />
+              )}
 
-                {/* Subtle glow on hover for active items */}
-                {isActive && isHovered && (
+              {group.items.map((item) => {
+                const index = runningIndex++;
+                const isActive =
+                  item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+                const isHovered = hoveredItem === item.href;
+
+                return (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-brand-500/5 absolute inset-0 rounded-xl"
-                  />
-                )}
+                    key={item.href}
+                    custom={index}
+                    variants={sidebarItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Link
+                      href={item.href}
+                      onMouseEnter={() => setHoveredItem(item.href)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      className={cn(
+                        'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        isActive
+                          ? 'bg-brand-500/12 text-brand-500 active-neon shadow-sm shadow-brand-500/10'
+                          : 'text-surface-600 hover:bg-surface-200/60 hover:text-surface-800',
+                      )}
+                      title={collapsed && !isMobile ? item.label : undefined}
+                    >
+                      <div className="relative">
+                        <item.icon
+                          className={cn(
+                            'h-4 w-4 shrink-0 transition-all duration-200',
+                            isActive && 'text-brand-500',
+                            !isActive && 'group-hover:text-brand-500 group-hover:scale-110',
+                          )}
+                        />
+                        {/* Ripple dot for active */}
+                        {isActive && (
+                          <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
+                            <span className="bg-brand-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+                            <span className="bg-brand-500 relative inline-flex h-1.5 w-1.5 rounded-full" />
+                          </span>
+                        )}
+                        {/* Unread notification badge on the Notifications icon */}
+                        {item.href === '/notifications' && unreadCount > 0 && (
+                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 ">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      {(!collapsed || isMobile) && (
+                        <span className="relative">
+                          {item.label}
+                          {/* Active indicator underline */}
+                          {isActive && (
+                            <motion.span
+                              layoutId="activeNavIndicator"
+                              className="bg-brand-500 absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full"
+                              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            />
+                          )}
+                        </span>
+                      )}
 
-                {/* Tooltip for collapsed mode */}
-                {collapsed && !isMobile && (
-                  <span className="bg-surface-200/90 dark:bg-surface-800/90 text-surface-900 dark:text-surface-100 border-surface-300/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            </motion.div>
-          );
-        })}
+                      {/* Subtle glow on hover for active items */}
+                      {isActive && isHovered && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="bg-brand-500/5 absolute inset-0 rounded-xl"
+                        />
+                      )}
+
+                      {/* Tooltip for collapsed mode */}
+                      {collapsed && !isMobile && (
+                        <span className="bg-surface-200/95 text-surface-900 border-surface-400/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ));
+        })()}
       </nav>
 
       {/* Quick create */}
-      <div className="border-surface-500/20 dark:border-surface-700/30 shrink-0 border-t p-3">
+      <div className="border-surface-500/20 shrink-0 border-t p-3">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-quick-create'))}
           className={cn(
@@ -297,7 +348,7 @@ export function Sidebar() {
           {(!collapsed || isMobile) && <span>New Task</span>}
 
           {collapsed && !isMobile && (
-            <span className="bg-surface-200/90 dark:bg-surface-800/90 text-surface-900 dark:text-surface-100 border-surface-300/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
+            <span className="bg-surface-200/90 text-surface-900 border-surface-300/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
               New Task (⌘T)
             </span>
           )}

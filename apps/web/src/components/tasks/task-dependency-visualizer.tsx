@@ -851,8 +851,8 @@ export function DependencyVisualizer({
                         isSelected
                           ? 'fill-brand-500'
                           : isRoot
-                            ? 'fill-surface-800 dark:fill-surface-200'
-                            : 'fill-surface-600 dark:fill-surface-300',
+                            ? 'fill-surface-800 '
+                            : 'fill-surface-600 ',
                       )}
                     >
                       {node.title.length > 22 ? node.title.slice(0, 20) + '\u2026' : node.title}

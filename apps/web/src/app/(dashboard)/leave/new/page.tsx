@@ -111,11 +111,11 @@ export default function NewLeaveRequestPage() {
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <Link href="/leave" className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
+        <Link href="/leave" className="text-surface-500 hover:text-surface-700 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Time Off
         </Link>
-        <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+        <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
           <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
             <CalendarDays className="h-4 w-4 text-white" />
           </div>
@@ -152,7 +152,7 @@ export default function NewLeaveRequestPage() {
                       'flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all',
                       form.leaveTypeId === type.id
                         ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/30'
-                        : 'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/50 hover:border-surface-300/40',
+                        : 'border-surface-300/20 bg-surface-100/50 hover:border-surface-300/40',
                     )}
                   >
                     <div
@@ -161,7 +161,7 @@ export default function NewLeaveRequestPage() {
                     >
                       <CalendarDays className="h-4 w-4" />
                     </div>
-                    <span className="text-surface-700 dark:text-surface-300 text-xs font-medium">{type.name}</span>
+                    <span className="text-surface-700 text-xs font-medium">{type.name}</span>
                   </button>
                 ))}
               </div>
@@ -177,7 +177,7 @@ export default function NewLeaveRequestPage() {
                   type="date"
                   value={form.startDate}
                   onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                  className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                 />
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function NewLeaveRequestPage() {
                   type="date"
                   value={form.endDate}
                   onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-                  className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -207,9 +207,9 @@ export default function NewLeaveRequestPage() {
                 id="halfDay"
                 checked={form.isHalfDay}
                 onChange={(e) => setForm((prev) => ({ ...prev, isHalfDay: e.target.checked }))}
-                className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 h-4 w-4 rounded border"
+                className="border-surface-300/30 bg-surface-100 h-4 w-4 rounded border"
               />
-              <label htmlFor="halfDay" className="text-surface-700 dark:text-surface-300 text-xs">
+              <label htmlFor="halfDay" className="text-surface-700 text-xs">
                 Half day
               </label>
             </div>
@@ -224,7 +224,7 @@ export default function NewLeaveRequestPage() {
                 onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))}
                 placeholder="Briefly describe the reason for your time off..."
                 rows={3}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
               />
             </div>
 
@@ -237,7 +237,7 @@ export default function NewLeaveRequestPage() {
             )}
 
             {/* Submit */}
-            <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+            <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
               <Link href="/leave">
                 <Button variant="outline" size="sm" type="button" className="h-8 rounded-lg px-3 text-xs">
                   Cancel

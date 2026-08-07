@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, AlertCircle, X, Plus, Loader2, Check, Search } from 'lucide-react';
@@ -174,19 +176,17 @@ export default function ProjectsPage() {
       animate="visible"
       className="space-y-6"
     >
-      <motion.div
-        variants={itemVariants}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Projects</h1>
-          <p className="text-surface-500 mt-1 text-sm">
-            {projects.length} project{projects.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
-          <Plus className="mr-2 h-4 w-4" /> New Project
-        </Button>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="Projects"
+          subtitle={`${projects.length} project${projects.length !== 1 ? 's' : ''}`}
+          actions={
+            <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
+              <Plus className="mr-2 h-4 w-4" /> New Project
+            </Button>
+          }
+        />
       </motion.div>
 
       {projects.length > 0 && (
@@ -211,7 +211,7 @@ export default function ProjectsPage() {
       ) : projects.length === 0 ? (
         <motion.div variants={itemVariants}>
           <EmptyState
-            icon={<FolderOpen className="text-surface-300 dark:text-surface-600 h-16 w-16" />}
+            icon={<FolderOpen className="text-surface-300 h-16 w-16" />}
             title="No projects yet"
             message="Organize your work into projects to track progress."
             action={
@@ -250,11 +250,9 @@ export default function ProjectsPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-surface-500">Progress</span>
-                    <span className="text-surface-700 dark:text-surface-300 font-medium">
-                      {project.progress}%
-                    </span>
+                    <span className="text-surface-700 font-medium">{project.progress}%</span>
                   </div>
-                  <div className="bg-surface-300/30 dark:bg-surface-700/30 h-1.5 overflow-hidden rounded-full">
+                  <div className="bg-surface-300/40 h-1.5 overflow-hidden rounded-full">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${project.progress}%` }}
@@ -308,37 +306,35 @@ export default function ProjectsPage() {
                   <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
                     Name <span className="text-error">*</span>
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g. Q4 Product Launch"
                     autoFocus
-                    className="border-surface-300/30 bg-surface-100/80 placeholder:text-surface-400 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:border-surface-600/30 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
                     Code
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={form.code}
                     onChange={(e) => setForm({ ...form, code: e.target.value })}
                     placeholder="e.g. Q4-2026"
-                    className="border-surface-300/30 bg-surface-100/80 placeholder:text-surface-400 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:border-surface-600/30 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
                     Description
                   </label>
-                  <textarea
+                  <Textarea
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="Optional description"
                     rows={3}
-                    className="border-surface-300/30 bg-surface-100/80 placeholder:text-surface-400 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:border-surface-600/30 w-full resize-none rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -346,22 +342,20 @@ export default function ProjectsPage() {
                     <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
                       Start Date
                     </label>
-                    <input
+                    <Input
                       type="date"
                       value={form.startDate}
                       onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                      className="border-surface-300/30 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:border-surface-600/30 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
                       End Date
                     </label>
-                    <input
+                    <Input
                       type="date"
                       value={form.endDate}
                       onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                      className="border-surface-300/30 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 dark:bg-surface-900/80 dark:border-surface-600/30 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     />
                   </div>
                 </div>

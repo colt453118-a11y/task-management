@@ -34,7 +34,7 @@ export function AISummary({ title, description, className }: AISummaryProps) {
           'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
           summary
             ? 'bg-brand-500/10 text-brand-500 hover:bg-brand-500/15'
-            : 'bg-surface-200/50 text-surface-500 hover:bg-surface-200/70 hover:text-surface-700 dark:bg-surface-700/30 dark:text-surface-400 dark:hover:bg-surface-700/50 dark:hover:text-surface-300',
+            : 'bg-surface-200/50 text-surface-500 hover:bg-surface-200/70 hover:text-surface-700 ',
         )}
       >
         {loading ? (
@@ -59,7 +59,7 @@ export function AISummary({ title, description, className }: AISummaryProps) {
             transition={{ duration: 0.2 }}
             className="mt-2 overflow-hidden"
           >
-            <div className="border-brand-500/20 bg-brand-500/5 dark:bg-brand-500/10 relative rounded-xl border p-3">
+            <div className="border-brand-500/20 bg-brand-500/5 relative rounded-xl border p-3">
               <div className="absolute right-2 top-2">
                 <button
                   onClick={() => setOpen(false)}
@@ -70,7 +70,7 @@ export function AISummary({ title, description, className }: AISummaryProps) {
               </div>
               <div className="flex items-start gap-2">
                 <Sparkles className="text-brand-500 mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <p className="text-surface-700 dark:text-surface-300 text-xs leading-relaxed">
+                <p className="text-surface-700 text-xs leading-relaxed">
                   {summary}
                 </p>
               </div>

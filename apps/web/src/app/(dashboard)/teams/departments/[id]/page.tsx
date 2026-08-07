@@ -75,11 +75,11 @@ function getInitials(name: string | null | undefined): string {
 }
 
 const statusColors: Record<string, string> = {
-  completed: 'text-green-600 bg-green-50 dark:bg-green-900/20',
-  in_progress: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
-  open: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20',
-  draft: 'text-surface-600 bg-surface-50 dark:bg-surface-900/20',
-  default: 'text-surface-500 bg-surface-50 dark:bg-surface-900/20',
+  completed: 'text-green-600 bg-green-50 ',
+  in_progress: 'text-blue-600 bg-blue-50 ',
+  open: 'text-yellow-600 bg-yellow-50 ',
+  draft: 'text-surface-600 bg-surface-50 ',
+  default: 'text-surface-500 bg-surface-50 ',
 };
 
 const statusLabels: Record<string, string> = {
@@ -208,7 +208,7 @@ export default function DepartmentDetailPage() {
                 · {teams.length} teams · {members.length} members
               </span>
             </div>
-            <h1 className="text-surface-900 dark:text-surface-50 mt-1 text-xl font-semibold">
+            <h1 className="text-surface-900 mt-1 text-xl font-semibold">
               {dept.name}
             </h1>
             {dept.description && (
@@ -233,19 +233,19 @@ export default function DepartmentDetailPage() {
               {taskStats.total > 0 ? (
                 <>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="border-surface-200 dark:border-surface-700 rounded-lg border p-3">
+                    <div className="border-surface-200 rounded-lg border p-3">
                       <p className="text-surface-500 text-xs">Total Tasks</p>
-                      <p className="text-surface-900 dark:text-surface-50 mt-1 text-2xl font-semibold">
+                      <p className="text-surface-900 mt-1 text-2xl font-semibold">
                         {taskStats.total}
                       </p>
                     </div>
-                    <div className="border-surface-200 dark:border-surface-700 rounded-lg border p-3">
+                    <div className="border-surface-200 rounded-lg border p-3">
                       <p className="text-surface-500 text-xs">Completed</p>
                       <p className="mt-1 text-2xl font-semibold text-green-600">
                         {taskStats.completed}
                       </p>
                     </div>
-                    <div className="border-surface-200 dark:border-surface-700 rounded-lg border p-3">
+                    <div className="border-surface-200 rounded-lg border p-3">
                       <p className="text-surface-500 text-xs">Completion Rate</p>
                       <p className="text-brand-600 mt-1 text-2xl font-semibold">
                         {taskStats.total > 0
@@ -303,11 +303,11 @@ export default function DepartmentDetailPage() {
                     <Link
                       key={team.id}
                       href={`/teams/${team.id}`}
-                      className="border-surface-200 hover:bg-surface-50 hover:border-brand-300 dark:border-surface-700 dark:hover:bg-surface-800 flex items-center justify-between rounded-lg border px-4 py-3 transition-colors"
+                      className="border-surface-200 hover:bg-surface-50 hover:border-brand-300 flex items-center justify-between rounded-lg border px-4 py-3 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-surface-900 dark:text-surface-50 text-sm font-medium">
+                          <span className="text-surface-900 text-sm font-medium">
                             {team.name}
                           </span>
                           {team.code && (
@@ -354,15 +354,15 @@ export default function DepartmentDetailPage() {
                   {members.map((member) => (
                     <div
                       key={member.id}
-                      className="hover:bg-surface-50 dark:hover:bg-surface-800 flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors"
+                      className="hover:bg-surface-50 flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                        <div className="bg-brand-100 text-brand-700 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                           {getInitials(member.name)}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-surface-900 dark:text-surface-50 truncate text-sm font-medium">
+                            <span className="text-surface-900 truncate text-sm font-medium">
                               {member.name ?? 'Unnamed'}
                             </span>
                             {member.id === dept.headUserId && (
@@ -405,7 +405,7 @@ export default function DepartmentDetailPage() {
                   <label className="text-surface-500 mb-1 block text-xs font-medium">
                     Department Head
                   </label>
-                  <div className="text-surface-700 dark:text-surface-300 flex items-center gap-2">
+                  <div className="text-surface-700 flex items-center gap-2">
                     <div className="bg-brand-100 text-brand-700 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                       {getInitials(dept.headUser.name)}
                     </div>
@@ -433,7 +433,7 @@ export default function DepartmentDetailPage() {
 
               <div>
                 <label className="text-surface-500 mb-1 block text-xs font-medium">Created</label>
-                <div className="text-surface-700 dark:text-surface-300">
+                <div className="text-surface-700 ">
                   {new Date(dept.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -454,25 +454,25 @@ export default function DepartmentDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-surface-600 dark:text-surface-400 text-sm">Teams</span>
-                <span className="text-surface-900 dark:text-surface-50 text-sm font-semibold">
+                <span className="text-surface-600 text-sm">Teams</span>
+                <span className="text-surface-900 text-sm font-semibold">
                   {teams.length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-surface-600 dark:text-surface-400 text-sm">Members</span>
-                <span className="text-surface-900 dark:text-surface-50 text-sm font-semibold">
+                <span className="text-surface-600 text-sm">Members</span>
+                <span className="text-surface-900 text-sm font-semibold">
                   {members.length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-surface-600 dark:text-surface-400 text-sm">Total Tasks</span>
-                <span className="text-surface-900 dark:text-surface-50 text-sm font-semibold">
+                <span className="text-surface-600 text-sm">Total Tasks</span>
+                <span className="text-surface-900 text-sm font-semibold">
                   {taskStats.total}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-surface-600 dark:text-surface-400 text-sm">Completed</span>
+                <span className="text-surface-600 text-sm">Completed</span>
                 <span className="text-sm font-semibold text-green-600">{taskStats.completed}</span>
               </div>
             </CardContent>

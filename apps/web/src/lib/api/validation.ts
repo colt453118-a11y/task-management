@@ -173,7 +173,7 @@ export const ProjectCreateSchema = z
       .transform((s) => s.trim())
       .optional()
       .nullable(),
-    ownerId: z.string().min(1, 'ownerId is required'),
+    ownerId: z.string().min(1, 'ownerId is required').optional(),
     departmentId: z.string().uuid().optional().nullable(),
     teamId: z.string().uuid().optional().nullable(),
     startDate: z.string().optional().nullable(),

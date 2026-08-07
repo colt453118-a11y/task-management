@@ -92,14 +92,14 @@ export function TaskMoveSheet({ task, open, onOpenChange, onMove }: TaskMoveShee
       >
         {/* Drag handle indicator — mobile only */}
         <div className="flex justify-center pt-2 sm:hidden">
-          <div className="bg-surface-300 dark:bg-surface-600 h-1 w-10 rounded-full" />
+          <div className="bg-surface-300 h-1 w-10 rounded-full" />
         </div>
 
         <div className="px-4 pb-4 pt-2 sm:p-0">
           {/* Header */}
           <div className="mb-4 flex items-start justify-between">
             <div>
-              <DialogTitle className="text-surface-900 dark:text-surface-100 text-base font-semibold sm:text-lg">
+              <DialogTitle className="text-surface-900 text-base font-semibold sm:text-lg">
                 Move task
               </DialogTitle>
               <DialogDescription className="sr-only">
@@ -110,12 +110,12 @@ export function TaskMoveSheet({ task, open, onOpenChange, onMove }: TaskMoveShee
 
           {/* Current task pill */}
           {task && currentStatusMeta && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-surface-200 bg-surface-100/50 px-3 py-2 dark:border-surface-700 dark:bg-surface-800/50">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-surface-200 bg-surface-100/50 px-3 py-2 ">
               <span className={cn('h-2 w-2 shrink-0 rounded-full', currentStatusMeta.dotColor)} />
-              <span className="text-surface-500 dark:text-surface-400 truncate text-xs font-medium">
+              <span className="text-surface-500 truncate text-xs font-medium">
                 {task.taskIdDisplay}
               </span>
-              <span className="text-surface-700 dark:text-surface-300 flex-1 truncate text-sm font-medium">
+              <span className="text-surface-700 flex-1 truncate text-sm font-medium">
                 {task.title}
               </span>
             </div>
@@ -148,23 +148,23 @@ export function TaskMoveSheet({ task, open, onOpenChange, onMove }: TaskMoveShee
                     aria-selected={false}
                     className={cn(
                       'group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200',
-                      'hover:bg-surface-100 dark:hover:bg-surface-800',
+                      'hover:bg-surface-100 ',
                       'focus-visible:ring-brand-500 focus-visible:outline-none focus-visible:ring-2',
                       'border-l-4',
                       target.borderColor,
-                      'border border-surface-200/50 dark:border-surface-700/50',
-                      'hover:border-surface-300 dark:hover:border-surface-600',
+                      'border border-surface-200/50 ',
+                      'hover:border-surface-300 ',
                     )}
                   >
                     <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', target.dotColor)} />
                     <div className="flex-1">
-                      <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                      <span className="text-surface-900 text-sm font-medium">
                         {target.label}
                       </span>
                     </div>
                     <motion.div
                       whileHover={{ scale: 1.1 }}
-                      className="text-surface-300 dark:text-surface-600 group-hover:text-surface-500 dark:group-hover:text-surface-400 rounded-full p-1 transition-colors"
+                      className="text-surface-300 group-hover:text-surface-500 rounded-full p-1 transition-colors"
                     >
                       <Move className="h-3.5 w-3.5" />
                     </motion.div>
@@ -179,10 +179,10 @@ export function TaskMoveSheet({ task, open, onOpenChange, onMove }: TaskMoveShee
             onClick={() => onOpenChange(false)}
             className={cn(
               'mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
-              'text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300',
-              'hover:bg-surface-100 dark:hover:bg-surface-800',
+              'text-surface-500 hover:text-surface-700 ',
+              'hover:bg-surface-100 ',
               'focus-visible:ring-brand-500 focus-visible:outline-none focus-visible:ring-2',
-              'border border-surface-200 dark:border-surface-700',
+              'border border-surface-200 ',
             )}
           >
             <X className="h-4 w-4" />

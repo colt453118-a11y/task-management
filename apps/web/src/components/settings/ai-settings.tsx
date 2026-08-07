@@ -229,7 +229,7 @@ export function AISettings() {
         className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
           config?.hasKey
             ? 'border-success/30 bg-success/5 text-success'
-            : 'border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400'
+            : 'border-amber-500/30 bg-amber-500/5 text-amber-600 '
         }`}
       >
         <div
@@ -279,20 +279,20 @@ export function AISettings() {
                 className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
                   form.provider === p.value
                     ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/30'
-                    : 'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/50 hover:border-surface-300/40'
+                    : 'border-surface-300/20 bg-surface-100/50 hover:border-surface-300/40'
                 }`}
               >
                 <div
                   className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl ${
                     form.provider === p.value
                       ? 'bg-brand-500/20 text-brand-500'
-                      : 'bg-surface-200/50 dark:bg-surface-700/50 text-surface-500'
+                      : 'bg-surface-200/50 text-surface-500'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                  <p className="text-surface-900 text-sm font-semibold">
                     {p.label}
                   </p>
                   <p className="text-surface-500 mt-0.5 text-xs">{p.description}</p>
@@ -315,7 +315,7 @@ export function AISettings() {
               value={form.model}
               onChange={(e) => setForm((prev) => ({ ...prev, model: e.target.value }))}
               placeholder={selectedProvider.defaultModel}
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
             />
           </div>
         </div>
@@ -328,7 +328,7 @@ export function AISettings() {
               className={`rounded-lg border px-2 py-1 text-[10px] font-medium transition-all ${
                 form.model === m
                   ? 'border-brand-500 bg-brand-500/10 text-brand-500'
-                  : 'border-surface-300/20 dark:border-surface-700/30 text-surface-500 hover:border-surface-300/40 hover:bg-surface-200/50 dark:hover:bg-surface-800/50'
+                  : 'border-surface-300/20 text-surface-500 hover:border-surface-300/40 hover:bg-surface-200/50 '
               }`}
             >
               {m}
@@ -361,12 +361,12 @@ export function AISettings() {
                 ? 'Leave blank to keep current key'
                 : `sk-... or sk-ant-... (${selectedProvider.label} API key)`
             }
-            className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 pr-10 text-sm transition-all focus:outline-none focus:ring-2"
+            className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 pr-10 text-sm transition-all focus:outline-none focus:ring-2"
           />
           <button
             type="button"
             onClick={() => setShowKey(!showKey)}
-            className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 absolute inset-y-0 right-0 flex items-center pr-3 transition-colors"
+            className="text-surface-500 hover:text-surface-700 absolute inset-y-0 right-0 flex items-center pr-3 transition-colors"
           >
             {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -375,7 +375,7 @@ export function AISettings() {
           Key is stored encrypted at rest. It cannot be read back — only overwritten or cleared.
           {!config?.hasKey && (
             <>
-              {' '}Set via <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded px-1 font-mono">OPENAI_API_KEY</kbd> env var as fallback.
+              {' '}Set via <kbd className="bg-surface-200/50 rounded px-1 font-mono">OPENAI_API_KEY</kbd> env var as fallback.
             </>
           )}
         </p>
@@ -428,7 +428,7 @@ export function AISettings() {
       )}
 
       {/* Save Button */}
-      <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+      <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
         <Button
           onClick={saveConfig}
           disabled={saving}
@@ -449,13 +449,13 @@ export function AISettings() {
       </div>
 
       {/* Security Note */}
-      <div className="border-surface-300/20 dark:border-surface-700/30 bg-amber-500/5 flex items-start gap-2.5 rounded-xl border px-4 py-3">
+      <div className="border-surface-300/20 bg-amber-500/5 flex items-start gap-2.5 rounded-xl border px-4 py-3">
         <Key className="text-amber-500 mt-0.5 h-4 w-4 shrink-0" />
         <div className="text-surface-500 text-xs leading-relaxed">
-          <p className="font-medium text-amber-600 dark:text-amber-400">Security Note</p>
+          <p className="font-medium text-amber-600 ">Security Note</p>
           <p className="mt-0.5">
             API keys are encrypted at rest using AES-256-GCM before being stored in the database.
-            The encryption key is derived from the <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded px-1 font-mono">ENCRYPTION_KEY</kbd> environment variable.
+            The encryption key is derived from the <kbd className="bg-surface-200/50 rounded px-1 font-mono">ENCRYPTION_KEY</kbd> environment variable.
             Keys are never exposed in API responses — only their configured status is shown.
           </p>
         </div>

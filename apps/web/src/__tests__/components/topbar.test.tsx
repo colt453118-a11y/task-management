@@ -85,10 +85,10 @@ describe('Topbar', () => {
     expect(screen.getByText('⌘T')).toBeInTheDocument();
   });
 
-  it('renders theme toggle (light mode shows moon icon button)', () => {
+  it('does not render a theme toggle (app is dark-only)', () => {
     render(<Topbar />);
-    const themeBtn = screen.getByTitle('Switch to dark mode');
-    expect(themeBtn).toBeInTheDocument();
+    expect(screen.queryByTitle('Switch to dark mode')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Switch to light mode')).not.toBeInTheDocument();
   });
 
   it('renders notification bell button with aria-label', () => {

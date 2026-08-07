@@ -142,19 +142,18 @@ export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardPro
       onTouchCancel={handleTouchEnd}
       className={cn(
         // Base card styles
-        'group relative rounded-lg border bg-white p-3 transition-all duration-200',
-        'dark:bg-surface-900 dark:border-surface-700',
+        'group relative rounded-lg border border-surface-500/20 bg-surface-200 p-3 transition-all duration-200',
         // Hover
-        'hover:border-brand-200 dark:hover:border-brand-800 hover:-translate-y-0.5 hover:shadow-md',
+        'hover:border-brand-200 hover:-translate-y-0.5 hover:shadow-md',
         // Focus
         'focus-visible:ring-brand-500 focus-visible:outline-none focus-visible:ring-2',
         // Dragging
         isDragging && 'scale-95 border-dashed opacity-30 shadow-none',
         isDragOverlay &&
-          'shadow-glass border-brand-300 dark:border-brand-700 rotate-[3deg] scale-105',
+          'shadow-glass border-brand-300 rotate-[3deg] scale-105',
         isReadonly && 'opacity-60',
         // Long-press feedback for mobile touch
-        isHolding && !isReadonly && 'scale-[0.97] border-brand-300 dark:border-brand-600 shadow-md bg-brand-500/5',
+        isHolding && !isReadonly && 'scale-[0.97] border-brand-300 shadow-md bg-brand-500/5',
         // Left border accent by status
         'border-l-4',
         statusBorderAccent[task.status] ?? 'border-l-surface-300',
@@ -169,7 +168,7 @@ export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardPro
 
       {/* Task ID + Priority row */}
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <span className="text-surface-400 dark:text-surface-500 font-mono text-[11px] font-medium">
+        <span className="text-surface-400 font-mono text-[11px] font-medium">
           {task.taskIdDisplay}
         </span>
         <motion.span
@@ -191,13 +190,13 @@ export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardPro
       {/* Title */}
       <h4
         data-testid={KANBAN.cardTitle(task.id)}
-        className="text-surface-900 dark:text-surface-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 mb-2 line-clamp-2 text-sm font-medium leading-snug transition-colors duration-200"
+        className="text-surface-900 group-hover:text-brand-600 mb-2 line-clamp-2 text-sm font-medium leading-snug transition-colors duration-200"
       >
         {task.title}
       </h4>
 
       {/* Footer: Assignee + Due Date */}
-      <div className="text-surface-400 dark:text-surface-500 flex items-center justify-between gap-2 text-[11px]">
+      <div className="text-surface-400 flex items-center justify-between gap-2 text-[11px]">
         <div className="flex min-w-0 items-center gap-1">
           <User className="h-3 w-3 shrink-0 transition-transform group-hover:scale-110" />
           <span className="truncate">

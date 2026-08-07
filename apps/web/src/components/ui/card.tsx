@@ -6,9 +6,8 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        'border-surface-700/25 bg-surface-200/50 text-surface-900 rounded-2xl border shadow-sm backdrop-blur-sm',
-        'dark:border-surface-700/30 dark:bg-surface-300/15 dark:text-surface-100',
-        'hover:border-brand-500/20 hover:shadow-md hover:shadow-brand-500/5 transition-all duration-300',
+        'border-surface-700/15 bg-surface-200/50 text-surface-900 rounded-2xl border shadow-card backdrop-blur-md',
+        'hover:border-brand-500/25 hover:shadow-card-hover transition-all duration-300',
         className,
       )}
       {...props}
@@ -29,7 +28,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
     <h3
       ref={ref}
       className={cn(
-        'text-surface-900 dark:text-surface-100 text-base font-semibold leading-tight tracking-tight',
+        'text-surface-900 text-base font-semibold leading-tight tracking-tight',
         className,
       )}
       {...props}

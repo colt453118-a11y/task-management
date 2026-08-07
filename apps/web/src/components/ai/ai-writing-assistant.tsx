@@ -65,7 +65,7 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
           'inline-flex items-center gap-1 rounded-md p-1.5 text-xs font-medium transition-colors',
           open
             ? 'bg-brand-500/10 text-brand-500'
-            : 'text-surface-500 hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-300',
+            : 'text-surface-500 hover:bg-surface-100 hover:text-surface-700 ',
           !text.trim() && 'cursor-not-allowed opacity-40',
         )}
         title="AI Writing Assistant"
@@ -80,11 +80,11 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50 dark:bg-surface-900 absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border p-3 shadow-lg backdrop-blur-xl"
+            className="border-surface-300/20 bg-surface-50 absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border p-3 shadow-lg backdrop-blur-xl"
           >
             {!result ? (
               <>
-                <p className="text-surface-700 dark:text-surface-300 mb-2 text-xs font-semibold">AI Writing Assistant</p>
+                <p className="text-surface-700 mb-2 text-xs font-semibold">AI Writing Assistant</p>
                 <div className="space-y-1.5">
                   {INSTRUCTIONS.map((inst) => (
                     <button
@@ -95,7 +95,7 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
                         'w-full rounded-lg px-2 py-1.5 text-left text-xs transition-all',
                         instruction === inst.value
                           ? 'bg-brand-500/10 text-brand-500 font-medium'
-                          : 'text-surface-600 dark:text-surface-400 hover:bg-surface-200/50 dark:hover:bg-surface-800/50',
+                          : 'text-surface-600 hover:bg-surface-200/50 ',
                       )}
                     >
                       {inst.label}
@@ -120,7 +120,7 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
             ) : (
               <>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-surface-700 dark:text-surface-300 text-xs font-semibold">Preview</p>
+                  <p className="text-surface-700 text-xs font-semibold">Preview</p>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -139,7 +139,7 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
                     </button>
                   </div>
                 </div>
-                <div className="border-surface-300/20 dark:border-surface-700/30 max-h-32 overflow-y-auto rounded-lg border bg-white/50 p-2 text-xs leading-relaxed text-surface-700 dark:bg-surface-800/50 dark:text-surface-300">
+                <div className="border-surface-300/20 max-h-32 overflow-y-auto rounded-lg border bg-surface-300/50 p-2 text-xs leading-relaxed text-surface-700">
                   {result}
                 </div>
                 <Button

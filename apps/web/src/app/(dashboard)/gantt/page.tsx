@@ -331,7 +331,7 @@ export default function GanttPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex shrink-0 items-center justify-between">
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <CalendarDays className="h-4 w-4 text-white" />
             </div>
@@ -361,10 +361,10 @@ export default function GanttPage() {
           </div>
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center py-24">
-            <div className="bg-surface-100/50 dark:bg-surface-800/30 border-surface-300/20 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+            <div className="bg-surface-100/50 border-surface-300/20 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
               <CalendarDays className="text-surface-400 h-7 w-7" />
             </div>
-            <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">No timeline data yet</h3>
+            <h3 className="text-surface-900 text-base font-semibold">No timeline data yet</h3>
             <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
               Create projects with start and end dates to see them on the Gantt chart.
             </p>
@@ -372,13 +372,13 @@ export default function GanttPage() {
         ) : (
           <div className="flex h-full flex-col overflow-hidden">
             {/* Timeline header: month markers */}
-            <div className="border-surface-300/10 dark:border-surface-700/30 relative flex h-8 shrink-0 border-b">
-              <div className="w-64 shrink-0 border-r border-surface-300/10 dark:border-surface-700/30" />
+            <div className="border-surface-300/10 relative flex h-8 shrink-0 border-b">
+              <div className="w-64 shrink-0 border-r border-surface-300/10 " />
               <div className="relative flex-1 overflow-hidden">
                 {monthMarkers.map((m, i) => (
                   <div
                     key={i}
-                    className="border-surface-300/10 dark:border-surface-700/30 absolute top-0 h-full border-l"
+                    className="border-surface-300/10 absolute top-0 h-full border-l"
                     style={{ left: `${m.left}%` }}
                   >
                     <span className="text-surface-500 absolute left-1 top-1 text-[9px] font-medium whitespace-nowrap">{m.label}</span>
@@ -407,17 +407,17 @@ export default function GanttPage() {
                   <div
                     key={`${item.type}-${item.id}`}
                     className={cn(
-                      'border-surface-300/5 dark:border-surface-700/20 group flex h-9 items-stretch border-b transition-colors',
-                      isProject && 'bg-surface-50/80 dark:bg-surface-800/40',
-                      isMilestone && 'bg-surface-50/40 dark:bg-surface-800/20',
+                      'border-surface-300/5 group flex h-9 items-stretch border-b transition-colors',
+                      isProject && 'bg-surface-50/80 ',
+                      isMilestone && 'bg-surface-50/40 ',
                     )}
                   >
                     {/* Left label */}
-                    <div className="flex w-64 shrink-0 items-center gap-1.5 border-r border-surface-300/10 px-3 dark:border-surface-700/30">
+                    <div className="flex w-64 shrink-0 items-center gap-1.5 border-r border-surface-300/10 px-3 ">
                       {isProject && (
                         <button
                           onClick={() => toggleProject(item.id)}
-                          className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 rounded p-0.5 transition-colors"
+                          className="text-surface-400 hover:text-surface-600 rounded p-0.5 transition-colors"
                         >
                           {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                         </button>
@@ -425,9 +425,9 @@ export default function GanttPage() {
                       {isMilestone && <Diamond className="text-surface-400 h-2.5 w-2.5 shrink-0" />}
                       <span className={cn(
                         'truncate text-xs',
-                        isProject && 'text-surface-900 dark:text-surface-100 font-semibold',
+                        isProject && 'text-surface-900 font-semibold',
                         isMilestone && 'text-surface-500 font-medium',
-                        !isProject && !isMilestone && 'text-surface-600 dark:text-surface-400',
+                        !isProject && !isMilestone && 'text-surface-600 ',
                       )}>
                         {item.name}
                       </span>
@@ -439,7 +439,7 @@ export default function GanttPage() {
                     {/* Timeline bar area */}
                     <div className="relative flex-1">
                       {monthMarkers.map((m, i) => (
-                        <div key={i} className="border-surface-300/5 dark:border-surface-700/10 absolute inset-y-0 border-l" style={{ left: `${m.left}%` }} />
+                        <div key={i} className="border-surface-300/5 absolute inset-y-0 border-l" style={{ left: `${m.left}%` }} />
                       ))}
 
                       {/* Dragged bar ghost */}
@@ -476,7 +476,7 @@ export default function GanttPage() {
                           onMouseDown={(e) => handleBarMouseDown(e, item)}
                           title={`${item.name}: ${formatDate(item.startDate)} — ${formatDate(item.endDate)}`}
                         >
-                          <span className="text-surface-700 dark:text-surface-200 truncate px-2 text-[10px] font-medium leading-6">
+                          <span className="text-surface-700 truncate px-2 text-[10px] font-medium leading-6">
                             {formatDate(item.startDate)}
                             {!isMilestone && item.startDate && item.endDate && item.startDate !== item.endDate && (
                               <> — {formatDate(item.endDate)}</>

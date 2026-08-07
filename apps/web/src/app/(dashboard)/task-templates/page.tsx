@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -243,28 +244,33 @@ export default function TaskTemplatesPage() {
       className="mx-auto max-w-4xl space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Layers className="h-4 w-4 text-white" />
             </div>
-            Task Templates
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            {templates.length} template{templates.length !== 1 ? 's' : ''}
-            {defaultTemplate && (
-              <>
-                {' · '}
-                <span className="text-amber-500 font-medium">{defaultTemplate.name}</span> is default
-              </>
-            )}
-          </p>
-        </div>
-        <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" />
-          New Template
-        </Button>
+          }
+          title="Task Templates"
+          subtitle={
+            <>
+              {templates.length} template{templates.length !== 1 ? 's' : ''}
+              {defaultTemplate && (
+                <>
+                  {' · '}
+                  <span className="text-amber-500 font-medium">{defaultTemplate.name}</span> is default
+                </>
+              )}
+            </>
+          }
+          actions={
+            <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              New Template
+            </Button>
+          }
+        />
       </motion.div>
 
       {/* Content */}
@@ -282,10 +288,10 @@ export default function TaskTemplatesPage() {
         </div>
       ) : templates.length === 0 ? (
         <motion.div variants={itemVariants} className="flex flex-col items-center py-16">
-          <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+          <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
             <FileText className="text-surface-400 h-7 w-7" />
           </div>
-          <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">No templates yet</h3>
+          <h3 className="text-surface-900 text-base font-semibold">No templates yet</h3>
           <p className="text-surface-500 mt-1.5 max-w-md text-center text-sm">
             Create templates to quickly generate tasks with predefined titles, descriptions, priorities, labels, and more.
           </p>
@@ -333,7 +339,7 @@ export default function TaskTemplatesPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">{t.name}</h3>
+                          <h3 className="text-surface-900 text-sm font-semibold">{t.name}</h3>
                           {t.isDefault && (
                             <Badge variant="warning" size="sm" className="px-1.5 py-0 text-[9px]">
                               <Star className="mr-0.5 h-2.5 w-2.5" />
@@ -364,7 +370,7 @@ export default function TaskTemplatesPage() {
 
                           {/* Category */}
                           {t.category && (
-                            <span className="text-surface-400 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 dark:bg-surface-700/30 px-1.5 py-0.5 text-[9px]">
+                            <span className="text-surface-400 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 px-1.5 py-0.5 text-[9px]">
                               <List className="h-2.5 w-2.5" />
                               {t.category}
                             </span>
@@ -382,7 +388,7 @@ export default function TaskTemplatesPage() {
                           {labels.slice(0, 3).map((label) => (
                             <span
                               key={label}
-                              className="inline-flex items-center gap-1 rounded-lg bg-surface-200/40 dark:bg-surface-700/30 px-1.5 py-0.5 text-[9px] text-surface-500"
+                              className="inline-flex items-center gap-1 rounded-lg bg-surface-200/40 px-1.5 py-0.5 text-[9px] text-surface-500"
                             >
                               <Tag className="h-2.5 w-2.5" />
                               {label}
@@ -396,7 +402,7 @@ export default function TaskTemplatesPage() {
                           {tags.slice(0, 2).map((tag) => (
                             <span
                               key={tag}
-                              className="bg-surface-200/30 dark:bg-surface-700/20 text-surface-500 rounded px-1 py-0.5 text-[9px] font-mono"
+                              className="bg-surface-200/30 text-surface-500 rounded px-1 py-0.5 text-[9px] font-mono"
                             >
                               #{tag}
                             </span>
@@ -437,7 +443,7 @@ export default function TaskTemplatesPage() {
                   </div>
 
                   {/* Bottom info */}
-                  <div className="text-surface-400 mt-3 flex items-center gap-3 border-t border-surface-300/10 dark:border-surface-700/30 pt-2 text-[10px]">
+                  <div className="text-surface-400 mt-3 flex items-center gap-3 border-t border-surface-300/10 pt-2 text-[10px]">
                     <span>Created {formatDate(t.createdAt)}</span>
                     {t.taskDescription && (
                       <>
@@ -456,7 +462,7 @@ export default function TaskTemplatesPage() {
             <Sparkles className="h-3 w-3" />
             <span>
               Templates are available when creating tasks. Click{' '}
-              <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded px-1 font-mono">From Template</kbd>{' '}
+              <kbd className="bg-surface-200/50 rounded px-1 font-mono">From Template</kbd>{' '}
               on the task creation form to apply one.
             </span>
           </div>
@@ -477,14 +483,14 @@ export default function TaskTemplatesPage() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-xl rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-xl rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   {editingId ? 'Edit Template' : 'New Task Template'}
                 </h3>
-                <button onClick={() => setShowForm(false)} className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all">
+                <button onClick={() => setShowForm(false)} className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -498,7 +504,7 @@ export default function TaskTemplatesPage() {
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="e.g., Bug Report"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -510,7 +516,7 @@ export default function TaskTemplatesPage() {
                     value={form.description}
                     onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                     placeholder="Template description (optional)"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -524,7 +530,7 @@ export default function TaskTemplatesPage() {
                     value={form.taskTitle}
                     onChange={(e) => setForm((p) => ({ ...p, taskTitle: e.target.value }))}
                     placeholder="e.g., Fix: [summary] — will be prefilled when creating a task"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -538,7 +544,7 @@ export default function TaskTemplatesPage() {
                     onChange={(e) => setForm((p) => ({ ...p, taskDescription: e.target.value }))}
                     placeholder="Default description for the task"
                     rows={3}
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -549,7 +555,7 @@ export default function TaskTemplatesPage() {
                     <select
                       value={form.priority}
                       onChange={(e) => setForm((p) => ({ ...p, priority: e.target.value }))}
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     >
                       <option value="none">None</option>
                       <option value="low">Low</option>
@@ -566,7 +572,7 @@ export default function TaskTemplatesPage() {
                       value={form.category}
                       onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
                       placeholder="e.g., Bug, Feature"
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     />
                   </div>
                 </div>
@@ -582,7 +588,7 @@ export default function TaskTemplatesPage() {
                       value={form.labels}
                       onChange={(e) => setForm((p) => ({ ...p, labels: e.target.value }))}
                       placeholder="bug, frontend, urgent"
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     />
                   </div>
                   <div>
@@ -594,7 +600,7 @@ export default function TaskTemplatesPage() {
                       value={form.tags}
                       onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
                       placeholder="sprint-24, q4"
-                      className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                     />
                   </div>
                 </div>
@@ -611,12 +617,12 @@ export default function TaskTemplatesPage() {
                     value={form.estimatedHours}
                     onChange={(e) => setForm((p) => ({ ...p, estimatedHours: e.target.value }))}
                     placeholder="0"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
                 {/* Default toggle */}
-                <label className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-all hover:bg-surface-200/40 dark:hover:bg-surface-800/40">
+                <label className="border-surface-300/20 hover:border-brand-500/20 flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-all hover:bg-surface-200/40 ">
                   <input
                     type="checkbox"
                     checked={form.isDefault}
@@ -624,7 +630,7 @@ export default function TaskTemplatesPage() {
                     className="border-surface-400 text-brand-500 focus:ring-brand-500 rounded"
                   />
                   <div>
-                    <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">Set as default template</p>
+                    <p className="text-surface-700 text-sm font-medium">Set as default template</p>
                     <p className="text-surface-500 text-xs">The default template will be pre-selected when creating new tasks.</p>
                   </div>
                 </label>
@@ -638,7 +644,7 @@ export default function TaskTemplatesPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
                   <Button variant="outline" size="sm" onClick={() => setShowForm(false)} className="h-8 rounded-lg px-3 text-xs">Cancel</Button>
                   <Button onClick={saveTemplate} disabled={saving} size="sm" className="h-8 rounded-lg px-3 text-xs">
                     {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}
@@ -664,9 +670,9 @@ export default function TaskTemplatesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
-              <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Delete Template</h3>
+              <h3 className="text-surface-900 text-lg font-semibold">Delete Template</h3>
               <p className="text-surface-500 mt-2 text-sm">Are you sure? This action cannot be undone.</p>
               <div className="mt-4 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowDeleteConfirm(null)} className="rounded-lg">Cancel</Button>

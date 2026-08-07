@@ -76,11 +76,11 @@ export default function LeaveBalancesPage() {
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <Link href="/leave" className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
+        <Link href="/leave" className="text-surface-500 hover:text-surface-700 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Time Off
         </Link>
-        <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+        <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
           <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
             <CalendarDays className="h-4 w-4 text-white" />
           </div>
@@ -102,10 +102,10 @@ export default function LeaveBalancesPage() {
           </div>
         ) : balances.length === 0 ? (
           <div className="neon-card flex flex-col items-center rounded-2xl py-12">
-            <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+            <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
               <CalendarDays className="text-surface-400 h-7 w-7" />
             </div>
-            <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">No balances allocated yet</h3>
+            <h3 className="text-surface-900 text-base font-semibold">No balances allocated yet</h3>
             <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
               Your admin hasn&apos;t allocated leave balances for this year yet.
             </p>
@@ -132,7 +132,7 @@ export default function LeaveBalancesPage() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                    <h3 className="text-surface-900 text-sm font-semibold">
                       {balance.leaveType?.name ?? 'Leave'}
                     </h3>
                     {balance.leaveType?.description && (
@@ -141,7 +141,7 @@ export default function LeaveBalancesPage() {
 
                     {/* Usage bar */}
                     <div className="mt-3">
-                      <div className="bg-surface-200 dark:bg-surface-700 h-2 w-full overflow-hidden rounded-full">
+                      <div className="bg-surface-200 h-2 w-full overflow-hidden rounded-full">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -155,19 +155,19 @@ export default function LeaveBalancesPage() {
                     {/* Stats */}
                     <div className="mt-3 grid grid-cols-4 gap-2 text-center">
                       <div>
-                        <p className="text-surface-900 dark:text-surface-100 text-lg font-bold">{balance.allocatedDays}</p>
+                        <p className="text-surface-900 text-lg font-bold">{balance.allocatedDays}</p>
                         <p className="text-surface-500 text-[10px]">Allocated</p>
                       </div>
                       <div>
-                        <p className="text-surface-900 dark:text-surface-100 text-lg font-bold">{balance.usedDays}</p>
+                        <p className="text-surface-900 text-lg font-bold">{balance.usedDays}</p>
                         <p className="text-surface-500 text-[10px]">Used</p>
                       </div>
                       <div>
-                        <p className="text-amber-600 dark:text-amber-400 text-lg font-bold">{balance.pendingDays}</p>
+                        <p className="text-amber-600 text-lg font-bold">{balance.pendingDays}</p>
                         <p className="text-surface-500 text-[10px]">Pending</p>
                       </div>
                       <div>
-                        <p className={available > 0 ? 'text-emerald-600 dark:text-emerald-400 text-lg font-bold' : 'text-red-500 text-lg font-bold'}>
+                        <p className={available > 0 ? 'text-emerald-600 text-lg font-bold' : 'text-red-500 text-lg font-bold'}>
                           {Math.max(0, available)}
                         </p>
                         <p className="text-surface-500 text-[10px]">Available</p>

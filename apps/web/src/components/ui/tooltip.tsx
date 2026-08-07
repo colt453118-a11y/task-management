@@ -22,7 +22,7 @@ const TooltipContent = React.forwardRef<
       'animate-in fade-in-0 zoom-in-95',
       'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
       'data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1',
-      'dark:bg-surface-900/95 dark:border-surface-700/30 dark:text-surface-300',
+      '',
       className,
     )}
     {...props}

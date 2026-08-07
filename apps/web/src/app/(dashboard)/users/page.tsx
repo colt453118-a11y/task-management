@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -196,26 +198,27 @@ export default function UsersPage() {
       animate="visible"
       className="space-y-6"
     >
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
-          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">People</h1>
-          <p className="text-surface-500 mt-1 text-sm">
-            {users.length} team member{users.length !== 1 ? 's' : ''}
-          </p>
-        </div>{' '}
-        <Button onClick={openInvite} className="shadow-sm">
-          <Plus className="mr-2 h-4 w-4" /> Invite Members
-        </Button>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="People"
+          subtitle={`${users.length} team member${users.length !== 1 ? 's' : ''}`}
+          actions={
+            <Button onClick={openInvite} className="shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> Invite Members
+            </Button>
+          }
+        />
       </motion.div>
 
       <motion.div variants={itemVariants} className="relative max-w-md">
         <Search className="text-surface-500 absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-        <input
+        <Input
           type="text"
           placeholder="Search people..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border-surface-300/30 bg-surface-100 placeholder:text-surface-500 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm transition-all duration-200 focus:outline-none focus:ring-2"
+          className="pl-9"
         />
       </motion.div>
 
