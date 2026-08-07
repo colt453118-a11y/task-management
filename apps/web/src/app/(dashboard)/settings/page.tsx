@@ -604,7 +604,7 @@ export default function SettingsPage() {
     >
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
+        <h1 className="text-surface-900 text-2xl font-bold tracking-tight">
           Settings
         </h1>
         <p className="text-surface-500 mt-0.5 text-sm">

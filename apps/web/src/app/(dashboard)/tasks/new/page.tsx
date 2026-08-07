@@ -220,7 +220,7 @@ export default function NewTaskPage() {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-surface-900 dark:text-surface-50 text-xl font-bold tracking-tight">
+          <h1 className="text-surface-900 text-xl font-bold tracking-tight">
             New Task
           </h1>
           <p className="text-surface-500 mt-0.5 text-sm">Create a new task for your team</p>

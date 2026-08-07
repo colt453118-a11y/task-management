@@ -615,7 +615,7 @@ export default function TasksPage() {
               <ClipboardList className="text-brand-500 h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h1 className="text-surface-900 dark:text-surface-50 text-xl font-bold tracking-tight sm:text-2xl">
+              <h1 className="text-surface-900 text-xl font-bold tracking-tight sm:text-2xl">
                 Tasks
               </h1>
               <p className="text-surface-500 mt-0.5 text-xs sm:text-sm">

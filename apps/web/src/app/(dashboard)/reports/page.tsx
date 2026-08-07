@@ -451,7 +451,7 @@ export default function ReportsPage() {
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">
             Reports
           </h1>
           <p className="text-surface-500 mt-0.5 text-sm">

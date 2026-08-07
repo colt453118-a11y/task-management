@@ -456,7 +456,7 @@ export default function SearchPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Search className="h-4 w-4 text-white" />
             </div>
