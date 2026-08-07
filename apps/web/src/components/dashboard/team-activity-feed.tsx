@@ -297,7 +297,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
     <div ref={containerRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {displayItems.length === 0 ? (
         <div className="flex flex-col items-center py-8 text-center">
-          <Activity className="text-surface-300 dark:text-surface-600 mb-3 h-10 w-10" />
+          <Activity className="text-surface-300 mb-3 h-10 w-10" />
           <p className="text-surface-500 text-sm font-medium">No activity yet</p>
           <p className="text-surface-400 mt-1 text-xs">
             Changes across the organization will appear here
@@ -306,7 +306,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
       ) : (
         <div className="relative">
           {/* Timeline line */}
-          <div className="bg-surface-300/30 dark:bg-surface-700/30 absolute bottom-3 left-[17px] top-3 w-px" />
+          <div className="bg-surface-300/30 absolute bottom-3 left-[17px] top-3 w-px" />
 
           <div className="space-y-0">
             <AnimatePresence initial={false}>
@@ -333,7 +333,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
                     tabIndex={desc.taskLink ? 0 : undefined}
                     className={cn(
                       'group relative flex items-start gap-3 px-1 py-2.5 transition-all duration-200',
-                      'hover:bg-surface-200/40 dark:hover:bg-surface-800/40 rounded-xl',
+                      'hover:bg-surface-200/40 rounded-xl',
                       desc.taskLink && 'cursor-pointer',
                     )}
                   >
@@ -346,12 +346,12 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
                           width={32}
                           height={32}
                           unoptimized
-                          className="h-8 w-8 rounded-full object-cover ring-2 ring-surface-50 dark:ring-surface-900"
+                          className="h-8 w-8 rounded-full object-cover ring-2 ring-surface-50 "
                         />
                       ) : (
                         <div
                           className={cn(
-                            'flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-surface-50 dark:ring-surface-900',
+                            'flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-surface-50 ',
                             bgColor,
                           )}
                           title={item.userName ?? 'Unknown user'}
@@ -364,7 +364,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
                     {/* Content */}
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-xs sm:text-sm">
-                        <span className="text-surface-700 dark:text-surface-300 max-w-[120px] truncate font-semibold sm:max-w-[160px]">
+                        <span className="text-surface-700 max-w-[120px] truncate font-semibold sm:max-w-[160px]">
                           {item.userName ?? 'System'}
                         </span>
                         <span className="text-surface-500 shrink-0">
@@ -376,7 +376,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
                             <ExternalLink className="text-brand-400/50 ml-0.5 inline-block h-2.5 w-2.5" />
                           </span>
                         ) : (
-                          <span className="text-surface-600 dark:text-surface-400 max-w-[200px] truncate sm:max-w-[280px]">
+                          <span className="text-surface-600 max-w-[200px] truncate sm:max-w-[280px]">
                             {desc.text}
                           </span>
                         )}
@@ -396,7 +396,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
                         </span>
                         {item.taskTitle && (
                           <>
-                            <span className="text-surface-300 dark:text-surface-600">·</span>
+                            <span className="text-surface-300 ">·</span>
                             <span className="text-surface-400 max-w-[120px] truncate text-[10px] sm:max-w-[180px]">
                               {item.taskTitle}
                             </span>
@@ -425,7 +425,7 @@ export function TeamActivityFeed({ maxItems = 20, refreshCounter = 0 }: TeamActi
         </div>
         <button
           onClick={() => { fetchFeed(); }}
-          className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 flex items-center gap-1 text-[10px] transition-colors"
+          className="text-surface-400 hover:text-surface-600 flex items-center gap-1 text-[10px] transition-colors"
           title="Refresh now"
         >
           <RefreshCw className="h-3 w-3" />

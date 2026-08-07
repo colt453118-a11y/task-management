@@ -193,7 +193,7 @@ function TaskBadge({ task }: { task: Task }) {
         className={cn('h-1.5 w-1.5 shrink-0 rounded-full', priority.ring)}
         style={{ backgroundColor: config.color }}
       />
-      <span className="text-surface-700 dark:text-surface-300 truncate max-w-[120px]">
+      <span className="text-surface-700 truncate max-w-[120px]">
         {task.title}
       </span>
     </span>
@@ -208,7 +208,7 @@ function MilestoneBadge({ milestone, index }: { milestone: Milestone; index: num
       style={{ backgroundColor: `${color}15` }}
     >
       <Diamond className="h-2.5 w-2.5 shrink-0" style={{ color }} />
-      <span className="text-surface-700 dark:text-surface-300 truncate max-w-[120px]">
+      <span className="text-surface-700 truncate max-w-[120px]">
         {milestone.name}
       </span>
     </span>
@@ -281,11 +281,11 @@ function DroppableDayCell({
   return (
     <div
       ref={setNodeRef}
-      className={cn(          'border-surface-300/20 dark:border-surface-700/30 group border-b border-r p-1.5 transition-all duration-150',
+      className={cn(          'border-surface-300/20 group border-b border-r p-1.5 transition-all duration-150',
           compact ? 'min-h-[52px]' : 'min-h-[110px]',
         isToday
-          ? 'bg-brand-500/5 dark:bg-brand-500/10'
-          : 'hover:bg-surface-100/40 dark:hover:bg-surface-800/30',
+          ? 'bg-brand-500/5 '
+          : 'hover:bg-surface-100/40 ',
         isOver && 'ring-2 ring-inset ring-brand-500/40 bg-brand-500/10',
       )}
     >
@@ -307,7 +307,7 @@ function DragOverlayTask({ task }: { task: Task | null }) {
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
       <GripVertical className="text-surface-300 h-3.5 w-3.5" />
-      <span className="text-surface-700 dark:text-surface-200 text-xs font-medium max-w-[200px] truncate">
+      <span className="text-surface-700 text-xs font-medium max-w-[200px] truncate">
         {task.title}
       </span>
       <span className="text-surface-400 ml-auto text-[10px] font-medium uppercase tracking-wider">
@@ -334,7 +334,7 @@ function TaskPopoverContent({ task, onClose }: { task: Task; onClose: () => void
         style={{ backgroundColor: status.color }}
       />
       <div className="pt-3">
-        <h4 className="text-surface-900 dark:text-surface-100 line-clamp-2 text-sm font-semibold leading-snug">
+        <h4 className="text-surface-900 line-clamp-2 text-sm font-semibold leading-snug">
           {task.title}
         </h4>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -361,7 +361,7 @@ function TaskPopoverContent({ task, onClose }: { task: Task; onClose: () => void
                   ? 'bg-orange-500/10 text-orange-500'
                   : task.priority === 'medium'
                     ? 'bg-amber-500/10 text-amber-500'
-                    : 'bg-surface-200/50 text-surface-500 dark:bg-surface-800/50',
+                    : 'bg-surface-200/50 text-surface-500 ',
             )}
           >
             {priority.label}
@@ -419,10 +419,10 @@ function MilestonePopoverContent({ milestone, index, onClose }: { milestone: Mil
         <div className="flex items-center gap-1.5 text-[11px] text-surface-500 mb-1">
           <Flag className="h-3 w-3" />
           <span>Milestone</span>
-          <span className="text-surface-300 dark:text-surface-600">·</span>
+          <span className="text-surface-300 ">·</span>
           <span className="truncate">{milestone.projectName}</span>
         </div>
-        <h4 className="text-surface-900 dark:text-surface-100 line-clamp-2 text-sm font-semibold leading-snug">
+        <h4 className="text-surface-900 line-clamp-2 text-sm font-semibold leading-snug">
           {milestone.name}
         </h4>
         {milestone.description && (
@@ -496,16 +496,16 @@ function MonthPicker({
       <div className="mb-2 flex items-center justify-between">
         <button
           onClick={() => setSelectedYear((y) => y - 1)}
-          className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 rounded-lg p-1 transition-colors"
+          className="text-surface-500 hover:text-surface-700 rounded-lg p-1 transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
-        <span className="text-surface-700 dark:text-surface-300 text-sm font-semibold">
+        <span className="text-surface-700 text-sm font-semibold">
           {selectedYear}
         </span>
         <button
           onClick={() => setSelectedYear((y) => y + 1)}
-          className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 rounded-lg p-1 transition-colors"
+          className="text-surface-500 hover:text-surface-700 rounded-lg p-1 transition-colors"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
@@ -524,7 +524,7 @@ function MonthPicker({
                 'rounded-lg px-2 py-1.5 text-xs font-medium transition-all',
                 isSelected
                   ? 'bg-brand-500 text-white'
-                  : 'text-surface-600 dark:text-surface-400 hover:bg-surface-200/70 dark:hover:bg-surface-700/50 hover:text-surface-900 dark:hover:text-surface-200',
+                  : 'text-surface-600 hover:bg-surface-200/70 hover:text-surface-900 ',
               )}
             >
               {m}
@@ -556,10 +556,10 @@ function EmptyState() {
       transition={{ type: 'spring', stiffness: 120, damping: 14 }}
       className="flex flex-col items-center justify-center py-16"
     >
-      <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+      <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
         <CalendarIcon className="text-surface-400 h-7 w-7" />
       </div>
-      <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+      <h3 className="text-surface-900 text-base font-semibold">
         No tasks or milestones with dates
       </h3>
       <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -595,11 +595,11 @@ function MonthView({
   const { firstDay, daysInMonth } = getMonthStartEnd(year, month);
 
   return (
-    <div className="border-surface-300/20 dark:border-surface-700/30 grid grid-cols-7 border-l border-t">
+    <div className="border-surface-300/20 grid grid-cols-7 border-l border-t">
       {DAYS.map((d) => (
         <div
           key={d}
-          className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/50 dark:bg-surface-950/50 border-b border-r px-1.5 py-2"
+          className="border-surface-300/20 bg-surface-50/50 border-b border-r px-1.5 py-2"
         >
           <span className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
             {d}
@@ -609,7 +609,7 @@ function MonthView({
       {Array.from({ length: firstDay }).map((_, i) => (
         <div
           key={`empty-${i}`}
-          className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/30 dark:bg-surface-950/30 min-h-[100px] border-b border-r p-1"
+          className="border-surface-300/20 bg-surface-50/30 min-h-[100px] border-b border-r p-1"
         />
       ))}
       {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -712,15 +712,15 @@ function WeekView({
   }, [weekDays, tasksByDate, milestonesByDate]);
 
   return (
-    <div className="border-surface-300/20 dark:border-surface-700/30 grid grid-cols-7 border-l border-t">
+    <div className="border-surface-300/20 grid grid-cols-7 border-l border-t">
       {weekDays.map((d, i) => {
         const isToday = isSameDay(d, today);
         return (
           <div
             key={i}
             className={cn(
-              'border-surface-300/20 dark:border-surface-700/30 border-b border-r px-2 py-2.5',
-              isToday ? 'bg-brand-500/5' : 'bg-surface-50/50 dark:bg-surface-950/50',
+              'border-surface-300/20 border-b border-r px-2 py-2.5',
+              isToday ? 'bg-brand-500/5' : 'bg-surface-50/50 ',
             )}
           >
             <div className="flex flex-col items-center">
@@ -732,7 +732,7 @@ function WeekView({
                   'mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
                   isToday
                     ? 'bg-brand-500 text-white'
-                    : 'text-surface-700 dark:text-surface-300',
+                    : 'text-surface-700 ',
                 )}
               >
                 {d.getDate()}
@@ -1051,7 +1051,7 @@ export default function CalendarPage() {
           )}
           {/* View toggle */}
           <div
-            className="bg-surface-200/50 dark:bg-surface-800/50 flex items-center gap-0.5 rounded-xl p-0.5"
+            className="bg-surface-200/50 flex items-center gap-0.5 rounded-xl p-0.5"
             role="tablist"
             aria-label="Calendar view mode"
           >
@@ -1062,8 +1062,8 @@ export default function CalendarPage() {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                 viewMode === 'month'
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                  ? 'bg-surface-50 text-surface-900 shadow-sm'
+                  : 'text-surface-500 hover:text-surface-700 ',
               )}
             >
               Month
@@ -1075,8 +1075,8 @@ export default function CalendarPage() {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                 viewMode === 'week'
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                  ? 'bg-surface-50 text-surface-900 shadow-sm'
+                  : 'text-surface-500 hover:text-surface-700 ',
               )}
             >
               Week
@@ -1092,7 +1092,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => navigate(-1)}
-                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 dark:hover:bg-surface-700/50 dark:hover:text-surface-300 rounded-xl p-2 transition-all"
+                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-xl p-2 transition-all"
                 aria-label={viewMode === 'month' ? 'Previous month' : 'Previous week'}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -1107,7 +1107,7 @@ export default function CalendarPage() {
               </Button>
               <button
                 onClick={() => navigate(1)}
-                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 dark:hover:bg-surface-700/50 dark:hover:text-surface-300 rounded-xl p-2 transition-all"
+                className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-xl p-2 transition-all"
                 aria-label={viewMode === 'month' ? 'Next month' : 'Next week'}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1117,7 +1117,7 @@ export default function CalendarPage() {
             {/* Month title with picker */}
             <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
               <PopoverTrigger asChild>
-                <button className="text-surface-900 dark:text-surface-100 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-base font-semibold transition-colors">
+                <button className="text-surface-900 hover:bg-surface-200/50 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-base font-semibold transition-colors">
                   {viewMode === 'month' ? (
                     <>{MONTHS[month]} {year}</>
                   ) : (
@@ -1147,16 +1147,16 @@ export default function CalendarPage() {
 
             {/* Keyboard hints */}
             <div className="hidden items-center gap-2 md:flex">
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 rounded-md px-1.5 py-0.5 text-[10px] font-mono">←</kbd>
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 rounded-md px-1.5 py-0.5 text-[10px] font-mono">→</kbd>
+              <kbd className="bg-surface-200/50 text-surface-500 rounded-md px-1.5 py-0.5 text-[10px] font-mono">←</kbd>
+              <kbd className="bg-surface-200/50 text-surface-500 rounded-md px-1.5 py-0.5 text-[10px] font-mono">→</kbd>
               <span className="text-surface-400 text-[10px]">Navigate</span>
-              <span className="text-surface-300 dark:text-surface-600 mx-1">·</span>
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 rounded-md px-1.5 py-0.5 text-[10px] font-mono">T</kbd>
+              <span className="text-surface-300 mx-1">·</span>
+              <kbd className="bg-surface-200/50 text-surface-500 rounded-md px-1.5 py-0.5 text-[10px] font-mono">T</kbd>
               <span className="text-surface-400 text-[10px]">Today</span>
-              <span className="text-surface-300 dark:text-surface-600 mx-1">·</span>
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 rounded-md px-1.5 py-0.5 text-[10px] font-mono">M</kbd>
+              <span className="text-surface-300 mx-1">·</span>
+              <kbd className="bg-surface-200/50 text-surface-500 rounded-md px-1.5 py-0.5 text-[10px] font-mono">M</kbd>
               <span className="text-surface-400 text-[10px]">/</span>
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 rounded-md px-1.5 py-0.5 text-[10px] font-mono">W</kbd>
+              <kbd className="bg-surface-200/50 text-surface-500 rounded-md px-1.5 py-0.5 text-[10px] font-mono">W</kbd>
               <span className="text-surface-400 text-[10px]">Views</span>
             </div>
           </div>
@@ -1218,7 +1218,7 @@ export default function CalendarPage() {
 
           {/* Legend */}
           {hasItemsOnCalendar && (
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-surface-300/10 dark:border-surface-700/30 pt-3">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-surface-300/10 pt-3">
               <span className="text-surface-500 text-[10px] font-medium uppercase tracking-wider">
                 Status
               </span>
@@ -1236,7 +1236,7 @@ export default function CalendarPage() {
               ))}
               {milestoneCount > 0 && (
                 <>
-                  <span className="text-surface-300 dark:text-surface-600 text-[10px]">·</span>
+                  <span className="text-surface-300 text-[10px]">·</span>
                   <span className="flex items-center gap-1.5 text-[10px] text-violet-500 font-medium">
                     <Diamond className="h-2.5 w-2.5" />
                     {milestoneCount} milestone{milestoneCount !== 1 ? 's' : ''}

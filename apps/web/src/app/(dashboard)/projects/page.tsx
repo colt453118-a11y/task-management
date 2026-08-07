@@ -211,7 +211,7 @@ export default function ProjectsPage() {
       ) : projects.length === 0 ? (
         <motion.div variants={itemVariants}>
           <EmptyState
-            icon={<FolderOpen className="text-surface-300 dark:text-surface-600 h-16 w-16" />}
+            icon={<FolderOpen className="text-surface-300 h-16 w-16" />}
             title="No projects yet"
             message="Organize your work into projects to track progress."
             action={

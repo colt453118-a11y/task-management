@@ -76,27 +76,27 @@ const statusColors: Record<
 const priorityBadge: Record<string, { label: string; color: string }> = {
   none: {
     label: 'None',
-    color: 'bg-surface-200/70 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400',
+    color: 'bg-surface-200/70 text-surface-500 ',
   },
   low: {
     label: 'Low',
-    color: 'bg-green-500/10 text-green-400 dark:bg-green-500/15 dark:text-green-300',
+    color: 'bg-green-500/10 text-green-400 ',
   },
   medium: {
     label: 'Medium',
-    color: 'bg-amber-500/10 text-amber-400 dark:bg-amber-500/15 dark:text-amber-300',
+    color: 'bg-amber-500/10 text-amber-400 ',
   },
   high: {
     label: 'High',
-    color: 'bg-orange-500/10 text-orange-400 dark:bg-orange-500/15 dark:text-orange-300',
+    color: 'bg-orange-500/10 text-orange-400 ',
   },
   urgent: {
     label: 'Urgent',
-    color: 'bg-red-500/10 text-red-400 dark:bg-red-500/15 dark:text-red-300',
+    color: 'bg-red-500/10 text-red-400 ',
   },
   critical: {
     label: 'Critical',
-    color: 'bg-red-500/20 text-red-300 dark:bg-red-500/25 dark:text-red-200',
+    color: 'bg-red-500/20 text-red-300 ',
   },
 };
 
@@ -681,7 +681,7 @@ export default function TasksPage() {
               'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-xl sm:px-3',
               watchedOnly && !showTrash
                 ? 'bg-brand-500/10 text-brand-500 border-brand-500/20 border'
-                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 border border-transparent',
             )}
           >
             <Eye className={cn('h-3.5 w-3.5', watchedOnly && !showTrash && 'fill-brand-500/20')} />
@@ -712,7 +712,7 @@ export default function TasksPage() {
               'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-xl sm:px-3',
               showTrash
                 ? 'bg-error/10 text-error border-error/20 border'
-                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 border border-transparent',
             )}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -741,7 +741,7 @@ export default function TasksPage() {
                 'relative flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-lg sm:px-3',
                 view === 'list'
                   ? 'text-white'
-                  : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+                  : 'text-surface-500 hover:text-surface-600 ',
               )}
             >
               {view === 'list' && (
@@ -763,7 +763,7 @@ export default function TasksPage() {
                 'relative flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:rounded-lg sm:px-3',
                 view === 'board'
                   ? 'text-white'
-                  : 'text-surface-500 hover:text-surface-600 dark:text-surface-400',
+                  : 'text-surface-500 hover:text-surface-600 ',
               )}
             >
               {view === 'board' && (
@@ -797,7 +797,7 @@ export default function TasksPage() {
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilter(e.target.value)}
-              className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-900/80 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
             >
               <option value="">All Statuses</option>
               {statuses.map((s) => (
@@ -814,7 +814,7 @@ export default function TasksPage() {
             <select
               value={priorityFilter}
               onChange={(e) => handlePriorityFilter(e.target.value)}
-              className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-900/80 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
             >
               <option value="">All Priorities</option>
               {Object.entries(priorityBadge).map(([value, meta]) => (
@@ -832,7 +832,7 @@ export default function TasksPage() {
               <select
                 value={deletedByFilter}
                 onChange={(e) => handleDeletedByFilter(e.target.value)}
-                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-900/80 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 rounded-xl border px-3 text-sm transition-all focus:outline-none focus:ring-2"
               >
                 <option value="">All Users</option>
                 {users.map((u) => (
@@ -858,9 +858,9 @@ export default function TasksPage() {
             className="border-brand-500/20 border bg-brand-500/5 rounded-2xl px-4 py-3"
           >
             <div className="flex items-center justify-between gap-4">
-              <p className="text-surface-600 dark:text-surface-400 text-sm">
+              <p className="text-surface-600 text-sm">
                 All{' '}
-                <span className="text-surface-900 dark:text-surface-200 font-semibold">
+                <span className="text-surface-900 font-semibold">
                   {tasks.length}
                 </span>{' '}
                 task{tasks.length !== 1 ? 's' : ''} on this page are selected.
@@ -909,7 +909,7 @@ export default function TasksPage() {
               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
               className="border-brand-500/20 border bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl p-3"
             >
-              <span className="text-surface-600 dark:text-surface-400 mr-1 text-xs font-medium">
+              <span className="text-surface-600 mr-1 text-xs font-medium">
                 <span className="text-brand-500 font-semibold">
                   {allSelectedMode ? totalCount : selectedIds.size}
                 </span>
@@ -972,7 +972,7 @@ export default function TasksPage() {
               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
               className="border-brand-500/20 border bg-brand-500/5 flex flex-wrap items-center gap-2 rounded-2xl p-3"
             >
-              <span className="text-surface-600 dark:text-surface-400 mr-1 text-xs font-medium">
+              <span className="text-surface-600 mr-1 text-xs font-medium">
                 <span className="text-brand-500 font-semibold">
                   {allSelectedMode ? totalCount : selectedIds.size}
                 </span>
@@ -991,7 +991,7 @@ export default function TasksPage() {
                   setBatchAction('status');
                   setBatchValue(e.target.value);
                 }}
-                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 dark:bg-surface-800/80 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
               >
                 <option value="">Change status...</option>
                 {statuses.map((s) => (
@@ -1008,7 +1008,7 @@ export default function TasksPage() {
                   setBatchAction('priority');
                   setBatchValue(e.target.value);
                 }}
-                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 dark:bg-surface-800/80 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
               >
                 <option value="">Change priority...</option>
                 {Object.entries(priorityBadge).map(([value, meta]) => (
@@ -1025,7 +1025,7 @@ export default function TasksPage() {
                   setBatchAction('assign');
                   setBatchValue(e.target.value);
                 }}
-                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 dark:bg-surface-800/80 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 h-8 rounded-lg border px-2 text-xs transition-all focus:outline-none"
               >
                 <option value="">Assign to...</option>
                 {users.map((u) => (
@@ -1151,7 +1151,7 @@ export default function TasksPage() {
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <ClipboardList className="text-surface-300 dark:text-surface-600 h-16 w-16" />
+                  <ClipboardList className="text-surface-300 h-16 w-16" />
                 </motion.div>
               }
               title="No tasks yet"
@@ -1180,7 +1180,7 @@ export default function TasksPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-surface-500/20 bg-surface-300/40 dark:bg-surface-700/30 border-b">
+                  <tr className="border-surface-500/20 bg-surface-300/40 border-b">
                     <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5">
                       <Checkbox
                         checked={
@@ -1239,8 +1239,8 @@ export default function TasksPage() {
                       className={cn(
                         'border-surface-300/10 group cursor-default border-b transition-all duration-150',
                         selectedIds.has(task.id)
-                          ? 'bg-brand-500/5 dark:bg-brand-500/10'
-                          : 'hover:bg-surface-200/30 dark:hover:bg-surface-800/30 hover:-translate-y-px',
+                          ? 'bg-brand-500/5 '
+                          : 'hover:bg-surface-200/30 hover:-translate-y-px',
                       )}
                     >
                       <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
@@ -1261,7 +1261,7 @@ export default function TasksPage() {
                       <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
                         <Link
                           href={`/tasks/${task.id}`}
-                          className="text-surface-900 hover:text-brand-500 dark:text-surface-100 inline-block text-xs font-medium transition-all duration-200 group-hover:translate-x-0.5 sm:text-sm"
+                          className="text-surface-900 hover:text-brand-500 inline-block text-xs font-medium transition-all duration-200 group-hover:translate-x-0.5 sm:text-sm"
                         >
                           <span className="line-clamp-1">{task.title}</span>
                           <span className="absolute inset-0" aria-hidden="true" />
@@ -1288,7 +1288,7 @@ export default function TasksPage() {
                           <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                             {task.updatedByName ? (
                               <div className="flex items-center gap-1.5">
-                                <div className="from-error/70 to-error ring-surface-200/50 dark:ring-surface-700/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 sm:h-6 sm:w-6 sm:text-[9px]">
+                                <div className="from-error/70 to-error ring-surface-200/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 sm:h-6 sm:w-6 sm:text-[9px]">
                                   {task.updatedByName.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="max-w-[80px] truncate sm:max-w-[100px]">{task.updatedByName}</span>
@@ -1317,7 +1317,7 @@ export default function TasksPage() {
                           <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
                             {task.assignedTo ? (
                               <div className="group/assignee flex items-center gap-1.5">
-                                <div className="from-brand-400 to-brand-600 ring-surface-200/50 dark:ring-surface-700/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 transition-transform duration-200 group-hover/assignee:scale-110 sm:h-6 sm:w-6 sm:text-[9px]">
+                                <div className="from-brand-400 to-brand-600 ring-surface-200/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 transition-transform duration-200 group-hover/assignee:scale-110 sm:h-6 sm:w-6 sm:text-[9px]">
                                   {task.assignedTo.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="max-w-[60px] truncate sm:max-w-[80px]">{task.assignedTo}</span>
@@ -1386,7 +1386,7 @@ export default function TasksPage() {
             <motion.div variants={itemVariants} className="neon-card flex items-center justify-between rounded-xl px-4 py-3">
               <p className="text-surface-500 text-sm">
                 Page{' '}
-                <span className="text-surface-700 dark:text-surface-300 font-medium">
+                <span className="text-surface-700 font-medium">
                   {page + 1}
                 </span>
               </p>
@@ -1436,7 +1436,7 @@ export default function TasksPage() {
                 <>
                   {' '}
                   &ldquo;
-                  <span className="text-surface-700 dark:text-surface-300 font-medium">
+                  <span className="text-surface-700 font-medium">
                     {deletingTask.title}
                   </span>
                   &rdquo;

@@ -40,10 +40,10 @@ interface LeaveRequestDetail {
 }
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400', dot: 'bg-amber-500', icon: Clock },
-  approved: { label: 'Approved', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400', dot: 'bg-emerald-500', icon: Check },
-  rejected: { label: 'Rejected', color: 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400', dot: 'bg-red-500', icon: X },
-  cancelled: { label: 'Cancelled', color: 'text-surface-500 bg-surface-100 dark:bg-surface-800 dark:text-surface-400', dot: 'bg-surface-400', icon: X },
+  pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50 ', dot: 'bg-amber-500', icon: Clock },
+  approved: { label: 'Approved', color: 'text-emerald-600 bg-emerald-50 ', dot: 'bg-emerald-500', icon: Check },
+  rejected: { label: 'Rejected', color: 'text-red-600 bg-red-50 ', dot: 'bg-red-500', icon: X },
+  cancelled: { label: 'Cancelled', color: 'text-surface-500 bg-surface-100 ', dot: 'bg-surface-400', icon: X },
 };
 
 function formatDate(dateStr: string): string {
@@ -180,7 +180,7 @@ export default function LeaveRequestDetailPage() {
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mx-auto max-w-2xl space-y-6">
       {/* Back */}
       <motion.div variants={itemVariants}>
-        <Link href="/leave" className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
+        <Link href="/leave" className="text-surface-500 hover:text-surface-700 mb-3 inline-flex items-center gap-1 text-xs transition-colors">
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Time Off
         </Link>
@@ -205,7 +205,7 @@ export default function LeaveRequestDetailPage() {
             <CalendarDays className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-surface-900 dark:text-surface-100 text-lg font-bold">
+            <h2 className="text-surface-900 text-lg font-bold">
               {request.leaveType?.name ?? 'Leave'} — {request.daysCount} day{request.daysCount !== 1 ? 's' : ''}
             </h2>
             <p className="text-surface-500 mt-1 text-sm">
@@ -216,11 +216,11 @@ export default function LeaveRequestDetailPage() {
         </div>
 
         {/* Requester info */}
-        <div className="border-surface-300/10 dark:border-surface-700/30 mt-4 flex items-center gap-2 border-t pt-3">
-          <div className="bg-surface-200 dark:bg-surface-700 flex h-6 w-6 items-center justify-center rounded-full">
+        <div className="border-surface-300/10 mt-4 flex items-center gap-2 border-t pt-3">
+          <div className="bg-surface-200 flex h-6 w-6 items-center justify-center rounded-full">
             <UserIcon className="text-surface-500 h-3 w-3" />
           </div>
-          <span className="text-surface-700 dark:text-surface-300 text-xs font-medium">
+          <span className="text-surface-700 text-xs font-medium">
             {request.user?.name ?? 'Unknown'}
           </span>
           <span className="text-surface-400 text-[10px]">
@@ -230,19 +230,19 @@ export default function LeaveRequestDetailPage() {
 
         {/* Reason */}
         {request.reason && (
-          <div className="border-surface-300/10 dark:border-surface-700/30 mt-3 border-t pt-3">
+          <div className="border-surface-300/10 mt-3 border-t pt-3">
             <p className="text-surface-500 mb-1 text-[10px] font-semibold uppercase tracking-wider">Reason</p>
-            <p className="text-surface-700 dark:text-surface-300 text-sm">{request.reason}</p>
+            <p className="text-surface-700 text-sm">{request.reason}</p>
           </div>
         )}
 
         {/* Review info */}
         {request.reviewedBy && (
-          <div className="border-surface-300/10 dark:border-surface-700/30 mt-3 border-t pt-3">
+          <div className="border-surface-300/10 mt-3 border-t pt-3">
             <p className="text-surface-500 mb-1 text-[10px] font-semibold uppercase tracking-wider">
               {request.status === 'approved' ? 'Approved' : 'Rejected'} by
             </p>
-            <p className="text-surface-700 dark:text-surface-300 text-xs">
+            <p className="text-surface-700 text-xs">
               {request.reviewedAt && formatDateTime(request.reviewedAt)}
             </p>
             {request.reviewNote && (
@@ -256,7 +256,7 @@ export default function LeaveRequestDetailPage() {
       {isPending && (
         <motion.div variants={itemVariants} className="neon-card relative overflow-hidden rounded-2xl p-5">
           <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-400 to-amber-600" />
-          <h3 className="text-surface-900 dark:text-surface-100 mb-3 text-sm font-semibold">Review Request</h3>
+          <h3 className="text-surface-900 mb-3 text-sm font-semibold">Review Request</h3>
 
           {/* Review note */}
           <div className="mb-3">
@@ -268,7 +268,7 @@ export default function LeaveRequestDetailPage() {
               onChange={(e) => setReviewNote(e.target.value)}
               placeholder="Add a note about your decision..."
               rows={2}
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
             />
           </div>
 
@@ -301,7 +301,7 @@ export default function LeaveRequestDetailPage() {
           </div>
 
           {/* Cancel option */}
-          <div className="mt-3 border-t border-surface-300/10 dark:border-surface-700/30 pt-3">
+          <div className="mt-3 border-t border-surface-300/10 pt-3">
             <Button
               onClick={handleCancel}
               disabled={actionLoading === 'cancel'}

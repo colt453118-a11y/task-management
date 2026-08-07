@@ -40,8 +40,8 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
       className={cn(
         'rounded-md p-1.5 transition-colors',
         isActive
-          ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300'
-          : 'text-surface-500 hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-300',
+          ? 'bg-brand-100 text-brand-700 '
+          : 'text-surface-500 hover:bg-surface-100 hover:text-surface-700 ',
         disabled && 'cursor-not-allowed opacity-40',
       )}
     >
@@ -53,7 +53,7 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
 // ─── Divider ─────────────────────────────────────────────────
 
 function ToolbarDivider() {
-  return <div className="bg-surface-200 dark:bg-surface-700 mx-0.5 h-5 w-px" />;
+  return <div className="bg-surface-200 mx-0.5 h-5 w-px" />;
 }
 
 // ─── Editor Component ────────────────────────────────────────
@@ -92,16 +92,16 @@ export function RichTextEditor({
       attributes: {
         class: cn(
           'prose prose-sm max-w-none focus:outline-none min-h-[150px] px-4 py-3',
-          'text-surface-900 dark:text-surface-100',
+          'text-surface-900 ',
           '[&_:first-child]:mt-0',
-          'prose-headings:text-surface-900 dark:prose-headings:text-surface-100',
+          'prose-headings:text-surface-900 ',
           'prose-headings:font-semibold prose-headings:mt-6 prose-headings:mb-3',
           'prose-h1:text-xl prose-h2:text-lg prose-h3:text-base',
           'prose-p:my-1.5 prose-p:leading-relaxed',
           'prose-ul:my-2 prose-ol:my-2',
           'prose-li:my-0.5',
-          'prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-normal dark:prose-code:bg-surface-800',
-          'prose-blockquote:border-l-brand-500 prose-blockquote:bg-brand-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r dark:prose-blockquote:bg-brand-950/20',
+          'prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-normal ',
+          'prose-blockquote:border-l-brand-500 prose-blockquote:bg-brand-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r ',
           '[&_p.is-editor-empty:first-child::before]:text-surface-400 [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child::before]:h-0',
         ),
       },
@@ -144,7 +144,7 @@ export function RichTextEditor({
       )}
     >
       {/* Toolbar */}
-      <div className="border-surface-200 bg-surface-50/50 dark:border-surface-700 dark:bg-surface-800/30 flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5">
+      <div className="border-surface-200 bg-surface-50/50 flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
@@ -260,16 +260,16 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
     <div
       className={cn(
         'prose prose-sm max-w-none',
-        'text-surface-700 dark:text-surface-300',
-        'prose-headings:text-surface-900 dark:prose-headings:text-surface-100',
+        'text-surface-700 ',
+        'prose-headings:text-surface-900 ',
         'prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2',
         'prose-h1:text-lg prose-h2:text-base prose-h3:text-sm',
         'prose-p:my-1 prose-p:leading-relaxed',
         'prose-ul:my-1.5 prose-ol:my-1.5',
         'prose-li:my-0.5',
-        'prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-normal dark:prose-code:bg-surface-800',
-        'prose-blockquote:border-l-brand-500 prose-blockquote:bg-brand-50/30 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r dark:prose-blockquote:bg-brand-950/10',
-        'prose-strong:text-surface-900 dark:prose-strong:text-surface-100',
+        'prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-normal ',
+        'prose-blockquote:border-l-brand-500 prose-blockquote:bg-brand-50/30 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r ',
+        'prose-strong:text-surface-900 ',
         'prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline',
         className,
       )}

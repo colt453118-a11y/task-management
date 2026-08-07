@@ -341,7 +341,7 @@ export default function SearchPage() {
           href={hit.url}
           className={cn(
             'group flex items-start gap-3 rounded-xl border border-transparent px-3 py-3 transition-all duration-200',
-            'hover:border-surface-300/20 dark:hover:border-surface-700/30 hover:bg-surface-200/40 dark:hover:bg-surface-800/40',
+            'hover:border-surface-300/20 hover:bg-surface-200/40 ',
             'active:scale-[0.99]',
           )}
         >
@@ -361,7 +361,7 @@ export default function SearchPage() {
           {/* Content */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-surface-900 dark:text-surface-100 truncate text-sm font-medium group-hover:text-brand-500 transition-colors">
+              <span className="text-surface-900 truncate text-sm font-medium group-hover:text-brand-500 transition-colors">
                 {highlightMatch(hit.title, debouncedQuery)}
               </span>
               {hit.status && (
@@ -475,13 +475,13 @@ export default function SearchPage() {
               'flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-200',
               showSavedSearches
                 ? 'bg-brand-500/10 text-brand-500 border border-brand-500/20'
-                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border border-transparent',
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 border border-transparent',
             )}
           >
             <Bookmark className={cn('h-3.5 w-3.5', showSavedSearches && 'fill-brand-500/20')} />
             Saved
             {savedSearches.length > 0 && (
-              <span className="bg-surface-300/30 dark:bg-surface-600/30 ml-0.5 rounded-full px-1.5 py-0.5 text-[9px]">
+              <span className="bg-surface-300/30 ml-0.5 rounded-full px-1.5 py-0.5 text-[9px]">
                 {savedSearches.length}
               </span>
             )}
@@ -506,7 +506,7 @@ export default function SearchPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 rounded-2xl border p-4"
+          className="border-surface-300/20 bg-surface-100/80 rounded-2xl border p-4"
         >
           <div className="mb-3 flex items-center justify-between">
             <span className="text-surface-500 text-xs font-semibold uppercase tracking-wider">
@@ -523,7 +523,7 @@ export default function SearchPage() {
             </div>
           ) : savedSearches.length === 0 ? (
             <div className="flex flex-col items-center py-4 text-center">
-              <Bookmark className="text-surface-300 dark:text-surface-600 h-6 w-6 mb-1" />
+              <Bookmark className="text-surface-300 h-6 w-6 mb-1" />
               <p className="text-surface-500 text-xs">No saved searches yet</p>
               <p className="text-surface-400 mt-0.5 text-[10px]">
                 Run a search and save it for quick access
@@ -534,13 +534,13 @@ export default function SearchPage() {
               {savedSearches.map((saved) => (
                 <div
                   key={saved.id}
-                  className="group flex items-center justify-between rounded-xl px-3 py-2 hover:bg-surface-200/50 dark:hover:bg-surface-800/50 transition-all cursor-pointer"
+                  className="group flex items-center justify-between rounded-xl px-3 py-2 hover:bg-surface-200/50 transition-all cursor-pointer"
                   onClick={() => applySavedSearch(saved)}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Bookmark className="text-brand-500 h-3 w-3 fill-brand-500/20" />
-                      <span className="text-surface-700 dark:text-surface-300 text-sm font-medium truncate">
+                      <span className="text-surface-700 text-sm font-medium truncate">
                         {saved.name}
                       </span>
                     </div>
@@ -591,7 +591,7 @@ export default function SearchPage() {
               value={savingName}
               onChange={(e) => setSavingName(e.target.value)}
               placeholder="Name this search..."
-              className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 focus:border-brand-500 focus:ring-brand-500/20 flex-1 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/20 bg-surface-100/80 focus:border-brand-500 focus:ring-brand-500/20 flex-1 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') saveCurrentSearch();
@@ -608,7 +608,7 @@ export default function SearchPage() {
             </button>
             <button
               onClick={() => setShowSaveDialog(false)}
-              className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 dark:hover:bg-surface-800/50 rounded-xl p-2 transition-all"
+              className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 rounded-xl p-2 transition-all"
             >
               <X className="h-4 w-4" />
             </button>
@@ -638,7 +638,7 @@ export default function SearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search tasks, projects, people... (⌘K)"
               className={cn(
-                'border-surface-300/30 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/80',
+                'border-surface-300/30 bg-surface-100/80 ',
                 'focus:border-brand-500 focus:ring-brand-500/20',
                 'w-full rounded-2xl border py-3.5 pl-11 pr-12 text-base transition-all',
                 'focus:outline-none focus:ring-2 focus:shadow-lg focus:shadow-brand-500/5',
@@ -650,7 +650,7 @@ export default function SearchPage() {
             {query && (
               <button
                 onClick={() => { setQuery(''); setResults(null); setHasSearched(false); inputRef.current?.focus(); }}
-                className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 absolute inset-y-0 right-0 flex items-center pr-3 transition-all"
+                className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 absolute inset-y-0 right-0 flex items-center pr-3 transition-all"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -658,7 +658,7 @@ export default function SearchPage() {
             {/* Keyboard hint */}
             <div className="pointer-events-none absolute inset-y-0 right-0 hidden items-center pr-3 sm:flex">
               {!query && (
-                <kbd className="bg-surface-200/50 dark:bg-surface-700/50 text-surface-400 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-mono">
+                <kbd className="bg-surface-200/50 text-surface-400 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-mono">
                   <Command className="h-2.5 w-2.5" />
                   K
                 </kbd>
@@ -673,7 +673,7 @@ export default function SearchPage() {
               'flex items-center gap-1.5 rounded-2xl border px-3.5 py-3.5 text-xs font-medium transition-all duration-200',
               showFilters || hasActiveFilters
                 ? 'bg-brand-500/10 text-brand-500 border-brand-500/20'
-                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 border-surface-300/30 dark:border-surface-700/30',
+                : 'text-surface-500 hover:text-surface-600 hover:bg-surface-200/50 border-surface-300/30 ',
             )}
             title="Toggle advanced filters"
           >
@@ -692,7 +692,7 @@ export default function SearchPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 grid grid-cols-2 gap-3 rounded-2xl border p-4 sm:grid-cols-4"
+            className="border-surface-300/20 bg-surface-100/80 grid grid-cols-2 gap-3 rounded-2xl border p-4 sm:grid-cols-4"
           >
             {/* Status Filter */}
             <div className="space-y-1.5">
@@ -700,7 +700,7 @@ export default function SearchPage() {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
-                className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
               >
                 <option value="">All Statuses</option>
                 {STATUS_OPTIONS.map((opt) => (
@@ -715,7 +715,7 @@ export default function SearchPage() {
               <select
                 value={filters.priority}
                 onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
-                className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
               >
                 <option value="">All Priorities</option>
                 {PRIORITY_OPTIONS.map((opt) => (
@@ -733,7 +733,7 @@ export default function SearchPage() {
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
-                  className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border pl-8 pr-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border pl-8 pr-2.5 text-xs transition-all focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -747,7 +747,7 @@ export default function SearchPage() {
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
-                  className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border pl-8 pr-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border pl-8 pr-2.5 text-xs transition-all focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -757,7 +757,7 @@ export default function SearchPage() {
               <div className="col-span-full flex justify-end">
                 <button
                   onClick={clearAllFilters}
-                  className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 dark:hover:bg-surface-800/50 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium transition-all"
+                  className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/50 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium transition-all"
                 >
                   <X className="h-3 w-3" />
                   Clear all filters
@@ -775,7 +775,7 @@ export default function SearchPage() {
           {results && results.total > 0 && (
             <motion.div variants={itemVariants}>
               <div
-                className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+                className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
                 role="tablist"
               >
                 {TAB_CONFIG.map((tab) => (
@@ -787,8 +787,8 @@ export default function SearchPage() {
                     className={cn(
                       'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                       activeTab === tab.id
-                        ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                        : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                        ? 'bg-surface-50 text-surface-900 shadow-sm'
+                        : 'text-surface-500 hover:text-surface-700 ',
                     )}
                   >
                     {tab.label}
@@ -798,7 +798,7 @@ export default function SearchPage() {
                           'ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]',
                           activeTab === tab.id
                             ? 'bg-brand-500/10 text-brand-500'
-                            : 'bg-surface-300/30 dark:bg-surface-600/30',
+                            : 'bg-surface-300/30 ',
                         )}
                       >
                         {tab.count}
@@ -829,10 +829,10 @@ export default function SearchPage() {
                 </div>
               ) : results && results.total === 0 ? (
                 <div className="flex flex-col items-center py-16">
-                  <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+                  <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
                     <Inbox className="text-surface-400 h-7 w-7" />
                   </div>
-                  <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+                  <h3 className="text-surface-900 text-base font-semibold">
                     No results found
                   </h3>
                   <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -862,17 +862,17 @@ export default function SearchPage() {
       {/* Empty state (no search yet) */}
       {!hasSearched && !loading && (
         <motion.div variants={itemVariants}>
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border py-16">
+          <div className="border-surface-300/20 bg-surface-100/80 relative overflow-hidden rounded-2xl border py-16">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-600 opacity-20" />
             <div className="flex flex-col items-center">
-              <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+              <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
                 <Search className="text-surface-400 h-7 w-7" />
               </div>
-              <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+              <h3 className="text-surface-900 text-base font-semibold">
                 Search your workspace
               </h3>
               <p className="text-surface-500 mt-1.5 max-w-sm text-center text-sm">
-                Type a query above to search across tasks, projects, and people. Use <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded px-1 py-0.5 font-mono text-[10px]">⌘K</kbd> to focus the search from anywhere.
+                Type a query above to search across tasks, projects, and people. Use <kbd className="bg-surface-200/50 rounded px-1 py-0.5 font-mono text-[10px]">⌘K</kbd> to focus the search from anywhere.
               </p>
             </div>
           </div>

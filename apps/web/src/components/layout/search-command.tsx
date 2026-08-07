@@ -59,15 +59,15 @@ interface PaletteItem {
 // ─── Status colors (shared with search results) ─────────────
 
 const statusColorMap: Record<string, string> = {
-  draft: 'bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-300',
-  open: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-  in_progress: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-  blocked: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
-  under_review: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300',
-  on_hold: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
-  completed: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  closed: 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300',
-  cancelled: 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400',
+  draft: 'bg-surface-200 text-surface-600 ',
+  open: 'bg-blue-100 text-blue-700 ',
+  in_progress: 'bg-yellow-100 text-yellow-700 ',
+  blocked: 'bg-red-100 text-red-700 ',
+  under_review: 'bg-cyan-100 text-cyan-700 ',
+  on_hold: 'bg-orange-100 text-orange-700 ',
+  completed: 'bg-green-100 text-green-700 ',
+  closed: 'bg-surface-100 text-surface-600 ',
+  cancelled: 'bg-surface-100 text-surface-500 ',
 };
 
 // ─── Props ──────────────────────────────────────────────────
@@ -304,7 +304,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-surface-300/20 top-[12%] max-w-xl translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:rounded-2xl">
         {/* Search input */}
-        <div className="border-surface-300/20 dark:border-surface-700/30 flex items-center border-b px-4">
+        <div className="border-surface-300/20 flex items-center border-b px-4">
           <Search className="text-surface-400 h-4 w-4 shrink-0" />
           <input
             type="text"
@@ -316,11 +316,11 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             }}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="text-surface-900 placeholder:text-surface-400 dark:text-surface-100 flex-1 border-0 bg-transparent px-3 py-4 text-sm focus:outline-none"
+            className="text-surface-900 placeholder:text-surface-400 flex-1 border-0 bg-transparent px-3 py-4 text-sm focus:outline-none"
           />
           {loading && <Loader2 className="text-surface-400 h-4 w-4 animate-spin" />}
           {!loading && query && (
-            <kbd className="border-surface-300/20 bg-surface-100/80 text-surface-400 dark:border-surface-700/30 dark:bg-surface-800/80 hidden rounded-lg border px-1.5 py-0.5 text-xs sm:inline-block">
+            <kbd className="border-surface-300/20 bg-surface-100/80 text-surface-400 hidden rounded-lg border px-1.5 py-0.5 text-xs sm:inline-block">
               ESC
             </kbd>
           )}
@@ -336,8 +336,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   key={i}
                   className="animate-skeleton-pulse flex items-center gap-3 rounded-xl px-3 py-2.5"
                 >
-                  <div className="bg-surface-300/50 dark:bg-surface-700/50 h-4 w-20 rounded-lg" />
-                  <div className="bg-surface-300/50 dark:bg-surface-700/50 h-4 flex-1 rounded-lg" />
+                  <div className="bg-surface-300/50 h-4 w-20 rounded-lg" />
+                  <div className="bg-surface-300/50 h-4 flex-1 rounded-lg" />
                 </div>
               ))}
             </div>
@@ -349,7 +349,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           {/* Empty state */}
           {noResults && (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-              <FileText className="text-surface-300 dark:text-surface-600 h-8 w-8" />
+              <FileText className="text-surface-300 h-8 w-8" />
               <p className="text-surface-500 text-sm">No results for &ldquo;{query}&rdquo;</p>
               <p className="text-surface-400 max-w-xs text-xs">
                 Try a different search term.
@@ -373,8 +373,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                         onMouseEnter={() => setSelectedIndex(index)}
                         className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
                           index === activeIndex
-                            ? 'bg-brand-500/10 text-brand-400 dark:bg-brand-500/15 dark:text-brand-300'
-                            : 'text-surface-700 hover:bg-surface-200/50 dark:text-surface-300 dark:hover:bg-surface-800'
+                            ? 'bg-brand-500/10 text-brand-400 '
+                            : 'text-surface-700 hover:bg-surface-200/50 '
                         }`}
                       >
                         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -393,7 +393,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                             <span
                               className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
                                 statusColorMap[item.badge] ??
-                                'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'
+                                'bg-surface-100 text-surface-600 '
                               }`}
                             >
                               {item.badge.replace(/_/g, ' ')}
@@ -413,28 +413,28 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
           {/* Initial hint (commands are listed above, keep this subtle) */}
           {!query && !loading && (
-            <div className="text-surface-300 dark:text-surface-500 px-6 py-3 text-center text-[11px]">
+            <div className="text-surface-300 px-6 py-3 text-center text-[11px]">
               Start typing to search across tasks, projects, and people
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-surface-300/20 text-surface-400 dark:border-surface-700/30 hidden items-center gap-4 border-t px-4 py-2 text-xs sm:flex">
+        <div className="border-surface-300/20 text-surface-400 hidden items-center gap-4 border-t px-4 py-2 text-xs sm:flex">
           <span className="flex items-center gap-1">
-            <kbd className="border-surface-300/20 bg-surface-100/80 dark:border-surface-700/30 dark:bg-surface-800/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
+            <kbd className="border-surface-300/20 bg-surface-100/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
               ↑↓
             </kbd>
             <span>Navigate</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="border-surface-300/20 bg-surface-100/80 dark:border-surface-700/30 dark:bg-surface-800/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
+            <kbd className="border-surface-300/20 bg-surface-100/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
               ↵
             </kbd>
             <span>Open</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="border-surface-300/20 bg-surface-100/80 dark:border-surface-700/30 dark:bg-surface-800/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
+            <kbd className="border-surface-300/20 bg-surface-100/80 rounded-lg border px-1.5 py-0.5 text-[10px]">
               Esc
             </kbd>
             <span>Close</span>

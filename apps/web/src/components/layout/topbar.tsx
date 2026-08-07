@@ -175,7 +175,7 @@ export function Topbar() {
         {/* Shadow overlay — fades in when content scrolls behind the header */}
         {/* Light mode: black shadow */}
         <motion.div
-          className="pointer-events-none absolute top-full left-0 right-0 h-3 dark:hidden"
+          className="pointer-events-none absolute top-full left-0 right-0 h-3 "
           style={{
             opacity: shadowSpring,
             y: shadowParallaxSpring,
@@ -184,7 +184,7 @@ export function Topbar() {
         />
         {/* Dark mode: white shadow */}
         <motion.div
-          className="pointer-events-none absolute top-full left-0 right-0 h-3 hidden dark:block"
+          className="pointer-events-none absolute top-full left-0 right-0 h-3 hidden "
           style={{
             opacity: shadowSpring,
             y: shadowParallaxSpring,
@@ -196,11 +196,11 @@ export function Topbar() {
           <Search className="text-surface-400 absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 sm:h-4 sm:w-4 sm:left-3.5" />
           <button
             onClick={() => setSearchOpen(true)}
-            className="border-surface-500/25 bg-surface-100/60 text-surface-400 hover:border-brand-500/30 hover:text-surface-500 focus:ring-brand-500/20 dark:bg-surface-800/40 dark:hover:bg-surface-700/40 w-full rounded-xl border py-1.5 pl-8 pr-2 text-left text-xs transition-all duration-200 focus:outline-none focus:ring-2 sm:py-2 sm:pl-10 sm:pr-3 sm:text-sm shadow-sm shadow-brand-500/5"
+            className="border-surface-500/25 bg-surface-100/60 text-surface-400 hover:border-brand-500/30 hover:text-surface-500 focus:ring-brand-500/20 w-full rounded-xl border py-1.5 pl-8 pr-2 text-left text-xs transition-all duration-200 focus:outline-none focus:ring-2 sm:py-2 sm:pl-10 sm:pr-3 sm:text-sm shadow-sm shadow-brand-500/5"
           >
             <span className="hidden sm:inline">Search tasks...</span>
             <span className="sm:hidden">Search...</span>
-            <kbd className="border-surface-500/20 bg-surface-200/80 text-surface-500 dark:bg-surface-700/80 dark:border-surface-600/30 neon-card pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium sm:flex">
+            <kbd className="border-surface-500/20 bg-surface-200/80 text-surface-500 neon-card pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium sm:flex">
               <span>⌘</span>K
             </kbd>
           </button>
@@ -228,12 +228,12 @@ export function Topbar() {
                 setNotifOpen(!notifOpen);
                 if (!notifOpen) refreshNotifs();
               }}
-              className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/40 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
+              className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 relative rounded-xl p-2 transition-all duration-200"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[14px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-surface-50 dark:ring-surface-900">
+                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[14px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-surface-50 ">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -245,7 +245,7 @@ export function Topbar() {
             </button>
 
             {notifOpen && (
-              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 w-72 rounded-2xl border p-3 shadow-lg backdrop-blur-xl sm:w-80" style={{ maxWidth: 'calc(100vw - 16px)' }}>
+              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 absolute right-0 z-50 mt-2 w-72 rounded-2xl border p-3 shadow-lg backdrop-blur-xl sm:w-80" style={{ maxWidth: 'calc(100vw - 16px)' }}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <span className="text-surface-500 text-xs font-semibold uppercase tracking-wider">
                     Notifications
@@ -286,14 +286,14 @@ export function Topbar() {
                         className={cn(
                           'group relative flex cursor-pointer items-start gap-2.5 rounded-xl px-2.5 py-2.5 transition-all duration-150',
                           notif.isRead
-                            ? 'hover:bg-surface-100/80 dark:hover:bg-surface-800/50'
+                            ? 'hover:bg-surface-100/80 '
                             : 'bg-brand-500/5 hover:bg-brand-500/10',
                         )}
                         onClick={() => handleNotifClick(notif)}
                       >
                         {/* Unread indicator */}
                         {!notif.isRead && (
-                          <span className="bg-brand-500 dark:bg-brand-400 mt-1.5 h-2 w-2 shrink-0 rounded-full" />
+                          <span className="bg-brand-500 mt-1.5 h-2 w-2 shrink-0 rounded-full" />
                         )}
                         {notif.isRead && <span className="mt-1.5 h-2 w-2 shrink-0" />}
 
@@ -310,8 +310,8 @@ export function Topbar() {
                             className={cn(
                               'mt-0.5 text-sm leading-snug',
                               notif.isRead
-                                ? 'text-surface-600 dark:text-surface-400'
-                                : 'text-surface-900 dark:text-surface-100 font-medium',
+                                ? 'text-surface-600 '
+                                : 'text-surface-900 font-medium',
                             )}
                           >
                             {notif.title}
@@ -340,7 +340,7 @@ export function Topbar() {
                             e.stopPropagation();
                             dismiss(notif.id);
                           }}
-                          className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 absolute right-1 top-1 rounded p-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+                          className="text-surface-400 hover:text-surface-600 absolute right-1 top-1 rounded p-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -353,7 +353,7 @@ export function Topbar() {
                   <Link
                     href="/settings"
                     onClick={() => setNotifOpen(false)}
-                    className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mt-2 flex items-center justify-center gap-1 border-t border-surface-300/20 pt-2 text-[11px] font-medium transition-colors"
+                    className="text-surface-500 hover:text-surface-700 mt-2 flex items-center justify-center gap-1 border-t border-surface-300/20 pt-2 text-[11px] font-medium transition-colors"
                   >
                     <Settings className="h-3 w-3" />
                     Notification settings
@@ -384,19 +384,19 @@ export function Topbar() {
             </button>
 
             {userMenuOpen && (
-              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 dark:bg-surface-900/95 dark:border-surface-700/30 absolute right-0 z-50 mt-2 min-w-[200px] rounded-2xl border p-1.5 shadow-lg backdrop-blur-xl sm:w-56">
-                <div className="border-surface-300/20 dark:border-surface-700/30 border-b px-3 py-2.5">
-                  <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+              <div className="animate-scale-in border-surface-300/20 bg-surface-50/95 absolute right-0 z-50 mt-2 min-w-[200px] rounded-2xl border p-1.5 shadow-lg backdrop-blur-xl sm:w-56">
+                <div className="border-surface-300/20 border-b px-3 py-2.5">
+                  <p className="text-surface-900 text-sm font-medium">
                     Admin User
                   </p>
                   <p className="text-surface-500 mt-0.5 text-xs">colt453118@gmail.com</p>
                 </div>
 
                 <div className="mt-1 space-y-0.5">
-                  <button className="text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 dark:hover:bg-surface-800 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors">
+                  <button className="text-surface-600 hover:bg-surface-200/50 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors">
                     <User className="h-4 w-4" /> Profile
                   </button>
-                  <button className="text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 dark:hover:bg-surface-800 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors">
+                  <button className="text-surface-600 hover:bg-surface-200/50 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors">
                     <Settings className="h-4 w-4" /> Settings
                   </button>
                   <button
@@ -404,13 +404,13 @@ export function Topbar() {
                       setUserMenuOpen(false);
                       setShortcutsOpen(true);
                     }}
-                    className="text-surface-600 hover:bg-surface-200/50 dark:text-surface-400 dark:hover:bg-surface-800 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors"
+                    className="text-surface-600 hover:bg-surface-200/50 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors"
                   >
                     <Keyboard className="h-4 w-4" /> Keyboard shortcuts
                   </button>
                 </div>
 
-                <div className="border-surface-300/20 dark:border-surface-700/30 mt-1 border-t pt-1">
+                <div className="border-surface-300/20 mt-1 border-t pt-1">
                   <button
                     onClick={handleSignOut}
                     className="text-error hover:bg-error/5 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors"

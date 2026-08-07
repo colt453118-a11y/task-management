@@ -48,8 +48,8 @@ function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (
       type="button"
       disabled={disabled}
       onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-surface-50 dark:focus:ring-offset-surface-900 ${
-        enabled ? 'bg-brand-500' : 'bg-surface-300/50 dark:bg-surface-700/50'
+      className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-surface-50 ${
+        enabled ? 'bg-brand-500' : 'bg-surface-300/50 '
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
       role="switch"
       aria-checked={enabled}
@@ -138,7 +138,7 @@ export function EODScheduleSettings() {
       <div className="p-5">
         <div className="mb-4 flex items-center gap-2">
           <Clock className="text-surface-400 h-4 w-4" />
-          <h2 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+          <h2 className="text-surface-900 text-base font-semibold">
             EOD Report Schedule
           </h2>
         </div>
@@ -153,7 +153,7 @@ export function EODScheduleSettings() {
 
   return (
     <div className="p-5">
-      <h2 className="text-surface-900 dark:text-surface-100 mb-1 flex items-center gap-2 text-base font-semibold">
+      <h2 className="text-surface-900 mb-1 flex items-center gap-2 text-base font-semibold">
         <Clock className="text-surface-400 h-4 w-4" />
         EOD Report Schedule
       </h2>
@@ -175,7 +175,7 @@ export function EODScheduleSettings() {
           <select
             value={settings.preferredTime}
             onChange={(e) => setSettings((prev) => ({ ...prev, preferredTime: e.target.value }))}
-            className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full max-w-xs rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+            className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full max-w-xs rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
           >
             {TIME_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -189,14 +189,14 @@ export function EODScheduleSettings() {
         <motion.div
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
-          className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
+          className="border-surface-300/20 hover:border-brand-500/20 hover:bg-surface-200/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
         >
           <div className="flex items-center gap-3">
             <div className={settings.aiSummaryEnabled ? 'text-brand-500' : 'text-surface-400'}>
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+              <p className="text-surface-900 text-sm font-medium">
                 AI Summary Generation
               </p>
               <p className="text-surface-500 text-xs">

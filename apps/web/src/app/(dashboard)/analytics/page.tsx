@@ -132,7 +132,7 @@ function BurndownTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -155,7 +155,7 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -385,7 +385,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <Target className="text-surface-400 h-4 w-4" />
                     Burndown Chart
                   </h2>
@@ -449,7 +449,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <Activity className="text-surface-400 h-4 w-4" />
                     Team Velocity
                   </h2>
@@ -499,7 +499,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <GitBranch className="text-surface-400 h-4 w-4" />
                     Status Distribution
                   </h2>
@@ -540,7 +540,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <CheckCircle2 className="text-surface-400 h-4 w-4" />
                     Task Overview
                   </h2>
@@ -555,12 +555,12 @@ export default function AnalyticsPage() {
                     { label: 'Blocked', value: data.trends.blockedTasks, color: '#f87171' },
                     { label: 'Overdue', value: data.trends.overdueTasks, color: '#ef4444' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-200/60 dark:bg-surface-700/30 px-3 py-2">
+                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-200/60 px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-surface-600 dark:text-surface-400 text-xs">{item.label}</span>
+                        <span className="text-surface-600 text-xs">{item.label}</span>
                       </div>
-                      <span className="text-surface-900 dark:text-surface-100 text-xs font-semibold">{item.value}</span>
+                      <span className="text-surface-900 text-xs font-semibold">{item.value}</span>
                     </div>
                   ))}
                 </div>

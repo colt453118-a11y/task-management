@@ -103,19 +103,19 @@ export function KanbanColumn({
         collapsed
           ? 'flex min-w-[60px] max-w-[60px] flex-shrink-0 flex-col rounded-xl'
           : 'flex min-w-[260px] max-w-[300px] flex-shrink-0 flex-col rounded-xl transition-all duration-300 sm:min-w-[280px] sm:max-w-[320px]',
-        'bg-surface-100/60 dark:bg-surface-800/40',
+        'bg-surface-100/60 ',
         'border-l-2',
         statusBorderAccent[status] ?? 'border-l-surface-300',
         // Drop indicator
         isOver &&
           isValidDropTarget !== false &&
           !isOverWipLimit &&
-          'ring-brand-400 bg-brand-50/40 dark:bg-brand-900/20 scale-[1.02] ring-2 ring-inset',
+          'ring-brand-400 bg-brand-50/40 scale-[1.02] ring-2 ring-inset',
         isOver &&
           isValidDropTarget === false &&
-          'scale-[1.02] bg-red-50/40 ring-2 ring-inset ring-red-400 dark:bg-red-900/20',
+          'scale-[1.02] bg-red-50/40 ring-2 ring-inset ring-red-400 ',
         isOver && isOverWipLimit &&
-          'scale-[1.02] bg-amber-50/40 ring-2 ring-inset ring-amber-400 dark:bg-amber-900/20',
+          'scale-[1.02] bg-amber-50/40 ring-2 ring-inset ring-amber-400 ',
         'hover:shadow-sm',
       )}
     >
@@ -123,7 +123,7 @@ export function KanbanColumn({
       <div
         data-testid={KANBAN.columnHeader(status)}
         className={cn(
-          'border-surface-200/60 dark:border-surface-700/60 flex items-center justify-between rounded-t-xl',
+          'border-surface-200/60 flex items-center justify-between rounded-t-xl',
           collapsed ? 'justify-center border-b-0 px-2 py-3' : 'border-b px-3 py-3',
           headerBg,
           isOverWipLimit && 'border-red-500/30',
@@ -135,7 +135,7 @@ export function KanbanColumn({
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
               onClick={onToggleCollapse}
-              className="flex flex-col items-center gap-1 rounded-md p-1 transition-colors hover:bg-surface-200/50 dark:hover:bg-surface-700/50"
+              className="flex flex-col items-center gap-1 rounded-md p-1 transition-colors hover:bg-surface-200/50 "
               aria-label={`Expand ${label}`}
               title={label}
             >
@@ -148,11 +148,11 @@ export function KanbanColumn({
                   isOverWipLimit && 'ring-2 ring-red-400 ring-offset-1',
                 )}
               />
-              <span className="text-surface-500 dark:text-surface-400 text-[10px] font-semibold" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+              <span className="text-surface-500 text-[10px] font-semibold" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
                 {label}
               </span>
             </motion.button>
-            <span className="text-surface-400 dark:text-surface-500 text-[10px] font-medium">
+            <span className="text-surface-400 text-[10px] font-medium">
               {lanes.reduce((sum, g) => sum + g.tasks.length, 0)}
             </span>
           </div>
@@ -163,7 +163,7 @@ export function KanbanColumn({
                 whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onToggleCollapse}
-                className="rounded p-0.5 transition-colors hover:bg-surface-200/50 dark:hover:bg-surface-700/50"
+                className="rounded p-0.5 transition-colors hover:bg-surface-200/50 "
                 aria-label={`Collapse ${label}`}
               >
                 <ChevronDown className="text-surface-400 h-3.5 w-3.5" />
@@ -177,7 +177,7 @@ export function KanbanColumn({
                   isOverWipLimit && 'ring-2 ring-red-400 ring-offset-1',
                 )}
               />
-              <h3 className="text-surface-700 dark:text-surface-300 truncate text-sm font-semibold">
+              <h3 className="text-surface-700 truncate text-sm font-semibold">
                 {label}
               </h3>
               <motion.span
@@ -188,10 +188,10 @@ export function KanbanColumn({
                 className={cn(
                   'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-medium tabular-nums',
                   isOverWipLimit
-                    ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                    ? 'bg-red-500/15 text-red-600 '
                     : isNearWipLimit
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                      : 'bg-surface-200/70 dark:bg-surface-700/70 text-surface-500 dark:text-surface-400',
+                      ? 'bg-amber-500/15 text-amber-600 '
+                      : 'bg-surface-200/70 text-surface-500 ',
                 )}
               >
                 {lanes.reduce((sum, g) => sum + g.tasks.length, 0)}
@@ -205,7 +205,7 @@ export function KanbanColumn({
                     isOverWipLimit
                       ? 'bg-red-500/10 text-red-500'
                       : isNearWipLimit
-                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        ? 'bg-amber-500/10 text-amber-600 '
                         : 'text-surface-400',
                   )}
                 >
@@ -219,7 +219,7 @@ export function KanbanColumn({
               whileTap={{ scale: 0.9 }}
               onClick={() => (window.location.href = `/tasks/new?status=${status}`)}
               data-testid={KANBAN.columnAddBtn(status)}
-              className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/60 dark:hover:bg-surface-700/60 rounded-md p-1 transition-colors"
+              className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/60 rounded-md p-1 transition-colors"
               aria-label={`Create task in ${label}`}
             >
               <Plus className="h-4 w-4" />
@@ -261,8 +261,8 @@ export function KanbanColumn({
                   </motion.div>
                 ) : (
                   <>
-                    <p className="text-surface-400 dark:text-surface-500 text-xs">No tasks</p>
-                    <p className="text-surface-300 dark:text-surface-600 mt-0.5 text-[10px]">
+                    <p className="text-surface-400 text-xs">No tasks</p>
+                    <p className="text-surface-300 mt-0.5 text-[10px]">
                       Drag tasks here
                     </p>
                   </>
@@ -278,7 +278,7 @@ export function KanbanColumn({
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: laneIdx * 0.02 }}
-                        className="mb-1 flex items-center gap-1.5 rounded-md bg-surface-200/40 px-2 py-1 dark:bg-surface-700/30"
+                        className="mb-1 flex items-center gap-1.5 rounded-md bg-surface-200/40 px-2 py-1 "
                       >
                         {swimlaneMode === 'assignee' && (
                           <div className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-500/10 text-[8px] font-medium text-brand-500">
@@ -290,7 +290,7 @@ export function KanbanColumn({
                             <ArrowUpDown className="h-3 w-3 text-surface-400" />
                           </div>
                         )}
-                        <span className="text-surface-500 dark:text-surface-400 truncate text-[10px] font-medium">
+                        <span className="text-surface-500 truncate text-[10px] font-medium">
                           {lane.label}
                         </span>
                         <span className="text-surface-400 ml-auto text-[9px] tabular-nums">
@@ -341,7 +341,7 @@ export function KanbanColumn({
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[10px] font-medium text-amber-600 "
               >
                 <AlertTriangle className="h-3 w-3 shrink-0" />
                 <span>Approaching WIP limit ({wipCount}/{wipLimit!.limit})</span>

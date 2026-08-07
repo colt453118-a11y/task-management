@@ -77,7 +77,7 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
         'h-8 shrink-0 rounded-xl text-xs transition-all duration-200',
         isWatching
           ? 'bg-brand-500/10 text-brand-500 border-brand-500/20 hover:bg-brand-500/15 hover:border-brand-500/30'
-          : 'text-surface-600 dark:text-surface-400',
+          : 'text-surface-600 ',
       )}
     >
       {toggling ? (
@@ -94,7 +94,7 @@ export function TaskWatcherButton({ taskId }: TaskWatcherButtonProps) {
             'ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium',
             isWatching
               ? 'bg-brand-500/15 text-brand-400'
-              : 'bg-surface-200/70 text-surface-500 dark:bg-surface-700/50',
+              : 'bg-surface-200/70 text-surface-500 ',
           )}
         >
           {watcherCount}

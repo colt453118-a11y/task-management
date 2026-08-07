@@ -49,7 +49,7 @@ export function AIRiskBadge({ task, className }: AIRiskBadgeProps) {
           'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-all',
           config
             ? `${config.bg} ${config.color}`
-            : 'bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 hover:bg-surface-200/70',
+            : 'bg-surface-200/50 text-surface-500 hover:bg-surface-200/70',
           loading && 'animate-pulse',
         )}
       >
@@ -68,7 +68,7 @@ export function AIRiskBadge({ task, className }: AIRiskBadgeProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50 dark:bg-surface-900 absolute left-0 top-full z-50 mt-1 w-64 rounded-xl border p-3 shadow-lg backdrop-blur-xl"
+            className="border-surface-300/20 bg-surface-50 absolute left-0 top-full z-50 mt-1 w-64 rounded-xl border p-3 shadow-lg backdrop-blur-xl"
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-xs font-semibold">
@@ -89,7 +89,7 @@ export function AIRiskBadge({ task, className }: AIRiskBadgeProps) {
                 <span>Risk Score</span>
                 <span className={cn('font-semibold', config?.color)}>{prediction.riskScore}/100</span>
               </div>
-              <div className="bg-surface-200 dark:bg-surface-700 h-1.5 w-full overflow-hidden rounded-full">
+              <div className="bg-surface-200 h-1.5 w-full overflow-hidden rounded-full">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${prediction.riskScore}%` }}
@@ -104,7 +104,7 @@ export function AIRiskBadge({ task, className }: AIRiskBadgeProps) {
               </div>
             </div>
 
-            <p className="text-surface-600 dark:text-surface-400 text-[10px] leading-relaxed">
+            <p className="text-surface-600 text-[10px] leading-relaxed">
               {prediction.reason}
             </p>
           </motion.div>

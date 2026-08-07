@@ -508,7 +508,7 @@ export default function ReportsPage() {
       {/* ── Tabs ──────────────────────────────────────────── */}
       <motion.div variants={itemVariants}>
         <div
-          className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+          className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
           role="tablist"
           aria-label="Report sections"
         >
@@ -522,8 +522,8 @@ export default function ReportsPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   activeTab === tab.key
-                    ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                    : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
+                    ? 'bg-surface-50 text-surface-900 shadow-sm'
+                    : 'text-surface-500 hover:text-surface-700 '
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -569,7 +569,7 @@ export default function ReportsPage() {
                               {card.label}
                             </p>
                             <div className="flex items-baseline gap-2">
-                              <p className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
+                              <p className="text-surface-900 text-2xl font-bold tracking-tight">
                                 {card.value}
                               </p>
                               {style.trend && (
@@ -608,7 +608,7 @@ export default function ReportsPage() {
               <motion.div variants={itemVariants}>
                 <Card>
                   <CardContent className="p-5">
-                    <h3 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-sm font-semibold">
+                    <h3 className="text-surface-900 mb-4 flex items-center gap-2 text-sm font-semibold">
                       <Camera className="text-brand-500 h-4 w-4" />
                       Recent Report Snapshots
                     </h3>
@@ -628,7 +628,7 @@ export default function ReportsPage() {
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 rounded-xl p-3 text-sm transition-all duration-200"
+                          className="neon-card hover:bg-surface-200/30 rounded-xl p-3 text-sm transition-all duration-200"
                         >
                           <div className="space-y-2">
                             <Link
@@ -640,7 +640,7 @@ export default function ReportsPage() {
                                   <Camera className="h-3.5 w-3.5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-surface-900 dark:text-surface-100 font-medium group-hover:text-brand-500 transition-colors">
+                                  <span className="text-surface-900 font-medium group-hover:text-brand-500 transition-colors">
                                     {snap.label ?? `Snapshot — ${snap.snapshotDate}`}
                                   </span>
                                   <div className="text-surface-500 mt-0.5 flex items-center gap-2">
@@ -652,7 +652,7 @@ export default function ReportsPage() {
                                         minute: '2-digit',
                                       })}
                                     </span>
-                                    <span className="text-surface-300 dark:text-surface-600">·</span>
+                                    <span className="text-surface-300 ">·</span>
                                     <Badge variant="default" size="sm" className="text-[9px]">
                                       {snap.snapshotType.toUpperCase()}
                                     </Badge>
@@ -663,7 +663,7 @@ export default function ReportsPage() {
                               {summary && (
                                 <div className="flex shrink-0 items-center gap-3 ml-3">
                                   <span className="text-surface-500 text-xs whitespace-nowrap">
-                                    <span className="font-medium text-surface-700 dark:text-surface-300">
+                                    <span className="font-medium text-surface-700 ">
                                       {String(summary.totalTasks ?? '—')}
                                     </span>{' '}
                                     tasks
@@ -681,7 +681,7 @@ export default function ReportsPage() {
                                     AI Summary
                                   </span>
                                 </div>
-                                <p className="text-surface-600 dark:text-surface-400 text-xs leading-relaxed">
+                                <p className="text-surface-600 text-xs leading-relaxed">
                                   {isLongSummary && !isExpanded
                                     ? summaryText.slice(0, 140) + '…'
                                     : summaryText}
@@ -735,7 +735,7 @@ export default function ReportsPage() {
             {!hasMetrics && (
               <motion.div variants={itemVariants}>
                 <EmptyState
-                  icon={<LineChart className="text-surface-300 dark:text-surface-600 h-16 w-16" />}
+                  icon={<LineChart className="text-surface-300 h-16 w-16" />}
                   title="No data available"
                   message="Create some tasks and projects to start seeing reports."
                 />
@@ -749,11 +749,11 @@ export default function ReportsPage() {
                 className="flex items-center justify-center gap-3 text-[10px] text-surface-400"
               >
                 <span>Switch to</span>
-                <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">
+                <kbd className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">
                   Time Tracking
                 </kbd>
                 <span>tab or press</span>
-                <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">
+                <kbd className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">
                   T
                 </kbd>
                 <span>for snapshot</span>
@@ -797,7 +797,7 @@ export default function ReportsPage() {
                         <div className="bg-brand-500/10 text-brand-500 rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110">
                           <tmpl.icon className="h-5 w-5" />
                         </div>
-                        <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{tmpl.label}</span>
+                        <span className="text-surface-700 text-sm font-medium">{tmpl.label}</span>
                         <span className="text-surface-500 text-[10px]">{tmpl.desc}</span>
                       </motion.button>
                     ))}
@@ -817,11 +817,11 @@ export default function ReportsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col items-center gap-4 py-6 text-center">
-                    <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 flex h-14 w-14 items-center justify-center rounded-2xl border">
+                    <div className="border-surface-300/20 bg-surface-100/50 flex h-14 w-14 items-center justify-center rounded-2xl border">
                       <FileText className="text-surface-400 h-7 w-7" />
                     </div>
                     <div>
-                      <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">
+                      <p className="text-surface-700 text-sm font-medium">
                         Select a template and export format
                       </p>
                       <p className="text-surface-500 mt-1 text-xs">
@@ -883,7 +883,7 @@ export default function ReportsPage() {
                   Time Tracking
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <div className="border-surface-300/20 dark:border-surface-700/30 flex gap-0.5 rounded-xl border p-0.5">
+                  <div className="border-surface-300/20 flex gap-0.5 rounded-xl border p-0.5">
                     {(['week', 'month', 'quarter'] as const).map((p) => (
                       <button
                         key={p}
@@ -891,14 +891,14 @@ export default function ReportsPage() {
                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                           timePeriod === p
                             ? 'bg-brand-500 text-white shadow-sm'
-                            : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 dark:hover:text-surface-300'
+                            : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 '
                         }`}
                       >
                         {p === 'week' ? 'Week' : p === 'month' ? 'Month' : 'Quarter'}
                       </button>
                     ))}
                   </div>
-                  <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
+                  <kbd className="bg-surface-200/50 text-surface-500 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
                     1-2-3
                   </kbd>
                 </div>
@@ -921,12 +921,12 @@ export default function ReportsPage() {
                         <motion.div
                           key={stat.label}
                           whileHover={{ y: -1 }}
-                          className="neon-card hover:bg-surface-200/30 dark:hover:bg-surface-800/40 rounded-xl p-3 transition-all duration-200"
+                          className="neon-card hover:bg-surface-200/30 rounded-xl p-3 transition-all duration-200"
                         >
                           <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
                             {stat.label}
                           </p>
-                          <p className="text-surface-900 dark:text-surface-100 mt-1 text-xl font-bold tabular-nums">
+                          <p className="text-surface-900 mt-1 text-xl font-bold tabular-nums">
                             {stat.value}
                           </p>
                         </motion.div>
@@ -963,7 +963,7 @@ export default function ReportsPage() {
                                 <span className="text-surface-500 w-20 shrink-0 text-[10px] font-medium">
                                   {label}
                                 </span>
-                                <div className="bg-surface-200/50 dark:bg-surface-700/50 flex-1 overflow-hidden rounded-full h-4">
+                                <div className="bg-surface-200/50 flex-1 overflow-hidden rounded-full h-4">
                                   <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${pct}%` }}
@@ -975,7 +975,7 @@ export default function ReportsPage() {
                                     className="bg-brand-500 h-full rounded-full"
                                   />
                                 </div>
-                                <span className="text-surface-600 dark:text-surface-400 w-10 shrink-0 text-right text-xs font-medium tabular-nums">
+                                <span className="text-surface-600 w-10 shrink-0 text-right text-xs font-medium tabular-nums">
                                   {day.hours}h
                                 </span>
                               </motion.div>
@@ -1005,13 +1005,13 @@ export default function ReportsPage() {
                                 transition={{ delay: idx * 0.04 }}
                                 className="flex items-center gap-2"
                               >
-                                <div className="bg-surface-300/20 dark:bg-surface-700/30 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium text-surface-500">
+                                <div className="bg-surface-300/20 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium text-surface-500">
                                   {u.userName.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="text-surface-700 dark:text-surface-300 w-24 truncate text-sm font-medium">
+                                <span className="text-surface-700 w-24 truncate text-sm font-medium">
                                   {u.userName}
                                 </span>
-                                <div className="bg-surface-200/50 dark:bg-surface-700/50 flex-1 overflow-hidden rounded-full h-3">
+                                <div className="bg-surface-200/50 flex-1 overflow-hidden rounded-full h-3">
                                   <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${pct}%` }}
@@ -1023,7 +1023,7 @@ export default function ReportsPage() {
                                     className="bg-purple-500 h-full rounded-full"
                                   />
                                 </div>
-                                <span className="text-surface-600 dark:text-surface-400 w-10 shrink-0 text-right text-xs font-medium tabular-nums">
+                                <span className="text-surface-600 w-10 shrink-0 text-right text-xs font-medium tabular-nums">
                                   {u.hours}h
                                 </span>
                               </motion.div>
@@ -1035,7 +1035,7 @@ export default function ReportsPage() {
 
                     {/* Top tasks by time */}
                     {timeReport.topTasks.length > 0 && (
-                      <div className="border-surface-300/20 dark:border-surface-700/30 rounded-xl border p-4">
+                      <div className="border-surface-300/20 rounded-xl border p-4">
                         <p className="text-surface-500 mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
                           <ListTodo className="h-3 w-3" />
                           Top Tasks by Time
@@ -1047,11 +1047,11 @@ export default function ReportsPage() {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               transition={{ delay: idx * 0.03 }}
-                              className="hover:bg-surface-200/50 dark:hover:bg-surface-800/30 flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors"
+                              className="hover:bg-surface-200/50 flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors"
                             >
                               <Link
                                 href={`/tasks/${t.taskId}`}
-                                className="text-surface-700 dark:text-surface-300 hover:text-brand-500 truncate text-sm font-medium transition-colors"
+                                className="text-surface-700 hover:text-brand-500 truncate text-sm font-medium transition-colors"
                               >
                                 {t.title}
                               </Link>
@@ -1067,7 +1067,7 @@ export default function ReportsPage() {
 
                     {/* Top projects by time */}
                     {timeReport.byProject.length > 0 && (
-                      <div className="border-surface-300/20 dark:border-surface-700/30 rounded-xl border p-4">
+                      <div className="border-surface-300/20 rounded-xl border p-4">
                         <p className="text-surface-500 mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
                           <FolderKanban className="h-3 w-3" />
                           Hours by Project
@@ -1081,7 +1081,7 @@ export default function ReportsPage() {
                               transition={{ delay: idx * 0.03 }}
                               className="flex items-center justify-between rounded-lg px-2 py-1.5"
                             >
-                              <span className="text-surface-700 dark:text-surface-300 truncate text-sm font-medium">
+                              <span className="text-surface-700 truncate text-sm font-medium">
                                 {p.projectName}
                               </span>
                               <div className="flex shrink-0 items-center gap-3">
@@ -1101,7 +1101,7 @@ export default function ReportsPage() {
                     <div className="neon-card mb-4 flex h-12 w-12 items-center justify-center rounded-2xl">
                       <Timer className="text-surface-400 h-6 w-6" />
                     </div>
-                    <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">
+                    <p className="text-surface-700 text-sm font-medium">
                       No time data for this period
                     </p>
                     <p className="text-surface-500 mt-1 text-xs">

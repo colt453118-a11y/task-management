@@ -43,20 +43,20 @@ interface ColumnDef {
 }
 
 const COLUMN_HEADER_BG: Record<string, string> = {
-  draft: 'bg-status-draft/5 dark:bg-status-draft/10',
-  open: 'bg-status-open/5 dark:bg-status-open/10',
-  assigned: 'bg-status-on-hold/5 dark:bg-status-on-hold/10',
-  in_progress: 'bg-status-in-progress/5 dark:bg-status-in-progress/10',
-  blocked: 'bg-status-blocked/5 dark:bg-status-blocked/10',
-  on_hold: 'bg-status-on-hold/5 dark:bg-status-on-hold/10',
-  under_review: 'bg-status-under-review/5 dark:bg-status-under-review/10',
-  approved: 'bg-status-approved/5 dark:bg-status-approved/10',
-  completed: 'bg-status-completed/5 dark:bg-status-completed/10',
-  closed: 'bg-status-closed/5 dark:bg-status-closed/10',
-  reopened: 'bg-status-approved/5 dark:bg-status-approved/10',
-  cancelled: 'bg-status-cancelled/5 dark:bg-status-cancelled/10',
-  archived: 'bg-status-archived/5 dark:bg-status-archived/10',
-  rejected: 'bg-status-rejected/5 dark:bg-status-rejected/10',
+  draft: 'bg-status-draft/5 ',
+  open: 'bg-status-open/5 ',
+  assigned: 'bg-status-on-hold/5 ',
+  in_progress: 'bg-status-in-progress/5 ',
+  blocked: 'bg-status-blocked/5 ',
+  on_hold: 'bg-status-on-hold/5 ',
+  under_review: 'bg-status-under-review/5 ',
+  approved: 'bg-status-approved/5 ',
+  completed: 'bg-status-completed/5 ',
+  closed: 'bg-status-closed/5 ',
+  reopened: 'bg-status-approved/5 ',
+  cancelled: 'bg-status-cancelled/5 ',
+  archived: 'bg-status-archived/5 ',
+  rejected: 'bg-status-rejected/5 ',
 };
 
 const WORKFLOW_COLUMNS: ColumnDef[] = [
@@ -477,7 +477,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
               className={cn(
                 'w-full rounded-lg border bg-surface-300 py-1 pl-7 pr-7 text-xs outline-none transition-all sm:py-1.5 sm:pl-8 sm:pr-8 sm:text-sm',
                 'border-surface-500/20',
-                'placeholder:text-surface-400 text-surface-700 dark:text-surface-300',
+                'placeholder:text-surface-400 text-surface-700 ',
                 'focus:border-brand-400 focus:ring-brand-500/20 focus:ring-2',
               )}
               aria-label="Filter tasks"
@@ -485,7 +485,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-surface-100 dark:hover:bg-surface-800 sm:right-2"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-surface-100 sm:right-2"
                 aria-label="Clear filter"
               >
                 <X className="text-surface-400 h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -509,7 +509,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
                   'flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-medium transition-all sm:px-2 sm:text-[11px]',
                   swimlaneMode === opt.key
                     ? 'bg-brand-500 text-white shadow-sm'
-                    : 'text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300',
+                    : 'text-surface-500 hover:text-surface-700 ',
                 )}
                 title={opt.label}
               >
@@ -526,8 +526,8 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
             onClick={anyCollapsed ? expandAll : collapseAll}
             className={cn(
               'flex items-center gap-1 rounded-lg px-1.5 py-1 text-[10px] font-medium transition-colors sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs',
-              'text-surface-500 dark:text-surface-400',
-              'hover:bg-surface-100 dark:hover:bg-surface-800 shrink-0',
+              'text-surface-500 ',
+              'hover:bg-surface-100 shrink-0',
             )}
             aria-label={allCollapsed ? 'Expand all columns' : 'Collapse all columns'}
           >
@@ -559,8 +559,8 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
                   className={cn(
                     'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
                     isOverLimit
-                      ? 'bg-red-500/10 text-red-500 dark:bg-red-500/20'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                      ? 'bg-red-500/10 text-red-500 '
+                      : 'bg-amber-500/10 text-amber-600 ',
                   )}
                 >
                   {isOverLimit ? (

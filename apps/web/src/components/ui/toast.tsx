@@ -29,13 +29,13 @@ const toastVariants = cva(
     variants: {
       variant: {
         default:
-          'border-surface-300/20 bg-surface-50/95 backdrop-blur-xl text-surface-900 dark:border-surface-700/30 dark:bg-surface-900/95 dark:text-surface-100',
+          'border-surface-300/20 bg-surface-50/95 backdrop-blur-xl text-surface-900 ',
         success:
-          'border-success/20 bg-success/5 backdrop-blur-xl text-green-900 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300',
+          'border-success/20 bg-success/5 backdrop-blur-xl text-green-900 ',
         error:
-          'border-error/20 bg-error/5 backdrop-blur-xl text-red-900 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300',
+          'border-error/20 bg-error/5 backdrop-blur-xl text-red-900 ',
         warning:
-          'border-warning/20 bg-warning/5 backdrop-blur-xl text-yellow-900 dark:border-yellow-500/20 dark:bg-yellow-500/10 dark:text-yellow-300',
+          'border-warning/20 bg-warning/5 backdrop-blur-xl text-yellow-900 ',
       },
     },
     defaultVariants: {
@@ -65,7 +65,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'text-surface-500 hover:text-surface-700 hover:bg-surface-200/70 focus:ring-brand-500/50 dark:hover:text-surface-300 dark:hover:bg-surface-800 absolute right-3 top-3 rounded-lg p-1 opacity-0 transition-all focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100',
+      'text-surface-500 hover:text-surface-700 hover:bg-surface-200/70 focus:ring-brand-500/50 absolute right-3 top-3 rounded-lg p-1 opacity-0 transition-all focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100',
       className,
     )}
     toast-close=""

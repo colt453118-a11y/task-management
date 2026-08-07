@@ -186,7 +186,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="border-surface-500/20 dark:border-surface-700/30 flex h-14 shrink-0 items-center justify-between border-b px-4">
+      <div className="border-surface-500/20 flex h-14 shrink-0 items-center justify-between border-b px-4">
         {(!collapsed || isMobile) && (
           <Link href="/" className="group flex items-center gap-2.5">
             <div className="from-brand-400 to-brand-600 group-hover:shadow-brand-500/20 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-all duration-200 group-hover:shadow-md">
@@ -289,7 +289,7 @@ export function Sidebar() {
                         )}
                         {/* Unread notification badge on the Notifications icon */}
                         {item.href === '/notifications' && unreadCount > 0 && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 dark:ring-surface-900">
+                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 ">
                             {unreadCount > 9 ? '9+' : unreadCount}
                           </span>
                         )}
@@ -333,7 +333,7 @@ export function Sidebar() {
       </nav>
 
       {/* Quick create */}
-      <div className="border-surface-500/20 dark:border-surface-700/30 shrink-0 border-t p-3">
+      <div className="border-surface-500/20 shrink-0 border-t p-3">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-quick-create'))}
           className={cn(
@@ -348,7 +348,7 @@ export function Sidebar() {
           {(!collapsed || isMobile) && <span>New Task</span>}
 
           {collapsed && !isMobile && (
-            <span className="bg-surface-200/90 dark:bg-surface-800/90 text-surface-900 dark:text-surface-100 border-surface-300/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
+            <span className="bg-surface-200/90 text-surface-900 border-surface-300/20 pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:opacity-100">
               New Task (⌘T)
             </span>
           )}

@@ -364,7 +364,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-surface-500 mt-1 text-sm">
-            Welcome back, <span className="text-surface-700 dark:text-surface-300 font-medium">{userName}</span>
+            Welcome back, <span className="text-surface-700 font-medium">{userName}</span>
           </p>
         </div>
         <div className="text-surface-500 flex items-center gap-2 text-xs">
@@ -383,7 +383,7 @@ export default function DashboardPage() {
               'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs',
               view === tab.key
                 ? 'bg-surface-300 text-surface-900 shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-800/50',
+                : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 ',
             )}
           >
             <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -474,9 +474,9 @@ export default function DashboardPage() {
                     <div className={cn('rounded-xl p-2.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm', action.color)}>
                       <action.icon className="h-5 w-5" />
                     </div>
-                    <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{action.label}</span>
+                    <span className="text-surface-700 text-sm font-medium">{action.label}</span>
                     {action.shortcut && (
-                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 dark:text-surface-600 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
+                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
                         {action.shortcut}
                       </kbd>
                     )}
@@ -500,7 +500,7 @@ export default function DashboardPage() {
               <CardContent>
                 {metrics.workloadByUser.length === 0 ? (
                   <div className="flex flex-col items-center py-8 text-center">
-                    <Users className="text-surface-300 dark:text-surface-600 h-8 w-8" />
+                    <Users className="text-surface-300 h-8 w-8" />
                     <p className="text-surface-500 mt-2 text-sm font-medium">No workload data</p>
                   </div>
                 ) : (
@@ -520,14 +520,14 @@ export default function DashboardPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-surface-700 dark:text-surface-300 truncate text-sm font-medium">
+                              <span className="text-surface-700 truncate text-sm font-medium">
                                 {user.name}
                               </span>
                               <span className="text-surface-500 ml-2 shrink-0 text-xs tabular-nums">
                                 {user.completed}/{user.tasks}
                               </span>
                             </div>
-                            <div className="bg-surface-200/70 dark:bg-surface-700/70 mt-1 h-2 w-full overflow-hidden rounded-full">
+                            <div className="bg-surface-200/70 mt-1 h-2 w-full overflow-hidden rounded-full">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${completionPct}%` }}
@@ -628,7 +628,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className={`h-2 w-2 shrink-0 rounded-full ${statusDotColors[task.status] ?? 'bg-surface-400'}`} />
-                          <span className="text-surface-700 group-hover:text-brand-400 dark:text-surface-300 truncate transition-colors">{task.title}</span>
+                          <span className="text-surface-700 group-hover:text-brand-400 truncate transition-colors">{task.title}</span>
                         </div>
                         <div className="ml-2 flex shrink-0 items-center gap-2">
                           <Badge variant={statusColors[task.status] ?? 'default'} size="sm">

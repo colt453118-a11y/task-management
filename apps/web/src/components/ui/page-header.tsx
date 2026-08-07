@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
  * One uniform Sora display title (+ optional breadcrumb, icon, subtitle) with a
  * right-aligned actions slot, replacing the ~25 hand-rolled `<h1>` variants across
  * the app. Colors are base-only semantic classes (correct in both themes; no
- * stale `dark:` overrides).
+ * stale `` overrides).
  */
 export interface PageHeaderProps {
   title: React.ReactNode;
