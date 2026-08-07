@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -243,28 +244,33 @@ export default function TaskTemplatesPage() {
       className="mx-auto max-w-4xl space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Layers className="h-4 w-4 text-white" />
             </div>
-            Task Templates
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            {templates.length} template{templates.length !== 1 ? 's' : ''}
-            {defaultTemplate && (
-              <>
-                {' · '}
-                <span className="text-amber-500 font-medium">{defaultTemplate.name}</span> is default
-              </>
-            )}
-          </p>
-        </div>
-        <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" />
-          New Template
-        </Button>
+          }
+          title="Task Templates"
+          subtitle={
+            <>
+              {templates.length} template{templates.length !== 1 ? 's' : ''}
+              {defaultTemplate && (
+                <>
+                  {' · '}
+                  <span className="text-amber-500 font-medium">{defaultTemplate.name}</span> is default
+                </>
+              )}
+            </>
+          }
+          actions={
+            <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              New Template
+            </Button>
+          }
+        />
       </motion.div>
 
       {/* Content */}

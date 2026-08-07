@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -301,45 +302,45 @@ export default function MilestonesPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Milestone className="h-4 w-4 text-white" />
             </div>
-            Milestones
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            {milestones.length} milestone{milestones.length !== 1 ? 's' : ''} across {groupedByProject.length} project{groupedByProject.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode('timeline')}
-              className={cn(
-                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                viewMode === 'timeline' ? 'bg-surface-50 dark:bg-surface-700 shadow-sm' : 'text-surface-500',
-              )}
-            >
-              Timeline
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                viewMode === 'list' ? 'bg-surface-50 dark:bg-surface-700 shadow-sm' : 'text-surface-500',
-              )}
-            >
-              List
-            </button>
-          </div>
-          <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            New Milestone
-          </Button>
-        </div>
+          }
+          title="Milestones"
+          subtitle={`${milestones.length} milestone${milestones.length !== 1 ? 's' : ''} across ${groupedByProject.length} project${groupedByProject.length !== 1 ? 's' : ''}`}
+          actions={
+            <>
+              <div className="bg-surface-200/60 inline-flex items-center gap-0.5 rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={cn(
+                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                    viewMode === 'timeline' ? 'bg-surface-300 text-surface-900 shadow-sm' : 'text-surface-500',
+                  )}
+                >
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                    viewMode === 'list' ? 'bg-surface-300 text-surface-900 shadow-sm' : 'text-surface-500',
+                  )}
+                >
+                  List
+                </button>
+              </div>
+              <Button size="sm" onClick={openCreateForm} className="h-8 rounded-lg px-3 text-xs">
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                New Milestone
+              </Button>
+            </>
+          }
+        />
       </motion.div>
 
       {/* Status filter */}

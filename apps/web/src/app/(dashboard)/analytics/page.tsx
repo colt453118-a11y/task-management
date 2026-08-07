@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { motion } from 'framer-motion';
 import {
   BarChart,
@@ -302,36 +303,35 @@ export default function AnalyticsPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <BarChart3 className="h-4 w-4 text-white" />
             </div>
-            Analytics
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            Burndown, velocity, and project trends
-          </p>
-        </div>
-
-        {/* Period selector */}
-        <div className="flex items-center gap-1 rounded-xl bg-surface-200/50 dark:bg-surface-800/50 p-0.5">
-          {PERIOD_PRESETS.map((preset) => (
-            <button
-              key={preset.days}
-              onClick={() => setPeriod(preset.days)}
-              className={cn(
-                'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
-                period === preset.days
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
-              )}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
+          }
+          title="Analytics"
+          subtitle="Burndown, velocity, and project trends"
+          actions={
+            <div className="bg-surface-200/60 flex items-center gap-1 rounded-xl p-0.5">
+              {PERIOD_PRESETS.map((preset) => (
+                <button
+                  key={preset.days}
+                  onClick={() => setPeriod(preset.days)}
+                  className={cn(
+                    'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
+                    period === preset.days
+                      ? 'bg-surface-300 text-surface-900 shadow-sm'
+                      : 'text-surface-500 hover:text-surface-700',
+                  )}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          }
+        />
       </motion.div>
 
       {error ? (
