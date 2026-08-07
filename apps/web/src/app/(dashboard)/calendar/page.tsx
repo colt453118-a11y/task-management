@@ -303,7 +303,7 @@ function DragOverlayTask({ task }: { task: Task | null }) {
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1.05, opacity: 1 }}
-      className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-xl ring-1 ring-black/5 dark:bg-surface-800"
+      className="flex items-center gap-2 rounded-lg bg-surface-300 px-3 py-2 shadow-xl ring-1 ring-white/10"
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
       <GripVertical className="text-surface-300 h-3.5 w-3.5" />

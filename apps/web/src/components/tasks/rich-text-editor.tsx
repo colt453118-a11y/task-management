@@ -124,7 +124,7 @@ export function RichTextEditor({
     return (
       <div
         className={cn(
-          'border-surface-200 dark:border-surface-700 dark:bg-surface-900 rounded-md border bg-white',
+          'border-surface-500/20 rounded-md border bg-surface-200',
           className,
         )}
         style={{ minHeight }}
@@ -139,7 +139,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'border-surface-200 dark:border-surface-700 dark:bg-surface-900 overflow-hidden rounded-md border bg-white',
+        'border-surface-500/20 overflow-hidden rounded-md border bg-surface-200',
         className,
       )}
     >

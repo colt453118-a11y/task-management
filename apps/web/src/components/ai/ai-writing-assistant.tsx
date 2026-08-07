@@ -139,7 +139,7 @@ export function AIWritingAssistant({ text, onApply, className }: AIWritingAssist
                     </button>
                   </div>
                 </div>
-                <div className="border-surface-300/20 dark:border-surface-700/30 max-h-32 overflow-y-auto rounded-lg border bg-white/50 p-2 text-xs leading-relaxed text-surface-700 dark:bg-surface-800/50 dark:text-surface-300">
+                <div className="border-surface-300/20 max-h-32 overflow-y-auto rounded-lg border bg-surface-300/50 p-2 text-xs leading-relaxed text-surface-700">
                   {result}
                 </div>
                 <Button

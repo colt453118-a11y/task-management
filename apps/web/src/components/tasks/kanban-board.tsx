@@ -475,8 +475,8 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                'w-full rounded-lg border bg-white py-1 pl-7 pr-7 text-xs outline-none transition-all sm:py-1.5 sm:pl-8 sm:pr-8 sm:text-sm',
-                'border-surface-200 dark:border-surface-700 dark:bg-surface-900',
+                'w-full rounded-lg border bg-surface-300 py-1 pl-7 pr-7 text-xs outline-none transition-all sm:py-1.5 sm:pl-8 sm:pr-8 sm:text-sm',
+                'border-surface-500/20',
                 'placeholder:text-surface-400 text-surface-700 dark:text-surface-300',
                 'focus:border-brand-400 focus:ring-brand-500/20 focus:ring-2',
               )}
@@ -495,7 +495,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
 
           {/* Swimlane Toggle */}
           <div
-            className="flex items-center gap-0.5 rounded-lg border border-surface-200 bg-white p-0.5 dark:border-surface-700 dark:bg-surface-900 shrink-0"
+            className="flex items-center gap-0.5 rounded-lg border border-surface-500/20 bg-surface-200 p-0.5 shrink-0"
             role="group"
             aria-label="Swimlane mode"
           >

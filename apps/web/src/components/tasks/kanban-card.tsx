@@ -142,8 +142,7 @@ export function KanbanCard({ task, isDragOverlay = false, onTap }: KanbanCardPro
       onTouchCancel={handleTouchEnd}
       className={cn(
         // Base card styles
-        'group relative rounded-lg border bg-white p-3 transition-all duration-200',
-        'dark:bg-surface-900 dark:border-surface-700',
+        'group relative rounded-lg border border-surface-500/20 bg-surface-200 p-3 transition-all duration-200',
         // Hover
         'hover:border-brand-200 dark:hover:border-brand-800 hover:-translate-y-0.5 hover:shadow-md',
         // Focus

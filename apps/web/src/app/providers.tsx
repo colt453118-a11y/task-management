@@ -25,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true}>
+      <ThemeProvider attribute="class" forcedTheme="dark">
         <ShortcutsProvider>{children}</ShortcutsProvider>
         <Toaster />
       </ThemeProvider>

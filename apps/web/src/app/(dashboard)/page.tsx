@@ -382,7 +382,7 @@ export default function DashboardPage() {
             className={cn(
               'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs',
               view === tab.key
-                ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-800 dark:text-surface-100'
+                ? 'bg-surface-300 text-surface-900 shadow-sm'
                 : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-800/50',
             )}
           >

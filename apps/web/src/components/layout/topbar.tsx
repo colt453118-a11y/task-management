@@ -8,8 +8,6 @@ import {
   Settings,
   Keyboard,
   ChevronDown,
-  Sun,
-  Moon,
   Sparkles,
   X,
   Check,
@@ -24,7 +22,6 @@ import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/ui/ke
 import { authClient } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useTheme } from 'next-themes';
 import { useNotificationStore } from '@/stores/notification-store';
 import { useNotificationSSE } from '@/lib/hooks/use-notification-sse';
 import { useScrollHide } from '@/lib/hooks/use-scroll-hide';
@@ -61,8 +58,6 @@ function typeLabel(type: string): string {
 
 export function Topbar() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -97,7 +92,6 @@ export function Topbar() {
   }, [fetchNotifications, fetchUnreadCount]);
 
   useEffect(() => {
-    startTransition(() => setMounted(true));
     refreshNotifs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -226,21 +220,6 @@ export function Topbar() {
               ⌘T
             </kbd>
           </button>
-
-          {/* Theme Toggle */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/40 hover:text-surface-600 rounded-xl p-2 transition-all duration-200"
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 transition-all duration-300 hover:rotate-45" />
-              ) : (
-                <Moon className="h-4 w-4 transition-all duration-300 hover:-rotate-12" />
-              )}
-            </button>
-          )}
 
           {/* Notifications */}
           <div ref={notifRef} className="relative">

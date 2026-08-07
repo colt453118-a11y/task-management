@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* ─── Dark-only: neutralize the legacy `dark:` variant ───────────
+   This app is dark-only (ThemeProvider forcedTheme="dark" → `.dark` is always
+   on <html>). The color tokens already render the dark theme via @theme, and
+   base semantic classes are the single source of truth. The codebase still
+   carries ~1000 legacy `dark:` overrides that are INVERTED for the current
+   dark-default scale (e.g. dark:text-surface-100 = near-black) and were
+   media-query driven, so they rendered dark-on-dark text for dark-OS users.
+   Point the `dark:` variant at a selector nothing matches so those overrides
+   never apply — base classes win everywhere. (Dead `dark:` classes are being
+   removed progressively; this guarantees correctness meanwhile.) */
+@custom-variant dark (&:where([data-never]));
+
 /* ─── CSS Custom Properties (accessible via var()) ────────────── */
 :root {
   --brand-rgb: 138 120 255;

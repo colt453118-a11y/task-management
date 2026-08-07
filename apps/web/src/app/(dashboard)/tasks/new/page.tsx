@@ -176,8 +176,7 @@ export default function NewTaskPage() {
 
   const getInputClasses = (fieldName: string, hasError = false) =>
     cn(
-      'h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200',
-      'dark:bg-surface-900 dark:text-surface-100',
+      'h-10 w-full rounded-lg border bg-surface-300 text-surface-800 px-3 py-2 text-sm shadow-sm transition-all duration-200',
       focusedField === fieldName
         ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-glow'
         : hasError
@@ -198,7 +197,7 @@ export default function NewTaskPage() {
             <div className="shimmer h-4 w-56 rounded-md" />
           </div>
         </div>
-        <div className="border-surface-200 dark:border-surface-700 dark:bg-surface-900 rounded-xl border bg-white p-6">
+        <div className="border-surface-500/20 rounded-xl border bg-surface-200 p-6">
           <div className="space-y-5">
             {[1, 2, 3].map((i) => (
               <div key={i} className="shimmer h-10 rounded-lg" />
