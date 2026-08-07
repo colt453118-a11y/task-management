@@ -87,15 +87,16 @@ describe('KanbanCard (React Testing Library)', () => {
     expect(screen.getByText('Urgent')).toBeInTheDocument();
   });
 
-  it('shows "Unassigned" when task has no assignee', () => {
+  it('shows an "Unassigned" indicator when task has no assignee', () => {
     render(<KanbanCard task={sampleTask({ assignedTo: null })} />);
-    expect(screen.getByText('Unassigned')).toBeInTheDocument();
+    expect(screen.getByTitle('Unassigned')).toBeInTheDocument();
   });
 
-  it('truncates assignee names longer than 8 characters', () => {
+  it('shows an assignee avatar with the initial and full name as its title', () => {
     render(<KanbanCard task={sampleTask({ assignedTo: 'Christopher' })} />);
-    // Component truncates to 8 chars + '…'
-    expect(screen.getByText(/Christop/)).toBeInTheDocument();
+    const avatar = screen.getByTitle('Christopher');
+    expect(avatar).toBeInTheDocument();
+    expect(avatar).toHaveTextContent('C');
   });
 
   // ── Due date rendering ─────────────────────────────────────
