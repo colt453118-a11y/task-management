@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -321,29 +322,23 @@ export default function CorrectionsPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div
-        variants={itemVariants}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
-            Time Corrections
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            Review and manage time entry correction requests
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchCorrections}
-            className="h-8 rounded-lg px-2.5 text-xs"
-          >
-            <Loader2 className={`mr-1 h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="Time Corrections"
+          subtitle="Review and manage time entry correction requests"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchCorrections}
+              className="h-8 rounded-lg px-2.5 text-xs"
+            >
+              <Loader2 className={`mr-1 h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          }
+        />
       </motion.div>
 
       {/* Stats Cards */}
