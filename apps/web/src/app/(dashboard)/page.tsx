@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, lazy, Suspense, startTransition, useM
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatCard } from '@/components/ui/stat-card';
 import { motion } from 'framer-motion';
 import {
   ListTodo,
@@ -14,8 +15,6 @@ import {
   Users,
   Target,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
   Plus,
   Search,
   Calendar as CalendarIcon,
@@ -346,6 +345,18 @@ export default function DashboardPage() {
     { label: 'Reports', icon: BarChart3, href: '/reports', shortcut: null, color: 'text-emerald-500 bg-emerald-500/10' },
   ];
 
+  const KPI_COLOR: Record<string, string> = {
+    'bg-blue-500/10 text-blue-400': '#60a5fa',
+    'bg-amber-500/10 text-amber-400': '#fbbf24',
+    'bg-red-500/10 text-red-400': '#f87171',
+    'bg-orange-500/10 text-orange-400': '#fb923c',
+    'bg-green-500/10 text-green-400': '#34d399',
+    'bg-purple-500/10 text-purple-400': '#a78bfa',
+    'bg-indigo-500/10 text-indigo-400': '#818cf8',
+    'bg-teal-500/10 text-teal-400': '#2dd4bf',
+    'bg-cyan-500/10 text-cyan-400': '#22d3ee',
+  };
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
       {/* Header */}
@@ -389,33 +400,16 @@ export default function DashboardPage() {
       )}>
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} variants={itemVariants} custom={i}>
-            <motion.div
-              whileHover={{ y: -3 }}
-              className="neon-card group relative overflow-hidden rounded-xl border p-3 transition-all duration-300 sm:rounded-2xl sm:p-5"
-            >
-              {/* Gradient top border */}
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
-              
-              {/* Subtle glow on hover */}
-              <div className={`absolute -inset-0.5 bg-gradient-to-r ${kpi.gradient} opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-15`} />
-              
-              <div className="relative flex items-start justify-between gap-2">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-surface-700 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-surface-900 text-lg font-bold tracking-tight sm:text-2xl">{kpi.value}</p>
-                    {kpi.trend && (
-                      <span className={`flex items-center gap-0.5 text-[10px] font-medium sm:text-[11px] ${kpi.trendUp ? 'text-success' : 'text-error'}`}>
-                        {kpi.trendUp ? <ArrowUpRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> : <ArrowDownRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />}
-                        {kpi.trend}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className={`rounded-lg p-2 sm:rounded-xl sm:p-2.5 ${kpi.iconBg} transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm shrink-0`}>
-                  <kpi.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </div>
+            <motion.div whileHover={{ y: -3 }} className="h-full">
+              <StatCard
+                label={kpi.label}
+                value={kpi.value}
+                icon={<kpi.icon className="h-4 w-4" />}
+                color={KPI_COLOR[kpi.iconBg] ?? 'var(--color-brand-500)'}
+                delta={kpi.trend ?? undefined}
+                trend={kpi.trend ? (kpi.trendUp ? 'up' : 'down') : undefined}
+                className="h-full"
+              />
             </motion.div>
           </motion.div>
         ))}
