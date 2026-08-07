@@ -173,7 +173,7 @@ export function Topbar() {
   return (
     <>
       <motion.header
-        className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 sticky top-0 z-30 flex h-12 sm:h-14 items-center justify-between border-b px-3 backdrop-blur-xl sm:px-6"
+        className="border-surface-500/15 bg-surface-100/70 sticky top-0 z-30 flex h-12 sm:h-14 items-center justify-between border-b px-3 backdrop-blur-xl sm:px-6"
         style={{
           y: elementSpring,
         }}
