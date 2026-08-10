@@ -1,35 +1,8 @@
 import { NextResponse } from 'next/server';
 import { checkOverdueTasks } from '@/lib/automation/overdue';
+import { isCronAuthorized } from '@/lib/api/cron-auth';
 
 export const runtime = 'nodejs';
-
-// ─── Configuration ──────────────────────────────────────────
-
-/**
- * The CRON_SECRET is used to authenticate cron job requests.
- * Set this in your .env file and pass it as a Bearer token
- * or ?secret= query parameter when calling this endpoint.
- */
-const CRON_SECRET = process.env.CRON_SECRET;
-
-// ─── Auth Check ─────────────────────────────────────────────
-
-function isAuthorized(request: Request): boolean {
-  if (!CRON_SECRET) {
-    // If no secret is configured, only allow in dev mode
-    return process.env.NODE_ENV === 'development';
-  }
-
-  // Check Bearer token
-  const authHeader = request.headers.get('authorization');
-  if (authHeader === `Bearer ${CRON_SECRET}`) return true;
-
-  // Check query parameter
-  const url = new URL(request.url);
-  if (url.searchParams.get('secret') === CRON_SECRET) return true;
-
-  return false;
-}
 
 // ─── POST /api/automation/check-overdue ────────────────────
 //
@@ -42,7 +15,7 @@ function isAuthorized(request: Request): boolean {
 //   Authorization: Bearer your-cron-secret
 //
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json(
       { error: { code: 'UNAUTHORIZED', message: 'Invalid or missing cron secret' } },
       { status: 401 },

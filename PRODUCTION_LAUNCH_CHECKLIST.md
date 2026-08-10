@@ -46,6 +46,7 @@
 - [ ] **Deployment Configuration**
   - [ ] Set `AUTH_SECRET` (generate with `openssl rand -base64 32`)
   - [ ] Set `ENCRYPTION_KEY` for webhook secret storage
+  - [ ] Set `CRON_SECRET` (**required in production** — cron/EOD/overdue endpoints fail closed without it, per WM-003)
   - [ ] Set `SENTRY_DSN` for error monitoring
   - [ ] Set `RESEND_API_KEY` for email notifications
   - [ ] Set `NEXT_PUBLIC_APP_URL` to production domain
