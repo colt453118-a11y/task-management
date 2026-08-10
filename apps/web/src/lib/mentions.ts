@@ -108,16 +108,3 @@ export async function extractAndResolveMentions(
 
   return userIds;
 }
-
-/**
- * Extract @mentions from text and return unique user IDs,
- * including checking for already-known mentioned user IDs.
- * Deduplicates results.
- */
-export function deduplicateMentionedIds(ids: (string | null | undefined)[]): string[] {
-  const set = new Set<string>();
-  for (const id of ids) {
-    if (id) set.add(id);
-  }
-  return Array.from(set);
-}
