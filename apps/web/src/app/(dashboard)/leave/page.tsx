@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, startTransition } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { motion } from 'framer-motion';
 import {
   Loader2,
@@ -37,10 +38,10 @@ interface LeaveRequestItem {
 // ─── Constants ──────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400', dot: 'bg-amber-500' },
-  approved: { label: 'Approved', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400', dot: 'bg-emerald-500' },
-  rejected: { label: 'Rejected', color: 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400', dot: 'bg-red-500' },
-  cancelled: { label: 'Cancelled', color: 'text-surface-500 bg-surface-100 dark:bg-surface-800 dark:text-surface-400', dot: 'bg-surface-400' },
+  pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50 ', dot: 'bg-amber-500' },
+  approved: { label: 'Approved', color: 'text-emerald-600 bg-emerald-50 ', dot: 'bg-emerald-500' },
+  rejected: { label: 'Rejected', color: 'text-red-600 bg-red-50 ', dot: 'bg-red-500' },
+  cancelled: { label: 'Cancelled', color: 'text-surface-500 bg-surface-100 ', dot: 'bg-surface-400' },
 } as const;
 
 const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -116,32 +117,33 @@ export default function LeavePage() {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <CalendarDays className="h-4 w-4 text-white" />
             </div>
-            Time Off
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            Request and manage time off
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/leave/balances">
-            <Button variant="outline" className="h-8 rounded-lg px-3 text-xs">
-              <Clock className="mr-1 h-3.5 w-3.5" />
-              My Balance
-            </Button>
-          </Link>
-          <Link href="/leave/new">
-            <Button className="h-8 rounded-lg px-3 text-xs">
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              New Request
-            </Button>
-          </Link>
-        </div>
+          }
+          title="Time Off"
+          subtitle="Request and manage time off"
+          actions={
+            <>
+              <Link href="/leave/balances">
+                <Button variant="outline" className="h-8 rounded-lg px-3 text-xs">
+                  <Clock className="mr-1 h-3.5 w-3.5" />
+                  My Balance
+                </Button>
+              </Link>
+              <Link href="/leave/new">
+                <Button className="h-8 rounded-lg px-3 text-xs">
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  New Request
+                </Button>
+              </Link>
+            </>
+          }
+        />
       </motion.div>
 
       {/* Summary cards */}
@@ -162,7 +164,7 @@ export default function LeavePage() {
           >
             <div className={cn('absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r', stat.color)} />
             <p className="text-surface-500 text-xs font-medium">{stat.label}</p>
-            <p className="text-surface-900 dark:text-surface-100 mt-1 text-2xl font-bold">{stat.count}</p>
+            <p className="text-surface-900 mt-1 text-2xl font-bold">{stat.count}</p>
           </button>
         ))}
       </motion.div>
@@ -183,10 +185,10 @@ export default function LeavePage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center py-12">
-                <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+                <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
                   <CalendarDays className="text-surface-400 h-7 w-7" />
                 </div>
-                <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+                <h3 className="text-surface-900 text-base font-semibold">
                   {activeFilter ? `No ${activeFilter} requests` : 'No time-off requests yet'}
                 </h3>
                 <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -210,7 +212,7 @@ export default function LeavePage() {
                     <Link
                       key={req.id}
                       href={`/leave/${req.id}`}
-                      className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/50 dark:bg-surface-800/50 hover:border-surface-300/40 group flex items-start gap-3 rounded-xl border p-3 transition-all hover:shadow-sm"
+                      className="border-surface-300/20 bg-surface-50/50 hover:border-surface-300/40 group flex items-start gap-3 rounded-xl border p-3 transition-all hover:shadow-sm"
                     >
                       {/* Type icon */}
                       <div
@@ -223,7 +225,7 @@ export default function LeavePage() {
                       {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-surface-900 dark:text-surface-100 truncate text-sm font-medium">
+                          <span className="text-surface-900 truncate text-sm font-medium">
                             {req.leaveType?.name ?? 'Leave'}
                           </span>
                           <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium', statusCfg.color)}>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -321,29 +322,23 @@ export default function CorrectionsPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div
-        variants={itemVariants}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
-            Time Corrections
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            Review and manage time entry correction requests
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchCorrections}
-            className="h-8 rounded-lg px-2.5 text-xs"
-          >
-            <Loader2 className={`mr-1 h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="Time Corrections"
+          subtitle="Review and manage time entry correction requests"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchCorrections}
+              className="h-8 rounded-lg px-2.5 text-xs"
+            >
+              <Loader2 className={`mr-1 h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          }
+        />
       </motion.div>
 
       {/* Stats Cards */}
@@ -361,7 +356,7 @@ export default function CorrectionsPage() {
           <motion.div key={card.label} variants={itemVariants}>
             <motion.div
               whileHover={{ y: -2 }}
-              className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/50 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:shadow-sm"
+              className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:shadow-sm"
             >
               <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${card.gradient} opacity-60`} />
               <div className="flex items-start justify-between">
@@ -369,7 +364,7 @@ export default function CorrectionsPage() {
                   <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
                     {card.label}
                   </p>
-                  <p className="text-surface-900 dark:text-surface-100 text-2xl font-bold tabular-nums">
+                  <p className="text-surface-900 text-2xl font-bold tabular-nums">
                     {card.value}
                   </p>
                 </div>
@@ -386,7 +381,7 @@ export default function CorrectionsPage() {
       <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between">
           <div
-            className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+            className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
             role="tablist"
             aria-label="Filter by status"
           >
@@ -398,15 +393,15 @@ export default function CorrectionsPage() {
                 onClick={() => { setFilter(f.key); clearSelection(); }}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   filter === f.key
-                    ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                    : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
+                    ? 'bg-surface-50 text-surface-900 shadow-sm'
+                    : 'text-surface-500 hover:text-surface-700 '
                 }`}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
+          <kbd className="bg-surface-200/50 text-surface-500 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
             1-2-3-4-5
           </kbd>
         </div>
@@ -428,7 +423,7 @@ export default function CorrectionsPage() {
             >
               <div className="flex items-center gap-2">
                 <CheckSquare className="text-brand-500 h-4 w-4" />
-                <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                <span className="text-surface-900 text-sm font-medium">
                   {selectedIds.size} selected
                 </span>
                 <button
@@ -482,7 +477,7 @@ export default function CorrectionsPage() {
                 <div className="neon-card mb-5 flex h-20 w-20 items-center justify-center rounded-3xl">
                   <FileEdit className="text-surface-400 h-9 w-9" />
                 </div>
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   {filter === 'all'
                     ? 'No correction requests'
                     : filter === 'pending'
@@ -505,7 +500,7 @@ export default function CorrectionsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-surface-300/20 dark:border-surface-700/30 border-b">
+                    <tr className="border-surface-300/20 border-b">
                       {/* Checkbox column */}
                       <th className="w-10 px-3 py-3">
                         <button
@@ -566,10 +561,10 @@ export default function CorrectionsPage() {
                             animate="visible"
                             exit="hidden"
                             layout
-                            className={`border-surface-300/20 dark:border-surface-700/30 group border-b transition-colors ${
+                            className={`border-surface-300/20 group border-b transition-colors ${
                               selectedIds.has(req.id)
-                                ? 'bg-brand-500/5 dark:bg-brand-500/10'
-                                : 'hover:bg-surface-100/50 dark:hover:bg-surface-800/30'
+                                ? 'bg-brand-500/5 '
+                                : 'hover:bg-surface-100/50 '
                             }`}
                           >
                             {/* Checkbox */}
@@ -593,7 +588,7 @@ export default function CorrectionsPage() {
                                   {(req.user.name ?? req.user.email).charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                  <p className="text-surface-900 dark:text-surface-100 text-sm font-medium leading-tight">
+                                  <p className="text-surface-900 text-sm font-medium leading-tight">
                                     {req.user.name ?? 'Unnamed'}
                                   </p>
                                   <p className="text-surface-500 text-[11px] leading-tight">
@@ -607,7 +602,7 @@ export default function CorrectionsPage() {
                             <td className="px-3 py-3">
                               <a
                                 href={`/tasks/${req.taskId}`}
-                                className="text-surface-700 dark:text-surface-300 hover:text-brand-500 block max-w-[200px] truncate text-sm font-medium transition-colors"
+                                className="text-surface-700 hover:text-brand-500 block max-w-[200px] truncate text-sm font-medium transition-colors"
                               >
                                 {req.task.title}
                               </a>
@@ -619,7 +614,7 @@ export default function CorrectionsPage() {
                               <div className="flex items-center gap-1.5">
                                 <span className="text-surface-500 text-xs">{formatMinutes(req.originalMinutes)}</span>
                                 <ChevronRight className="text-surface-400 h-3 w-3" />
-                                <span className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                                <span className="text-surface-900 text-sm font-semibold">
                                   {formatMinutes(req.requestedMinutes)}
                                 </span>
                                 {req.requestedMinutes !== req.originalMinutes && (
@@ -639,7 +634,7 @@ export default function CorrectionsPage() {
 
                             {/* Reason */}
                             <td className="px-3 py-3 hidden md:table-cell">
-                              <p className="text-surface-600 dark:text-surface-400 max-w-[220px] truncate text-xs">
+                              <p className="text-surface-600 max-w-[220px] truncate text-xs">
                                 {req.reason}
                               </p>
                             </td>
@@ -653,7 +648,7 @@ export default function CorrectionsPage() {
 
                             {/* Date */}
                             <td className="px-3 py-3 hidden md:table-cell">
-                              <p className="text-surface-600 dark:text-surface-400 text-xs whitespace-nowrap">
+                              <p className="text-surface-600 text-xs whitespace-nowrap">
                                 {formatDateTime(req.createdAt)}
                               </p>
                             </td>
@@ -719,15 +714,15 @@ export default function CorrectionsPage() {
         >
           <span>Filter:</span>
           {[1, 2, 3, 4, 5].map((n) => (
-            <kbd key={n} className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">
+            <kbd key={n} className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">
               {n}
             </kbd>
           ))}
-          <span className="text-surface-300 dark:text-surface-600">·</span>
+          <span className="text-surface-300 ">·</span>
           <span>Bulk:</span>
-          <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">A</kbd>
+          <kbd className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">A</kbd>
           <span>approve</span>
-          <kbd className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">R</kbd>
+          <kbd className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">R</kbd>
           <span>reject</span>
         </motion.div>
       )}

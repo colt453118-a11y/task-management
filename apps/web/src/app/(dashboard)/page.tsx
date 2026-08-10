@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, lazy, Suspense, startTransition, useM
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatCard } from '@/components/ui/stat-card';
 import { motion } from 'framer-motion';
 import {
   ListTodo,
@@ -14,8 +15,6 @@ import {
   Users,
   Target,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
   Plus,
   Search,
   Calendar as CalendarIcon,
@@ -346,6 +345,18 @@ export default function DashboardPage() {
     { label: 'Reports', icon: BarChart3, href: '/reports', shortcut: null, color: 'text-emerald-500 bg-emerald-500/10' },
   ];
 
+  const KPI_COLOR: Record<string, string> = {
+    'bg-blue-500/10 text-blue-400': '#60a5fa',
+    'bg-amber-500/10 text-amber-400': '#fbbf24',
+    'bg-red-500/10 text-red-400': '#f87171',
+    'bg-orange-500/10 text-orange-400': '#fb923c',
+    'bg-green-500/10 text-green-400': '#34d399',
+    'bg-purple-500/10 text-purple-400': '#a78bfa',
+    'bg-indigo-500/10 text-indigo-400': '#818cf8',
+    'bg-teal-500/10 text-teal-400': '#2dd4bf',
+    'bg-cyan-500/10 text-cyan-400': '#22d3ee',
+  };
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
       {/* Header */}
@@ -353,7 +364,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-surface-500 mt-1 text-sm">
-            Welcome back, <span className="text-surface-700 dark:text-surface-300 font-medium">{userName}</span>
+            Welcome back, <span className="text-surface-700 font-medium">{userName}</span>
           </p>
         </div>
         <div className="text-surface-500 flex items-center gap-2 text-xs">
@@ -371,8 +382,8 @@ export default function DashboardPage() {
             className={cn(
               'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs',
               view === tab.key
-                ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-800 dark:text-surface-100'
-                : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-800/50',
+                ? 'bg-surface-300 text-surface-900 shadow-sm'
+                : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 ',
             )}
           >
             <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -389,33 +400,16 @@ export default function DashboardPage() {
       )}>
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} variants={itemVariants} custom={i}>
-            <motion.div
-              whileHover={{ y: -3 }}
-              className="neon-card group relative overflow-hidden rounded-xl border p-3 transition-all duration-300 sm:rounded-2xl sm:p-5"
-            >
-              {/* Gradient top border */}
-              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${kpi.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
-              
-              {/* Subtle glow on hover */}
-              <div className={`absolute -inset-0.5 bg-gradient-to-r ${kpi.gradient} opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-15`} />
-              
-              <div className="relative flex items-start justify-between gap-2">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-surface-700 text-[10px] font-semibold uppercase tracking-wider sm:text-xs">{kpi.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-surface-900 text-lg font-bold tracking-tight sm:text-2xl">{kpi.value}</p>
-                    {kpi.trend && (
-                      <span className={`flex items-center gap-0.5 text-[10px] font-medium sm:text-[11px] ${kpi.trendUp ? 'text-success' : 'text-error'}`}>
-                        {kpi.trendUp ? <ArrowUpRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> : <ArrowDownRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />}
-                        {kpi.trend}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className={`rounded-lg p-2 sm:rounded-xl sm:p-2.5 ${kpi.iconBg} transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm shrink-0`}>
-                  <kpi.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </div>
+            <motion.div whileHover={{ y: -3 }} className="h-full">
+              <StatCard
+                label={kpi.label}
+                value={kpi.value}
+                icon={<kpi.icon className="h-4 w-4" />}
+                color={KPI_COLOR[kpi.iconBg] ?? 'var(--color-brand-500)'}
+                delta={kpi.trend ?? undefined}
+                trend={kpi.trend ? (kpi.trendUp ? 'up' : 'down') : undefined}
+                className="h-full"
+              />
             </motion.div>
           </motion.div>
         ))}
@@ -480,9 +474,9 @@ export default function DashboardPage() {
                     <div className={cn('rounded-xl p-2.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm', action.color)}>
                       <action.icon className="h-5 w-5" />
                     </div>
-                    <span className="text-surface-700 dark:text-surface-300 text-sm font-medium">{action.label}</span>
+                    <span className="text-surface-700 text-sm font-medium">{action.label}</span>
                     {action.shortcut && (
-                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 dark:text-surface-600 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
+                      <kbd className="border-surface-500/20 bg-surface-300/40 text-surface-500 rounded-md border px-1.5 py-0.5 text-[9px] font-medium">
                         {action.shortcut}
                       </kbd>
                     )}
@@ -506,7 +500,7 @@ export default function DashboardPage() {
               <CardContent>
                 {metrics.workloadByUser.length === 0 ? (
                   <div className="flex flex-col items-center py-8 text-center">
-                    <Users className="text-surface-300 dark:text-surface-600 h-8 w-8" />
+                    <Users className="text-surface-300 h-8 w-8" />
                     <p className="text-surface-500 mt-2 text-sm font-medium">No workload data</p>
                   </div>
                 ) : (
@@ -526,14 +520,14 @@ export default function DashboardPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-surface-700 dark:text-surface-300 truncate text-sm font-medium">
+                              <span className="text-surface-700 truncate text-sm font-medium">
                                 {user.name}
                               </span>
                               <span className="text-surface-500 ml-2 shrink-0 text-xs tabular-nums">
                                 {user.completed}/{user.tasks}
                               </span>
                             </div>
-                            <div className="bg-surface-200/70 dark:bg-surface-700/70 mt-1 h-2 w-full overflow-hidden rounded-full">
+                            <div className="bg-surface-200/70 mt-1 h-2 w-full overflow-hidden rounded-full">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${completionPct}%` }}
@@ -634,7 +628,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className={`h-2 w-2 shrink-0 rounded-full ${statusDotColors[task.status] ?? 'bg-surface-400'}`} />
-                          <span className="text-surface-700 group-hover:text-brand-400 dark:text-surface-300 truncate transition-colors">{task.title}</span>
+                          <span className="text-surface-700 group-hover:text-brand-400 truncate transition-colors">{task.title}</span>
                         </div>
                         <div className="ml-2 flex shrink-0 items-center gap-2">
                           <Badge variant={statusColors[task.status] ?? 'default'} size="sm">

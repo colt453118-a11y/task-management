@@ -614,8 +614,9 @@ test.describe('TaskActivityFeed', () => {
     await expect(page.getByText('Created this task')).toBeVisible();
     await expect(page.getByText('Changed priority from medium to high')).toBeVisible();
 
-    // "System" should appear for entries with no user
-    await expect(page.getByText('System')).toBeVisible();
+    // "System" should appear for entries with no user (scope to the main content —
+    // the redesigned sidebar now has a "System" nav group header with the same text)
+    await expect(page.getByRole('main').getByText('System')).toBeVisible();
   });
 
   test('shows error state when history fetch fails', async ({ page }) => {

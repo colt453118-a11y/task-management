@@ -141,10 +141,10 @@ function BarRow({
   const pct = Math.round((value / max) * 100);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-surface-600 dark:text-surface-400 w-24 shrink-0 text-[11px] font-medium capitalize">
+      <span className="text-surface-600 w-24 shrink-0 text-[11px] font-medium capitalize">
         {label}
       </span>
-      <div className="bg-surface-200/50 dark:bg-surface-700/50 flex-1 overflow-hidden rounded-full h-5">
+      <div className="bg-surface-200/50 flex-1 overflow-hidden rounded-full h-5">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
@@ -152,7 +152,7 @@ function BarRow({
           className={`${color} h-full rounded-full`}
         />
       </div>
-      <span className="text-surface-700 dark:text-surface-300 w-10 shrink-0 text-right text-xs font-bold tabular-nums">
+      <span className="text-surface-700 w-10 shrink-0 text-right text-xs font-bold tabular-nums">
         {value}
       </span>
     </div>
@@ -247,7 +247,7 @@ function StatCard({
           <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-surface-900 dark:text-surface-100 text-xl font-bold tabular-nums">
+          <p className="text-surface-900 text-xl font-bold tabular-nums">
             {value}
           </p>
         </div>
@@ -420,7 +420,7 @@ export default function SnapshotDetailPage() {
         <div className="neon-card mb-6 flex h-16 w-16 items-center justify-center rounded-2xl">
           <AlertTriangle className="text-surface-400 h-8 w-8" />
         </div>
-        <h2 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+        <h2 className="text-surface-900 text-lg font-semibold">
           {error ?? 'Snapshot not found'}
         </h2>
         <p className="text-surface-500 mt-1 text-sm">
@@ -467,14 +467,14 @@ export default function SnapshotDetailPage() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => router.push('/reports')}
-          className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 rounded-lg p-1.5 transition-colors"
+          className="text-surface-400 hover:text-surface-600 rounded-lg p-1.5 transition-colors"
           aria-label="Back to reports"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-surface-900 dark:text-surface-100 text-xl font-bold tracking-tight">
+            <h1 className="text-surface-900 text-xl font-bold tracking-tight">
               {snapshot.label ?? `Snapshot — ${snapshot.snapshotDate}`}
             </h1>
             <Badge variant="default" size="sm" className="text-[10px]">
@@ -568,7 +568,7 @@ export default function SnapshotDetailPage() {
             {aiSummary ? (
               <div>
                 <div className="flex items-start justify-between gap-4">
-                  <p className="text-surface-700 dark:text-surface-300 text-sm leading-relaxed whitespace-pre-line">
+                  <p className="text-surface-700 text-sm leading-relaxed whitespace-pre-line">
                     {isLongAi && !expandedAi ? aiSummary.slice(0, 200) + '…' : aiSummary}
                   </p>
                   <Button
@@ -709,24 +709,24 @@ export default function SnapshotDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-2">
-                    <span className="text-surface-600 dark:text-surface-400 text-xs font-medium">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-2">
+                    <span className="text-surface-600 text-xs font-medium">
                       Created Today
                     </span>
-                    <span className="text-surface-900 dark:text-surface-100 text-sm font-bold tabular-nums">
+                    <span className="text-surface-900 text-sm font-bold tabular-nums">
                       {snapshotData.tasks.createdThisPeriod}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-2">
-                    <span className="text-surface-600 dark:text-surface-400 text-xs font-medium">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-2">
+                    <span className="text-surface-600 text-xs font-medium">
                       Completed Today
                     </span>
                     <span className="text-green-500 text-sm font-bold tabular-nums">
                       {snapshotData.tasks.completedThisPeriod}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-2">
-                    <span className="text-surface-600 dark:text-surface-400 text-xs font-medium">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-2">
+                    <span className="text-surface-600 text-xs font-medium">
                       Overdue
                     </span>
                     <span className="text-orange-500 text-sm font-bold tabular-nums">
@@ -734,7 +734,7 @@ export default function SnapshotDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-surface-600 dark:text-surface-400 text-xs font-medium">
+                    <span className="text-surface-600 text-xs font-medium">
                       Completion Rate
                     </span>
                     <span className="text-brand-500 text-sm font-bold tabular-nums">
@@ -761,11 +761,11 @@ export default function SnapshotDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-2 mb-3">
-                    <span className="text-surface-600 dark:text-surface-400 text-xs font-medium">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-2 mb-3">
+                    <span className="text-surface-600 text-xs font-medium">
                       Total Projects
                     </span>
-                    <span className="text-surface-900 dark:text-surface-100 text-sm font-bold tabular-nums">
+                    <span className="text-surface-900 text-sm font-bold tabular-nums">
                       {snapshotData.projects.total}
                     </span>
                   </div>
@@ -802,31 +802,31 @@ export default function SnapshotDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-3">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-3">
                     <div className="flex items-center gap-2">
                       <div className="bg-purple-500/10 text-purple-400 flex h-8 w-8 items-center justify-center rounded-lg">
                         <Users className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-surface-600 dark:text-surface-400 text-[10px] font-semibold uppercase tracking-wider">
+                        <p className="text-surface-600 text-[10px] font-semibold uppercase tracking-wider">
                           Total Users
                         </p>
-                        <p className="text-surface-900 dark:text-surface-100 text-sm font-bold tabular-nums">
+                        <p className="text-surface-900 text-sm font-bold tabular-nums">
                           {snapshotData.users.total}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-b border-surface-200/50 dark:border-surface-700/30 pb-3">
+                  <div className="flex items-center justify-between border-b border-surface-200/50 pb-3">
                     <div className="flex items-center gap-2">
                       <div className="bg-green-500/10 text-green-400 flex h-8 w-8 items-center justify-center rounded-lg">
                         <UserCheck className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-surface-600 dark:text-surface-400 text-[10px] font-semibold uppercase tracking-wider">
+                        <p className="text-surface-600 text-[10px] font-semibold uppercase tracking-wider">
                           Active Users
                         </p>
-                        <p className="text-surface-900 dark:text-surface-100 text-sm font-bold tabular-nums">
+                        <p className="text-surface-900 text-sm font-bold tabular-nums">
                           {snapshotData.users.active}
                         </p>
                       </div>
@@ -838,10 +838,10 @@ export default function SnapshotDetailPage() {
                         <Layers className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-surface-600 dark:text-surface-400 text-[10px] font-semibold uppercase tracking-wider">
+                        <p className="text-surface-600 text-[10px] font-semibold uppercase tracking-wider">
                           Teams
                         </p>
-                        <p className="text-surface-900 dark:text-surface-100 text-sm font-bold tabular-nums">
+                        <p className="text-surface-900 text-sm font-bold tabular-nums">
                           {snapshotData.teams.total}
                         </p>
                       </div>
@@ -943,7 +943,7 @@ export default function SnapshotDetailPage() {
                           )}
                         </div>
                         <div className="mt-1 flex items-baseline gap-1.5">
-                          <span className="text-surface-900 dark:text-surface-100 text-lg font-bold tabular-nums">
+                          <span className="text-surface-900 text-lg font-bold tabular-nums">
                             {m.current}
                             {m.format === 'percent' && '%'}
                           </span>

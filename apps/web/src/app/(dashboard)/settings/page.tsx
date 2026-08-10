@@ -192,8 +192,8 @@ function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (
       type="button"
       disabled={disabled}
       onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-surface-50 dark:focus:ring-offset-surface-900 ${
-        enabled ? 'bg-brand-500' : 'bg-surface-300/50 dark:bg-surface-700/50'
+      className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-surface-50 ${
+        enabled ? 'bg-brand-500' : 'bg-surface-300/50 '
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
       role="switch"
       aria-checked={enabled}
@@ -604,7 +604,7 @@ export default function SettingsPage() {
     >
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
+        <h1 className="text-surface-900 text-2xl font-bold tracking-tight">
           Settings
         </h1>
         <p className="text-surface-500 mt-0.5 text-sm">
@@ -615,7 +615,7 @@ export default function SettingsPage() {
       {/* Tabs */}
       <motion.div variants={itemVariants}>
         <div
-          className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+          className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
           role="tablist"
           aria-label="Settings sections"
         >
@@ -627,8 +627,8 @@ export default function SettingsPage() {
               onClick={() => setTab(t.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                 tab === t.id
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
+                  ? 'bg-surface-50 text-surface-900 shadow-sm'
+                  : 'text-surface-500 hover:text-surface-700 '
               }`}
             >
               {t.label}
@@ -649,7 +649,7 @@ export default function SettingsPage() {
           >
             <SectionCard gradient={CARD_GRADIENTS.general ?? 'from-blue-500 to-blue-400'}>
               <div className="p-5 space-y-4">
-                <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
                   <SettingsIcon className="text-surface-400 h-4 w-4" />
                   General Settings
                 </h2>
@@ -667,7 +667,7 @@ export default function SettingsPage() {
                       value={field.value}
                       disabled
                       placeholder={field.placeholder}
-                      className="border-surface-300/20 dark:border-surface-700/30 bg-surface-200/50 dark:bg-surface-800/50 text-surface-500 dark:text-surface-400 w-full max-w-md cursor-not-allowed rounded-xl border px-3 py-2.5 text-sm"
+                      className="border-surface-300/20 bg-surface-200/50 text-surface-500 w-full max-w-md cursor-not-allowed rounded-xl border px-3 py-2.5 text-sm"
                     />
                   </div>
                 ))}
@@ -695,7 +695,7 @@ export default function SettingsPage() {
             <SectionCard gradient={CARD_GRADIENTS.roles ?? 'from-amber-500 to-yellow-400'}>
               <div className="p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-base font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
                     <Shield className="text-surface-400 h-4 w-4" />
                     Roles
                   </h2>
@@ -734,7 +734,7 @@ export default function SettingsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-surface-300/20 dark:border-surface-700/30 border-b">
+                        <tr className="border-surface-300/20 border-b">
                           <th className="text-surface-500 px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider">Name</th>
                           <th className="text-surface-500 px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider hidden md:table-cell">Slug</th>
                           <th className="text-surface-500 px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider">Perms</th>
@@ -747,11 +747,11 @@ export default function SettingsPage() {
                         {roles.map((role) => (
                           <tr
                             key={role.id}
-                            className="border-surface-300/20 dark:border-surface-700/30 hover:bg-surface-200/30 dark:hover:bg-surface-800/30 border-b transition-colors"
+                            className="border-surface-300/20 hover:bg-surface-200/30 border-b transition-colors"
                           >
                             <td className="px-3 py-3">
                               <div>
-                                <span className="text-surface-900 dark:text-surface-100 font-medium">{role.name}</span>
+                                <span className="text-surface-900 font-medium">{role.name}</span>
                                 {role.isSystem && (
                                   <Badge variant="primary" className="ml-2 px-1.5 py-0 text-[9px]">System</Badge>
                                 )}
@@ -778,7 +778,7 @@ export default function SettingsPage() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => openEditDialog(role)}
-                                  className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/50 rounded-lg p-1.5 transition-all"
+                                  className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 rounded-lg p-1.5 transition-all"
                                 >
                                   <Edit3 className="h-3.5 w-3.5" />
                                 </button>
@@ -804,7 +804,7 @@ export default function SettingsPage() {
             {/* User Role Assignments */}
             <SectionCard gradient={CARD_GRADIENTS.roles ?? 'from-amber-500 to-yellow-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <Users className="text-surface-400 h-4 w-4" />
                   User Role Assignments
                 </h2>
@@ -821,14 +821,14 @@ export default function SettingsPage() {
                         key={user.id}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="neon-card hover:bg-surface-200/40 dark:hover:bg-surface-800/50 flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200"
+                        className="neon-card hover:bg-surface-200/40 flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                             {getInitials(user.name)}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-surface-900 dark:text-surface-100 truncate text-sm font-medium">
+                            <p className="text-surface-900 truncate text-sm font-medium">
                               {user.name ?? 'Unnamed'}
                             </p>
                             <p className="text-surface-500 truncate text-xs">{user.email}</p>
@@ -852,7 +852,7 @@ export default function SettingsPage() {
                           <select
                             value=""
                             onChange={(e) => { if (e.target.value) assignRole(user.id, e.target.value); }}
-                            className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 hover:border-surface-400/30 ml-2 h-7 rounded-lg border px-2 text-xs transition-all"
+                            className="border-surface-300/30 bg-surface-100 hover:border-surface-400/30 ml-2 h-7 rounded-lg border px-2 text-xs transition-all"
                           >
                             <option value="">
                               {assigningUser === user.id ? 'Assigning...' : '+ Add role'}
@@ -883,7 +883,7 @@ export default function SettingsPage() {
           >
             <SectionCard gradient={CARD_GRADIENTS.ai ?? 'from-purple-500 to-pink-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <Sparkles className="text-surface-400 h-4 w-4" />
                   AI Provider Configuration
                 </h2>
@@ -907,7 +907,7 @@ export default function SettingsPage() {
           >
             <SectionCard gradient={CARD_GRADIENTS.webhooks ?? 'from-cyan-500 to-teal-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <Webhook className="text-surface-400 h-4 w-4" />
                   Webhook Integrations
                 </h2>
@@ -931,7 +931,7 @@ export default function SettingsPage() {
           >
             <SectionCard gradient={CARD_GRADIENTS.slack ?? 'from-[#4A154B] to-[#611f69]'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <MessageSquare className="text-[#4A154B] h-4 w-4" />
                   Slack Integration
                 </h2>
@@ -951,7 +951,7 @@ export default function SettingsPage() {
           >
             <SectionCard gradient={CARD_GRADIENTS.security ?? 'from-emerald-500 to-teal-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
                   <Shield className="text-surface-400 h-4 w-4" />
                   Security Settings
                 </h2>
@@ -973,7 +973,7 @@ export default function SettingsPage() {
             {/* Channels */}
             <SectionCard gradient={CARD_GRADIENTS.notifications ?? 'from-purple-500 to-violet-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <Bell className="text-surface-400 h-4 w-4" />
                   Notification Channels
                 </h2>
@@ -983,13 +983,13 @@ export default function SettingsPage() {
                       key={key}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
+                      className="border-surface-300/20 hover:border-brand-500/20 hover:bg-surface-200/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200"
                     >
                       <div className="flex items-center gap-3">
                         <div className="text-surface-500">{channelMeta[key]!.icon}</div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                            <p className="text-surface-900 text-sm font-medium">
                               {channelMeta[key]!.label}
                             </p>
                             {key === 'slack' && slackConnected !== null && (
@@ -1019,7 +1019,7 @@ export default function SettingsPage() {
                   ))}
 
                   {/* Sound & Haptic feedback toggles */}
-                  <div className="border-surface-300/20 dark:border-surface-700/30 border-t pt-3 mt-3">
+                  <div className="border-surface-300/20 border-t pt-3 mt-3">
                     <p className="text-surface-500 mb-2 text-[10px] font-semibold uppercase tracking-wider">
                       Notification Feedback
                     </p>
@@ -1027,12 +1027,12 @@ export default function SettingsPage() {
                       <motion.div
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
+                        className="hover:border-brand-500/20 hover:bg-surface-200/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
                       >
                         <div className="flex items-center gap-3">
                           <Volume2 className="text-surface-500 h-4 w-4" />
                           <div>
-                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">Sound</p>
+                            <p className="text-surface-900 text-sm font-medium">Sound</p>
                             <p className="text-surface-500 text-xs">Play a chime on new notifications</p>
                           </div>
                         </div>
@@ -1065,12 +1065,12 @@ export default function SettingsPage() {
                       <motion.div
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
+                        className="hover:border-brand-500/20 hover:bg-surface-200/40 flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200"
                       >
                         <div className="flex items-center gap-3">
                           <Smartphone className="text-surface-500 h-4 w-4" />
                           <div>
-                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">Vibration</p>
+                            <p className="text-surface-900 text-sm font-medium">Vibration</p>
                             <p className="text-surface-500 text-xs">Vibrate on new notifications (mobile only)</p>
                           </div>
                         </div>
@@ -1109,7 +1109,7 @@ export default function SettingsPage() {
             {/* Notification Events — Per-Channel Toggles */}
             <SectionCard gradient={CARD_GRADIENTS.notifications ?? 'from-purple-500 to-violet-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-1 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-1 flex items-center gap-2 text-base font-semibold">
                   <Bell className="text-surface-400 h-4 w-4" />
                   Notification Events
                 </h2>
@@ -1125,12 +1125,12 @@ export default function SettingsPage() {
                         key={key}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 group flex items-center justify-between rounded-xl border px-4 py-2.5 transition-all duration-200"
+                        className="border-surface-300/20 hover:border-brand-500/20 hover:bg-surface-200/40 group flex items-center justify-between rounded-xl border px-4 py-2.5 transition-all duration-200"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="text-surface-500 shrink-0">{notifTypeMeta[k]!.icon}</div>
                           <div className="min-w-0">
-                            <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                            <p className="text-surface-900 text-sm font-medium">
                               {notifTypeMeta[k]!.label}
                             </p>
                             <p className="text-surface-500 hidden truncate text-xs sm:block">
@@ -1183,16 +1183,16 @@ export default function SettingsPage() {
             {/* Digest */}
             <SectionCard gradient={CARD_GRADIENTS.notifications ?? 'from-purple-500 to-violet-400'}>
               <div className="p-5">
-                <h2 className="text-surface-900 dark:text-surface-100 mb-4 flex items-center gap-2 text-base font-semibold">
+                <h2 className="text-surface-900 mb-4 flex items-center gap-2 text-base font-semibold">
                   <BookOpen className="text-surface-400 h-4 w-4" />
                   Email Digest
                 </h2>
                 <div className="space-y-4">
-                  <div className="border-surface-300/20 dark:border-surface-700/30 hover:border-brand-500/20 hover:bg-surface-200/40 dark:hover:bg-surface-800/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200">
+                  <div className="border-surface-300/20 hover:border-brand-500/20 hover:bg-surface-200/40 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <Mail className="text-surface-500 h-4 w-4" />
                       <div>
-                        <p className="text-surface-900 dark:text-surface-100 text-sm font-medium">Send digest email</p>
+                        <p className="text-surface-900 text-sm font-medium">Send digest email</p>
                         <p className="text-surface-500 text-xs">Receive a summary of unread notifications</p>
                       </div>
                     </div>
@@ -1212,7 +1212,7 @@ export default function SettingsPage() {
                       <select
                         value={notifPrefs.digest?.frequency ?? 'daily'}
                         onChange={(e) => setNotifPrefs((prev) => ({ ...prev, digest: { ...(prev.digest ?? {}), frequency: e.target.value as 'daily' | 'weekly' | 'never' } }))}
-                        className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
+                        className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
                       >
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -1254,7 +1254,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-center gap-2 text-[10px] text-surface-400">
               <span>Tab shortcuts:</span>
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <kbd key={n} className="bg-surface-200/50 dark:bg-surface-700/50 rounded-md px-1.5 py-0.5 font-mono">{n}</kbd>
+                <kbd key={n} className="bg-surface-200/50 rounded-md px-1.5 py-0.5 font-mono">{n}</kbd>
               ))}
             </div>
           </motion.div>
@@ -1274,13 +1274,13 @@ export default function SettingsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-lg rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-lg rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   {editingRole ? 'Edit Role' : 'Create Role'}
                 </h3>
-                <button onClick={() => setShowRoleDialog(false)} className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all">
+                <button onClick={() => setShowRoleDialog(false)} className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -1292,7 +1292,7 @@ export default function SettingsPage() {
                     value={roleForm.name}
                     onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value, slug: editingRole ? roleForm.slug : e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                     placeholder="e.g. Project Manager"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
                 <div>
@@ -1302,7 +1302,7 @@ export default function SettingsPage() {
                     value={roleForm.slug}
                     onChange={(e) => setRoleForm({ ...roleForm, slug: e.target.value })}
                     placeholder="e.g. project-manager"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
                 <div>
@@ -1312,12 +1312,12 @@ export default function SettingsPage() {
                     value={roleForm.description}
                     onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
                     placeholder="Optional description"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
                 <div>
                   <label className="text-surface-500 mb-2 block text-xs font-semibold uppercase tracking-wider">Permissions</label>
-                  <div className="border-surface-300/30 dark:border-surface-700/30 max-h-64 space-y-3 overflow-y-auto rounded-xl border p-3">
+                  <div className="border-surface-300/30 max-h-64 space-y-3 overflow-y-auto rounded-xl border p-3">
                     {Object.entries(groupedPermissions).map(([module, perms]) => (
                       <div key={module}>
                         <p className={`mb-1.5 inline-block rounded-lg px-1.5 py-0.5 text-xs font-semibold uppercase ${moduleColors[module] ?? 'bg-surface-200 text-surface-500'}`}>
@@ -1325,14 +1325,14 @@ export default function SettingsPage() {
                         </p>
                         <div className="grid grid-cols-2 gap-1">
                           {perms.map((perm) => (
-                            <label key={perm.id} className="hover:bg-surface-200/50 dark:hover:bg-surface-800/50 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors">
+                            <label key={perm.id} className="hover:bg-surface-200/50 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors">
                               <input
                                 type="checkbox"
                                 checked={selectedPermissionIds.includes(perm.id)}
                                 onChange={() => togglePermission(perm.id)}
                                 className="border-surface-400 text-brand-500 focus:ring-brand-500 rounded"
                               />
-                              <span className="text-surface-600 dark:text-surface-400">{perm.name}</span>
+                              <span className="text-surface-600 ">{perm.name}</span>
                             </label>
                           ))}
                         </div>
@@ -1375,14 +1375,14 @@ export default function SettingsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="bg-error/10 flex h-10 w-10 items-center justify-center rounded-full">
                   <AlertCircle className="text-error h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Delete Role</h3>
+                  <h3 className="text-surface-900 text-lg font-semibold">Delete Role</h3>
                   <p className="text-surface-500 text-sm">Are you sure? This action cannot be undone.</p>
                 </div>
               </div>

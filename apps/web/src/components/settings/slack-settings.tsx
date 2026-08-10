@@ -224,7 +224,7 @@ export function SlackSettings() {
       {integration ? (
         <div className="space-y-4">
           {/* Integration Card */}
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm">
+          <div className="border-surface-300/20 bg-surface-100/80 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-sm">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-600" />
             
             <div className="p-4">
@@ -235,7 +235,7 @@ export function SlackSettings() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                      <h3 className="text-surface-900 text-sm font-semibold">
                         Slack Integration
                       </h3>
                       <Badge
@@ -282,7 +282,7 @@ export function SlackSettings() {
               </div>
 
               {/* Meta */}
-              <div className="text-surface-400 mt-2 flex items-center gap-3 border-t border-surface-300/10 dark:border-surface-700/30 pt-2 text-[10px]">
+              <div className="text-surface-400 mt-2 flex items-center gap-3 border-t border-surface-300/10 pt-2 text-[10px]">
                 <span>Connected {formatDate(integration.createdAt)}</span>
                 <span>·</span>
                 <span>All task events</span>
@@ -342,8 +342,8 @@ export function SlackSettings() {
           </div>
 
           {/* Setup Instructions */}
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 rounded-2xl border p-4">
-            <h4 className="text-surface-900 dark:text-surface-100 mb-2 text-sm font-semibold">
+          <div className="border-surface-300/20 bg-surface-100/50 rounded-2xl border p-4">
+            <h4 className="text-surface-900 mb-2 text-sm font-semibold">
               How to set up Slack notifications
             </h4>
             <ol className="text-surface-500 space-y-2 text-xs">
@@ -366,7 +366,7 @@ export function SlackSettings() {
         /* No Integration - Show Setup Form */
         <div className="space-y-4">
           {/* Setup Card */}
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/80 dark:bg-surface-900/50 relative overflow-hidden rounded-2xl border">
+          <div className="border-surface-300/20 bg-surface-100/80 relative overflow-hidden rounded-2xl border">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-surface-300 to-surface-400 opacity-40" />
             
             <div className="p-4">
@@ -375,7 +375,7 @@ export function SlackSettings() {
                   <MessageSquare className="h-5 w-5 text-[#4A154B]" />
                 </div>
                 <div>
-                  <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                  <h3 className="text-surface-900 text-sm font-semibold">
                     Connect Slack
                   </h3>
                   <p className="text-surface-500 text-xs">
@@ -398,7 +398,7 @@ export function SlackSettings() {
                       setTestResult(null);
                     }}
                     placeholder="https://hooks.slack.com/services/..."
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -478,8 +478,8 @@ export function SlackSettings() {
           </div>
 
           {/* Setup Instructions */}
-          <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/30 rounded-2xl border p-4">
-            <h4 className="text-surface-900 dark:text-surface-100 mb-2 text-sm font-semibold">
+          <div className="border-surface-300/20 bg-surface-100/50 rounded-2xl border p-4">
+            <h4 className="text-surface-900 mb-2 text-sm font-semibold">
               How to get a Slack webhook URL
             </h4>
             <ol className="text-surface-500 space-y-2 text-xs">
@@ -517,14 +517,14 @@ export function SlackSettings() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="bg-error/10 flex h-10 w-10 items-center justify-center rounded-full">
                   <AlertCircle className="text-error h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                  <h3 className="text-surface-900 text-lg font-semibold">
                     Disconnect Slack
                   </h3>
                   <p className="text-surface-500 text-sm">

@@ -219,7 +219,7 @@ function ActionConfigEditor({
                 value={(config.message as string) ?? ''}
                 onChange={(e) => onChange({ ...action, config: { ...config, message: e.target.value } })}
                 placeholder="e.g., A high-priority task needs attention"
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ function ActionConfigEditor({
             <select
               value={(config.status as string) ?? ''}
               onChange={(e) => onChange({ ...action, config: { ...config, status: e.target.value } })}
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
             >
               <option value="">Select status...</option>
               <option value="open">Open</option>
@@ -259,7 +259,7 @@ function ActionConfigEditor({
               value={(config.userId as string) ?? ''}
               onChange={(e) => onChange({ ...action, config: { ...config, userId: e.target.value } })}
               placeholder="User ID to assign"
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
             />
           </div>
         );
@@ -275,7 +275,7 @@ function ActionConfigEditor({
               value={(config.label as string) ?? ''}
               onChange={(e) => onChange({ ...action, config: { ...config, label: e.target.value } })}
               placeholder="e.g., auto-tagged, urgent"
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
             />
           </div>
         );
@@ -289,7 +289,7 @@ function ActionConfigEditor({
             <select
               value={(config.priority as string) ?? ''}
               onChange={(e) => onChange({ ...action, config: { ...config, priority: e.target.value } })}
-              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+              className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
             >
               <option value="">Select priority...</option>
               <option value="low">Low</option>
@@ -313,7 +313,7 @@ function ActionConfigEditor({
                 value={(config.message as string) ?? ''}
                 onChange={(e) => onChange({ ...action, config: { ...config, message: e.target.value } })}
                 placeholder="Escalation reason"
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
             <p className="text-surface-500 text-[10px]">Escalation also sets priority to critical.</p>
@@ -343,7 +343,7 @@ function ActionConfigEditor({
                   })
                 }
                 placeholder="user@example.com, manager@example.com"
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
             <div>
@@ -355,7 +355,7 @@ function ActionConfigEditor({
                 value={(config.subject as string) ?? ''}
                 onChange={(e) => onChange({ ...action, config: { ...config, subject: e.target.value } })}
                 placeholder="e.g., Task requires immediate attention"
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
             <div>
@@ -367,7 +367,7 @@ function ActionConfigEditor({
                 onChange={(e) => onChange({ ...action, config: { ...config, message: e.target.value } })}
                 placeholder="Write the email body content here..."
                 rows={3}
-                className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
           </div>
@@ -379,12 +379,12 @@ function ActionConfigEditor({
   };
 
   return (
-    <div className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/60 dark:bg-surface-800/60 rounded-xl border p-3">
+    <div className="border-surface-300/20 bg-surface-100/60 rounded-xl border p-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line react-hooks/static-components */}
           <Icon className="text-surface-500 h-3.5 w-3.5" />
-          <span className="text-surface-700 dark:text-surface-300 text-xs font-medium">
+          <span className="text-surface-700 text-xs font-medium">
             {getActionLabel(action.type)}
           </span>
         </div>
@@ -614,7 +614,7 @@ export default function AutomationPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <Bot className="h-4 w-4 text-white" />
             </div>
@@ -635,7 +635,7 @@ export default function AutomationPage() {
       {/* Tabs */}
       <motion.div variants={itemVariants}>
         <div
-          className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+          className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
           role="tablist"
         >
           <button
@@ -645,14 +645,14 @@ export default function AutomationPage() {
             className={cn(
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
               tab === 'rules'
-                ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                ? 'bg-surface-50 text-surface-900 shadow-sm'
+                : 'text-surface-500 hover:text-surface-700 ',
             )}
           >
             <Zap className="-ml-0.5 mr-1.5 inline h-3.5 w-3.5" />
             Rules
             {rules.length > 0 && (
-              <span className="bg-surface-300/30 dark:bg-surface-600/30 ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]">
+              <span className="bg-surface-300/30 ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]">
                 {rules.length}
               </span>
             )}
@@ -664,8 +664,8 @@ export default function AutomationPage() {
             className={cn(
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
               tab === 'logs'
-                ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                ? 'bg-surface-50 text-surface-900 shadow-sm'
+                : 'text-surface-500 hover:text-surface-700 ',
             )}
           >
             <History className="-ml-0.5 mr-1.5 inline h-3.5 w-3.5" />
@@ -705,10 +705,10 @@ export default function AutomationPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-16"
               >
-                <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+                <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
                   <Bot className="text-surface-400 h-7 w-7" />
                 </div>
-                <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+                <h3 className="text-surface-900 text-base font-semibold">
                   No automation rules yet
                 </h3>
                 <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -759,7 +759,7 @@ export default function AutomationPage() {
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <h3 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                                <h3 className="text-surface-900 text-sm font-semibold">
                                   {rule.name}
                                 </h3>
                                 <Badge
@@ -776,7 +776,7 @@ export default function AutomationPage() {
                                 </p>
                               )}
                               <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                                <span className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 dark:bg-surface-700/30 px-1.5 py-0.5 text-[9px] font-medium">
+                                <span className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 px-1.5 py-0.5 text-[9px] font-medium">
                                   <Zap className="h-2.5 w-2.5" />
                                   {TRIGGER_DEFINITIONS[rule.trigger]?.label ?? rule.trigger}
                                 </span>
@@ -785,7 +785,7 @@ export default function AutomationPage() {
                                   return (
                                     <span
                                       key={ai}
-                                      className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 dark:bg-surface-700/30 px-1.5 py-0.5 text-[9px] font-medium"
+                                      className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 px-1.5 py-0.5 text-[9px] font-medium"
                                     >
                                       <AIcon className="h-2.5 w-2.5" />
                                       {getActionLabel(action.type)}
@@ -793,7 +793,7 @@ export default function AutomationPage() {
                                   );
                                 })}
                                 {rule.cooldownMinutes > 0 && (
-                                  <span className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 dark:bg-surface-700/30 px-1.5 py-0.5 text-[9px] font-medium">
+                                  <span className="text-surface-500 inline-flex items-center gap-1 rounded-lg bg-surface-200/40 px-1.5 py-0.5 text-[9px] font-medium">
                                     <Clock className="h-2.5 w-2.5" />
                                     {rule.cooldownMinutes}m cooldown
                                   </span>
@@ -829,7 +829,7 @@ export default function AutomationPage() {
                             </button>
                             <button
                               onClick={() => openEditForm(rule)}
-                              className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 dark:hover:bg-surface-700/50 rounded-lg p-1.5 transition-all"
+                              className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 rounded-lg p-1.5 transition-all"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
@@ -844,7 +844,7 @@ export default function AutomationPage() {
 
                         {/* Last triggered info */}
                         {rule.lastTriggeredAt && (
-                          <div className="text-surface-400 mt-2 flex items-center gap-1.5 border-t border-surface-300/10 dark:border-surface-700/30 pt-2 text-[10px]">
+                          <div className="text-surface-400 mt-2 flex items-center gap-1.5 border-t border-surface-300/10 pt-2 text-[10px]">
                             <Clock className="h-3 w-3" />
                             Last triggered {formatDate(rule.lastTriggeredAt)}
                           </div>
@@ -888,7 +888,7 @@ export default function AutomationPage() {
                     {logs.map((log) => (
                       <div
                         key={log.id}
-                        className="border-surface-300/20 dark:border-surface-700/30 bg-surface-50/50 dark:bg-surface-800/50 flex items-start gap-3 rounded-xl border p-3"
+                        className="border-surface-300/20 bg-surface-50/50 flex items-start gap-3 rounded-xl border p-3"
                       >
                         <div
                           className={cn(
@@ -906,7 +906,7 @@ export default function AutomationPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-surface-900 dark:text-surface-100 text-xs font-medium">
+                            <span className="text-surface-900 text-xs font-medium">
                               {log.ruleName}
                             </span>
                             <Badge
@@ -925,11 +925,11 @@ export default function AutomationPage() {
                           </div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-surface-500">
                             <span>{log.trigger}</span>
-                            <span className="text-surface-300 dark:text-surface-600">·</span>
+                            <span className="text-surface-300 ">·</span>
                             <span>{log.entityType}:{log.entityId.slice(0, 8)}</span>
-                            <span className="text-surface-300 dark:text-surface-600">·</span>
+                            <span className="text-surface-300 ">·</span>
                             <span>{log.durationMs}ms</span>
-                            <span className="text-surface-300 dark:text-surface-600">·</span>
+                            <span className="text-surface-300 ">·</span>
                             <span>{formatDate(log.createdAt)}</span>
                           </div>
                           {log.errorMessage && (
@@ -992,16 +992,16 @@ export default function AutomationPage() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-2xl rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-2xl rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   {editingRuleId ? 'Edit Rule' : 'New Automation Rule'}
                 </h3>
                 <button
                   onClick={() => setShowForm(false)}
-                  className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+                  className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1018,7 +1018,7 @@ export default function AutomationPage() {
                     value={form.name}
                     onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g., Notify on high-priority task"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -1032,7 +1032,7 @@ export default function AutomationPage() {
                     value={form.description}
                     onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                     placeholder="Optional description of what this rule does"
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -1053,12 +1053,12 @@ export default function AutomationPage() {
                             'flex items-start gap-2.5 rounded-xl border p-3 text-left transition-all',
                             form.trigger === key
                               ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/30'
-                              : 'border-surface-300/20 dark:border-surface-700/30 bg-surface-100/50 dark:bg-surface-800/50 hover:border-surface-300/40',
+                              : 'border-surface-300/20 bg-surface-100/50 hover:border-surface-300/40',
                           )}
                         >
                           <Icon className="text-surface-500 mt-0.5 h-4 w-4 shrink-0" />
                           <div>
-                            <p className="text-surface-700 dark:text-surface-300 text-xs font-medium">
+                            <p className="text-surface-700 text-xs font-medium">
                               {def.label}
                             </p>
                             <p className="text-surface-500 mt-0.5 text-[10px]">{def.description}</p>
@@ -1092,12 +1092,12 @@ export default function AutomationPage() {
                       {form.conditions.map((cond, idx) => (
                         <div
                           key={idx}
-                          className="border-surface-300/20 dark:border-surface-700/30 bg-surface-100/60 dark:bg-surface-800/60 flex items-center gap-2 rounded-xl border p-2"
+                          className="border-surface-300/20 bg-surface-100/60 flex items-center gap-2 rounded-xl border p-2"
                         >
                           <select
                             value={cond.field}
                             onChange={(e) => updateCondition(idx, { field: e.target.value })}
-                            className="border-surface-300/30 dark:border-surface-700/30 bg-surface-50 dark:bg-surface-800 rounded-lg border px-2 py-1.5 text-xs"
+                            className="border-surface-300/30 bg-surface-50 rounded-lg border px-2 py-1.5 text-xs"
                           >
                             {CONDITION_FIELDS.map((f) => (
                               <option key={f.value} value={f.value}>{f.label}</option>
@@ -1106,7 +1106,7 @@ export default function AutomationPage() {
                           <select
                             value={cond.operator}
                             onChange={(e) => updateCondition(idx, { operator: e.target.value })}
-                            className="border-surface-300/30 dark:border-surface-700/30 bg-surface-50 dark:bg-surface-800 rounded-lg border px-2 py-1.5 text-xs"
+                            className="border-surface-300/30 bg-surface-50 rounded-lg border px-2 py-1.5 text-xs"
                           >
                             {CONDITION_OPERATORS.map((op) => (
                               <option key={op.value} value={op.value}>{op.label}</option>
@@ -1118,7 +1118,7 @@ export default function AutomationPage() {
                               value={cond.value}
                               onChange={(e) => updateCondition(idx, { value: e.target.value })}
                               placeholder="Value"
-                              className="border-surface-300/30 dark:border-surface-700/30 bg-surface-50 dark:bg-surface-800 focus:border-brand-500 flex-1 rounded-lg border px-2 py-1.5 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                              className="border-surface-300/30 bg-surface-50 focus:border-brand-500 flex-1 rounded-lg border px-2 py-1.5 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-brand-500/20"
                             />
                           )}
                           <button
@@ -1186,7 +1186,7 @@ export default function AutomationPage() {
                         cooldownMinutes: Math.max(0, parseInt(e.target.value) || 0),
                       }))
                     }
-                    className="border-surface-300/30 dark:border-surface-700/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-24 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-24 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -1199,7 +1199,7 @@ export default function AutomationPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 dark:border-surface-700/30 pt-4">
+                <div className="flex items-center justify-end gap-2 border-t border-surface-300/10 pt-4">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1246,9 +1246,9 @@ export default function AutomationPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-sm rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
             >
-              <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Delete Rule</h3>
+              <h3 className="text-surface-900 text-lg font-semibold">Delete Rule</h3>
               <p className="text-surface-500 mt-2 text-sm">Are you sure you want to delete this rule? This action cannot be undone.</p>
               <div className="mt-4 flex items-center justify-end gap-2">
                 <Button

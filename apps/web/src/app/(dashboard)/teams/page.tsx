@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Building2, GitBranch, AlertCircle, Plus, X, Loader2, Check } from 'lucide-react';
@@ -154,17 +155,17 @@ export default function TeamsPage() {
       animate="visible"
       className="space-y-6"
     >
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
-          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Teams</h1>
-          <p className="text-surface-500 mt-1 text-sm">
-            {teams.length} team{teams.length !== 1 ? 's' : ''} · {departments.length} department
-            {departments.length !== 1 ? 's' : ''}
-          </p>
-        </div>{' '}
-        <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
-          <Plus className="mr-2 h-4 w-4" /> Create Team
-        </Button>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="Teams"
+          subtitle={`${teams.length} team${teams.length !== 1 ? 's' : ''} · ${departments.length} department${departments.length !== 1 ? 's' : ''}`}
+          actions={
+            <Button onClick={openCreate} className="btn-shine shadow-sm shadow-brand-500/20">
+              <Plus className="mr-2 h-4 w-4" /> Create Team
+            </Button>
+          }
+        />
       </motion.div>
 
       {departments.length > 0 && (

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { motion } from 'framer-motion';
 import {
   BarChart,
@@ -131,7 +132,7 @@ function BurndownTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -154,7 +155,7 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
+    <div className="border-surface-500/20 bg-surface-50/95 neon-card rounded-xl p-3 shadow-lg backdrop-blur-xl">
       <p className="text-surface-500 mb-1 text-[10px] font-medium">{label}</p>
       {payload.map((entry, idx) => (
         <p key={idx} className="flex items-center gap-2 text-xs" style={{ color: entry.color }}>
@@ -198,7 +199,7 @@ function TrendCard({
           </div>
           <div>
             <p className="text-surface-500 text-[10px] font-medium uppercase tracking-wider">{label}</p>
-            <p className="text-surface-900 dark:text-surface-100 text-lg font-bold">{value}</p>
+            <p className="stat-value text-surface-900 text-xl">{value}</p>
           </div>
         </div>
         {trend && (
@@ -302,36 +303,35 @@ export default function AnalyticsPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          icon={
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <BarChart3 className="h-4 w-4 text-white" />
             </div>
-            Analytics
-          </h1>
-          <p className="text-surface-500 mt-0.5 text-sm">
-            Burndown, velocity, and project trends
-          </p>
-        </div>
-
-        {/* Period selector */}
-        <div className="flex items-center gap-1 rounded-xl bg-surface-200/50 dark:bg-surface-800/50 p-0.5">
-          {PERIOD_PRESETS.map((preset) => (
-            <button
-              key={preset.days}
-              onClick={() => setPeriod(preset.days)}
-              className={cn(
-                'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
-                period === preset.days
-                  ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
-              )}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
+          }
+          title="Analytics"
+          subtitle="Burndown, velocity, and project trends"
+          actions={
+            <div className="bg-surface-200/60 flex items-center gap-1 rounded-xl p-0.5">
+              {PERIOD_PRESETS.map((preset) => (
+                <button
+                  key={preset.days}
+                  onClick={() => setPeriod(preset.days)}
+                  className={cn(
+                    'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
+                    period === preset.days
+                      ? 'bg-surface-300 text-surface-900 shadow-sm'
+                      : 'text-surface-500 hover:text-surface-700',
+                  )}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          }
+        />
       </motion.div>
 
       {error ? (
@@ -385,7 +385,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <Target className="text-surface-400 h-4 w-4" />
                     Burndown Chart
                   </h2>
@@ -449,7 +449,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <Activity className="text-surface-400 h-4 w-4" />
                     Team Velocity
                   </h2>
@@ -499,7 +499,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <GitBranch className="text-surface-400 h-4 w-4" />
                     Status Distribution
                   </h2>
@@ -540,7 +540,7 @@ export default function AnalyticsPage() {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-4">
-                  <h2 className="text-surface-900 dark:text-surface-100 flex items-center gap-2 text-sm font-semibold">
+                  <h2 className="text-surface-900 flex items-center gap-2 text-sm font-semibold">
                     <CheckCircle2 className="text-surface-400 h-4 w-4" />
                     Task Overview
                   </h2>
@@ -555,12 +555,12 @@ export default function AnalyticsPage() {
                     { label: 'Blocked', value: data.trends.blockedTasks, color: '#f87171' },
                     { label: 'Overdue', value: data.trends.overdueTasks, color: '#ef4444' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-200/60 dark:bg-surface-700/30 px-3 py-2">
+                    <div key={item.label} className="flex items-center justify-between rounded-xl bg-surface-200/60 px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-surface-600 dark:text-surface-400 text-xs">{item.label}</span>
+                        <span className="text-surface-600 text-xs">{item.label}</span>
                       </div>
-                      <span className="text-surface-900 dark:text-surface-100 text-xs font-semibold">{item.value}</span>
+                      <span className="text-surface-900 text-xs font-semibold">{item.value}</span>
                     </div>
                   ))}
                 </div>

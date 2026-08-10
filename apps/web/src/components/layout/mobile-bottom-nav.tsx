@@ -60,7 +60,7 @@ export function MobileBottomNav() {
 
   return (
     <motion.nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-500/20 bg-surface-50/95 dark:bg-surface-900/95 backdrop-blur-xl md:hidden overflow-visible"        style={{
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-500/20 bg-surface-50/95 backdrop-blur-xl md:hidden overflow-visible"        style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         y: elementSpring,
       }}
@@ -68,7 +68,7 @@ export function MobileBottomNav() {
       {/* Shadow overlay — fades in when content scrolls behind the nav */}
       {/* Light mode: black shadow */}
       <motion.div
-        className="pointer-events-none absolute bottom-full left-0 right-0 h-3 dark:hidden"
+        className="pointer-events-none absolute bottom-full left-0 right-0 h-3 "
         style={{
           opacity: shadowSpring,
           y: shadowParallaxSpring,
@@ -77,7 +77,7 @@ export function MobileBottomNav() {
       />
       {/* Dark mode: white shadow */}
       <motion.div
-        className="pointer-events-none absolute bottom-full left-0 right-0 h-3 hidden dark:block"
+        className="pointer-events-none absolute bottom-full left-0 right-0 h-3 hidden "
         style={{
           opacity: shadowSpring,
           y: shadowParallaxSpring,
@@ -99,7 +99,7 @@ export function MobileBottomNav() {
                     'relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-all duration-200 min-w-0',
                     active
                       ? 'text-brand-500'
-                      : 'text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300',
+                      : 'text-surface-500 hover:text-surface-700 ',
                   )}
                 >
                   {active && (
@@ -144,7 +144,7 @@ export function MobileBottomNav() {
                   onClick={() => handleAction(item)}
                   className={cn(
                     'relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-all duration-200',
-                    'text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300',
+                    'text-surface-500 hover:text-surface-700 ',
                   )}
                   aria-label={item.label}
                 >
@@ -152,7 +152,7 @@ export function MobileBottomNav() {
                     <item.icon className="h-5 w-5" />
                     {/* Notification badge on the More/Menu icon — sidebar opens notifications */}
                     {isMore && unreadCount > 0 && (
-                      <span className="absolute -right-2 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 dark:ring-surface-900">
+                      <span className="absolute -right-2 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-1 text-[7px] font-bold text-white shadow-sm ring-1 ring-surface-50 ">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}

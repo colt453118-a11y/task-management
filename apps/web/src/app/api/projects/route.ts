@@ -57,8 +57,10 @@ export const POST = withAuth(
         return NextResponse.json(err, { status });
       }
 
-      const { name, code, description, ownerId, departmentId, teamId, startDate, endDate } =
+      const { name, code, description, ownerId: ownerIdInput, departmentId, teamId, startDate, endDate } =
         parsed.data;
+      // Owner defaults to the creating user (the create UI has no owner picker).
+      const ownerId = ownerIdInput ?? user.id;
 
       // Validate owner is in same org
       const [owner] = await db()

@@ -189,7 +189,7 @@ export function TaskHoverCard({ taskRef, children, className }: TaskHoverCardPro
                     {preview.status.replace(/_/g, ' ')}
                   </Badge>
                 </div>
-                <h4 className="text-surface-900 dark:text-surface-100 line-clamp-2 text-sm font-semibold leading-snug">
+                <h4 className="text-surface-900 line-clamp-2 text-sm font-semibold leading-snug">
                   {preview.title}
                 </h4>
               </div>
@@ -206,7 +206,7 @@ export function TaskHoverCard({ taskRef, children, className }: TaskHoverCardPro
                         ? 'bg-red-500/10 text-red-400'
                         : preview.priority === 'medium'
                           ? 'bg-amber-500/10 text-amber-400'
-                          : 'bg-surface-200/50 text-surface-500 dark:bg-surface-800/50',
+                          : 'bg-surface-200/50 text-surface-500 ',
                     )}
                   >
                     {priorityLabel[preview.priority] ?? preview.priority}
@@ -243,7 +243,7 @@ export function TaskHoverCard({ taskRef, children, className }: TaskHoverCardPro
               {/* Footer link */}
               <a
                 href={`/tasks/${preview.id}`}
-                className="border-surface-300/10 dark:border-surface-700/30 text-brand-500 hover:text-brand-400 hover:bg-brand-500/5 block border-t px-4 py-2 text-[11px] font-medium transition-all duration-200"
+                className="border-surface-300/10 text-brand-500 hover:text-brand-400 hover:bg-brand-500/5 block border-t px-4 py-2 text-[11px] font-medium transition-all duration-200"
               >
                 Open task &rarr;
               </a>

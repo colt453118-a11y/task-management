@@ -129,7 +129,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
         <>
           <div className="relative">
             {/* Timeline line */}
-            <div className="bg-surface-300/30 dark:bg-surface-700/30 absolute bottom-2 left-3 top-2 w-px" />
+            <div className="bg-surface-300/30 absolute bottom-2 left-3 top-2 w-px" />
 
             <div className="space-y-0">
               <AnimatePresence initial={false}>
@@ -145,7 +145,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
                     <div className="relative z-10 mt-0.5">
                       <div
                         className={cn(
-                          'ring-surface-50 dark:ring-surface-900 flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white ring-2',
+                          'ring-surface-50 flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white ring-2',
                           entry.changeType === 'status_change'
                             ? 'bg-amber-500'
                             : entry.changeType === 'assignment'
@@ -162,7 +162,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
                     {/* Content */}
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="flex items-center gap-1.5 text-xs">
-                        <span className="text-surface-700 dark:text-surface-300 max-w-[100px] truncate font-medium">
+                        <span className="text-surface-700 max-w-[100px] truncate font-medium">
                           {entry.user?.name ?? 'System'}
                         </span>
                         {entry.description ? (
@@ -170,7 +170,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
                         ) : (
                           <span className="text-surface-500">
                             Updated{' '}
-                            <span className="text-surface-600 dark:text-surface-400 font-medium">
+                            <span className="text-surface-600 font-medium">
                               {fieldLabels[entry.field] ?? entry.field}
                             </span>
                           </span>
@@ -190,7 +190,7 @@ export function TaskActivityFeed({ taskId }: TaskActivityFeedProps) {
           {history.length > 10 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 w-full py-2 text-center text-xs transition-colors"
+              className="text-surface-500 hover:text-surface-700 w-full py-2 text-center text-xs transition-colors"
             >
               {expanded ? 'Show less' : `Show ${history.length - 10} more entries`}
             </button>

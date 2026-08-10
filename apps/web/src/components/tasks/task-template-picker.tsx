@@ -176,7 +176,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
           <LayoutTemplate className="h-3.5 w-3.5" />
           Templates
           {templates.length > 0 && (
-            <span className="bg-surface-200/70 text-surface-500 dark:bg-surface-700/50 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium">
+            <span className="bg-surface-200/70 text-surface-500 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium">
               {templates.length}
             </span>
           )}
@@ -190,7 +190,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
             initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -8, height: 0 }}
-            className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/80 mb-4 overflow-hidden rounded-2xl border"
+            className="border-surface-300/20 bg-surface-100/80 mb-4 overflow-hidden rounded-2xl border"
           >
             {manageMode === 'list' ? (
               /* Template list */
@@ -220,7 +220,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     {templates.map((template) => (
                       <div
                         key={template.id}
-                        className="hover:bg-surface-200/50 dark:hover:bg-surface-800/50 group flex items-center justify-between rounded-xl px-2.5 py-2 transition-all"
+                        className="hover:bg-surface-200/50 group flex items-center justify-between rounded-xl px-2.5 py-2 transition-all"
                       >
                         <button
                           onClick={() => {
@@ -231,7 +231,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                         >
                           <Sparkles className="text-surface-400 h-3.5 w-3.5 shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-surface-700 dark:text-surface-300 truncate text-sm font-medium">
+                            <p className="text-surface-700 truncate text-sm font-medium">
                               {template.name}
                             </p>
                             {template.description && (
@@ -286,7 +286,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Template name *"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -296,7 +296,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Description (optional)"
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
-                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -306,7 +306,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Default title for new tasks (optional)"
                     value={formTaskTitle}
                     onChange={(e) => setFormTaskTitle(e.target.value)}
-                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -315,7 +315,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                     placeholder="Default description for new tasks (optional)"
                     value={formTaskDescription}
                     onChange={(e) => setFormTaskDescription(e.target.value)}
-                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-16 w-full resize-none rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1"
+                    className="border-surface-300/20 bg-surface-200/50 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 h-16 w-full resize-none rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1"
                   />
                 </div>
 
@@ -326,7 +326,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
                   <select
                     value={formPriority}
                     onChange={(e) => setFormPriority(e.target.value)}
-                    className="border-surface-300/20 bg-surface-200/50 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/50 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
+                    className="border-surface-300/20 bg-surface-200/50 focus:border-brand-500 focus:ring-brand-500/20 h-8 w-full rounded-lg border px-2.5 text-xs focus:outline-none focus:ring-1"
                   >
                     <option value="none">None</option>
                     <option value="low">Low</option>
@@ -376,7 +376,7 @@ export function TaskTemplatePicker({ onApplyTemplate }: TaskTemplatePickerProps)
             <button
               key={template.id}
               onClick={() => applyTemplate(template)}
-              className="border-surface-300/20 text-surface-600 hover:border-brand-500/30 hover:text-brand-500 hover:bg-brand-500/5 dark:text-surface-400 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all"
+              className="border-surface-300/20 text-surface-600 hover:border-brand-500/30 hover:text-brand-500 hover:bg-brand-500/5 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all"
             >
               <Sparkles className="h-3 w-3" />
               {template.name}

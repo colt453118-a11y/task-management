@@ -16,13 +16,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           'placeholder:text-surface-600',
           'hover:border-brand-500/35',
           'focus-visible:border-brand-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/20',
-          'focus-visible:shadow-[0_0_12px_rgba(99,102,241,0.08)]',
+          'focus-visible:shadow-[0_0_12px_rgb(var(--brand-rgb)/0.12)]',
           'disabled:cursor-not-allowed disabled:opacity-50',
           error
             ? 'border-error/50 focus-visible:ring-error/20 focus-visible:border-error/60'
             : 'border-surface-600/45',
           'bg-surface-300/60 text-surface-800 file:text-surface-800',
-          'dark:bg-surface-300/40 dark:text-surface-800 dark:border-surface-600/40 dark:placeholder:text-surface-600 dark:file:text-surface-700',
           className,
         )}
         ref={ref}

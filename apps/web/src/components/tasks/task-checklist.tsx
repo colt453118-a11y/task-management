@@ -100,8 +100,8 @@ function SortableChecklistItem({
       className={cn(
         'group flex items-center gap-1 rounded-xl px-1.5 py-2 transition-all duration-150',
         item.isChecked
-          ? 'bg-green-500/5 dark:bg-green-500/10'
-          : 'hover:bg-surface-200/30 dark:hover:bg-surface-800/30',
+          ? 'bg-green-500/5 '
+          : 'hover:bg-surface-200/30 ',
         isDragging && 'z-50 opacity-30 shadow-none',
       )}
     >
@@ -110,7 +110,7 @@ function SortableChecklistItem({
         <button
           {...attributes}
           {...listeners}
-          className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 cursor-grab rounded-lg p-0.5 opacity-0 transition-all duration-150 active:cursor-grabbing group-hover:opacity-100"
+          className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 cursor-grab rounded-lg p-0.5 opacity-0 transition-all duration-150 active:cursor-grabbing group-hover:opacity-100"
           title="Drag to reorder"
           tabIndex={-1}
         >
@@ -143,7 +143,7 @@ function SortableChecklistItem({
             onKeyDown={onEditKeyDown}
             autoFocus
             data-testid={CHECKLIST.editInput(item.id)}
-            className="border-surface-300/30 bg-surface-100/80 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-7 flex-1 rounded-lg px-2 text-xs focus:ring-1"
+            className="border-surface-300/30 bg-surface-100/80 focus:border-brand-500 focus:ring-brand-500/20 h-7 flex-1 rounded-lg px-2 text-xs focus:ring-1"
           />
           <button
             onClick={onSaveEdit}
@@ -173,8 +173,8 @@ function SortableChecklistItem({
             className={cn(
               'flex-1 text-sm leading-snug transition-all duration-200',
               item.isChecked
-                ? 'text-surface-400 dark:text-surface-500 line-through'
-                : 'text-surface-700 dark:text-surface-300',
+                ? 'text-surface-400 line-through'
+                : 'text-surface-700 ',
             )}
           >
             {item.content}
@@ -185,7 +185,7 @@ function SortableChecklistItem({
             <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
               <button
                 onClick={() => onStartEdit(item)}
-                className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 dark:hover:bg-surface-700/70 rounded-lg p-1 transition-colors"
+                className="text-surface-400 hover:text-surface-600 hover:bg-surface-200/70 rounded-lg p-1 transition-colors"
                 title="Edit item"
                 data-testid={CHECKLIST.editBtn(item.id)}
               >
@@ -481,7 +481,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
           value={progress}
           data-testid={CHECKLIST.progressBar}
           className={cn(
-            'bg-surface-200/60 dark:bg-surface-700/60 h-1.5',
+            'bg-surface-200/60 h-1.5',
             progress === 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-brand-500',
           )}
         />
@@ -540,7 +540,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
         {/* Drag overlay */}
         <DragOverlay dropAnimation={null}>
           {activeDragItem ? (
-            <div className="border-brand-500/30 bg-surface-50/95 dark:bg-surface-900/95 flex items-center gap-1 rounded-xl border px-1.5 py-2 shadow-lg backdrop-blur-sm" data-testid={CHECKLIST.dragOverlay}>
+            <div className="border-brand-500/30 bg-surface-50/95 flex items-center gap-1 rounded-xl border px-1.5 py-2 shadow-lg backdrop-blur-sm" data-testid={CHECKLIST.dragOverlay}>
               <GripVertical className="text-brand-500 h-3.5 w-3.5" />
               <Checkbox checked={activeDragItem.isChecked} className="h-4 w-4 shrink-0" />
               <span
@@ -548,7 +548,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
                   'flex-1 text-sm leading-snug',
                   activeDragItem.isChecked
                     ? 'text-surface-400 line-through'
-                    : 'text-surface-700 dark:text-surface-300',
+                    : 'text-surface-700 ',
                 )}
               >
                 {activeDragItem.content}
@@ -580,7 +580,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
               onChange={(e) => setNewItemContent(e.target.value)}
               onKeyDown={handleKeyDown}
               data-testid={CHECKLIST.addInput}
-              className="border-surface-400/30 placeholder:text-surface-400 hover:border-surface-400/50 focus:border-brand-500 focus:bg-surface-100/50 focus:ring-brand-500/20 dark:focus:bg-surface-800/50 h-8 w-full rounded-lg border border-dashed bg-transparent px-2.5 pr-8 text-xs transition-all duration-200 focus:border-solid focus:outline-none focus:ring-2"
+              className="border-surface-400/30 placeholder:text-surface-400 hover:border-surface-400/50 focus:border-brand-500 focus:bg-surface-100/50 focus:ring-brand-500/20 h-8 w-full rounded-lg border border-dashed bg-transparent px-2.5 pr-8 text-xs transition-all duration-200 focus:border-solid focus:outline-none focus:ring-2"
             />
           </div>
           <Button

@@ -217,7 +217,7 @@ function TimelineBar({
       </p>
       <div
         ref={barRef}
-        className="bg-surface-200/50 dark:bg-surface-800/50 relative flex h-8 w-full overflow-hidden rounded-xl"
+        className="bg-surface-200/50 relative flex h-8 w-full overflow-hidden rounded-xl"
       >
         {entries.map((entry, idx) => {
           const pct = Math.max(
@@ -262,9 +262,9 @@ function TimelineBar({
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="bg-surface-900 dark:bg-surface-100 absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg px-2 py-1 shadow-lg"
+                    className="bg-surface-900 absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg px-2 py-1 shadow-lg"
                   >
-                    <p className="text-surface-100 dark:text-surface-900 text-[10px] font-medium">
+                    <p className="text-surface-100 text-[10px] font-medium">
                       {entry.task.title} — {formatDuration(entry.durationMinutes ?? 0)}
                     </p>
                   </motion.div>
@@ -762,7 +762,7 @@ export default function TimeTrackingPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">
             Time Tracking
           </h1>
           <p className="text-surface-500 mt-0.5 text-sm">
@@ -797,7 +797,7 @@ export default function TimeTrackingPage() {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-surface-50 dark:from-brand-500/20 dark:via-brand-500/10 dark:to-surface-900 border-brand-500/20 rounded-2xl border p-5 shadow-sm"
+            className="bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-surface-50 border-brand-500/20 rounded-2xl border p-5 shadow-sm"
           >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
@@ -812,7 +812,7 @@ export default function TimeTrackingPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-surface-900 dark:text-surface-100 text-lg font-bold tabular-nums">
+                    <span className="text-surface-900 text-lg font-bold tabular-nums">
                       {formatTimerElapsed(timerElapsed)}
                     </span>
                     <Badge variant="success" size="sm" className="animate-pulse">
@@ -883,7 +883,7 @@ export default function TimeTrackingPage() {
           <motion.div key={card.label} variants={itemVariants}>
             <motion.div
               whileHover={{ y: -2 }}
-              className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-900/50 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:shadow-sm"
+              className="border-surface-300/20 bg-surface-100/80 hover:border-brand-500/30 group relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:shadow-sm"
             >
               <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${card.gradient} opacity-60`} />
               <div className="flex items-start justify-between">
@@ -891,7 +891,7 @@ export default function TimeTrackingPage() {
                   <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">
                     {card.label}
                   </p>
-                  <p className="text-surface-900 dark:text-surface-100 text-2xl font-bold tabular-nums">
+                  <p className="text-surface-900 text-2xl font-bold tabular-nums">
                     {card.value}
                   </p>
                   <p className="text-surface-500 text-xs">{card.sub}</p>
@@ -910,7 +910,7 @@ export default function TimeTrackingPage() {
         <motion.div variants={itemVariants}>
           <motion.div
             initial={false}
-            className="border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 overflow-hidden rounded-2xl border"
+            className="border-amber-500/20 bg-amber-500/5 overflow-hidden rounded-2xl border"
           >
             <button
               onClick={() => setShowCorrections(!showCorrections)}
@@ -918,7 +918,7 @@ export default function TimeTrackingPage() {
             >
               <div className="flex items-center gap-2">
                 <FileEdit className="text-amber-500 h-4 w-4" />
-                <span className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                <span className="text-surface-900 text-sm font-semibold">
                   Pending Corrections
                 </span>
                 <span className="bg-amber-500/15 text-amber-500 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold">
@@ -955,11 +955,11 @@ export default function TimeTrackingPage() {
                             key={req.id}
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-surface-100/80 dark:bg-surface-800/50 flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+                            className="bg-surface-100/80 flex items-center justify-between gap-3 rounded-xl px-4 py-3"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+                                <span className="text-surface-900 text-sm font-medium">
                                   {req.user.name ?? req.user.email}
                                 </span>
                                 <Badge variant="warning" size="sm">Pending</Badge>
@@ -1037,7 +1037,7 @@ export default function TimeTrackingPage() {
                 <History className="text-surface-400 h-4 w-4" />
                 Time Log
               </CardTitle>
-              <div className="border-surface-300/20 dark:border-surface-700/30 flex gap-0.5 rounded-xl border p-0.5">
+              <div className="border-surface-300/20 flex gap-0.5 rounded-xl border p-0.5">
                 {(['today', 'week', 'month'] as const).map((s) => (
                   <button
                     key={s}
@@ -1045,14 +1045,14 @@ export default function TimeTrackingPage() {
                     className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       scope === s
                         ? 'bg-brand-500 text-white shadow-sm'
-                        : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 dark:hover:text-surface-300'
+                        : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 '
                     }`}
                   >
                     {s === 'today' ? 'Today' : s === 'week' ? 'This Week' : 'This Month'}
                   </button>
                 ))}
               </div>
-              <kbd className="bg-surface-200/50 text-surface-500 dark:bg-surface-700/50 dark:text-surface-400 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
+              <kbd className="bg-surface-200/50 text-surface-500 hidden rounded-md px-1.5 py-0.5 text-[10px] font-mono md:inline-block">
                 1-2-3
               </kbd>
             </div>
@@ -1062,7 +1062,7 @@ export default function TimeTrackingPage() {
               </span>
               <button
                 onClick={refresh}
-                className="text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 rounded-lg p-1.5 transition-all"
+                className="text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 rounded-lg p-1.5 transition-all"
               >
                 <Loader2 className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -1090,7 +1090,7 @@ export default function TimeTrackingPage() {
                 <div className="neon-card mb-5 flex h-20 w-20 items-center justify-center rounded-3xl">
                   <Clock className="text-surface-400 h-9 w-9" />
                 </div>
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">
+                <h3 className="text-surface-900 text-lg font-semibold">
                   No time entries yet
                 </h3>
                 <p className="text-surface-500 mt-1.5 max-w-sm text-sm leading-relaxed">
@@ -1116,7 +1116,7 @@ export default function TimeTrackingPage() {
               <div className="space-y-6">
                 {/* Task breakdown */}
                 {taskBreakdown.length > 0 && (
-                  <div className="border-surface-300/20 dark:border-surface-700/30 rounded-xl border p-4">
+                  <div className="border-surface-300/20 rounded-xl border p-4">
                     <p className="text-surface-500 mb-3 text-xs font-semibold uppercase tracking-wider">
                       Breakdown by Task
                     </p>
@@ -1136,7 +1136,7 @@ export default function TimeTrackingPage() {
                               <div className="flex items-center justify-between">
                                 <Link
                                   href={`/tasks/${bt.taskId}`}
-                                  className="text-surface-700 dark:text-surface-300 hover:text-brand-500 truncate text-sm font-medium transition-colors"
+                                  className="text-surface-700 hover:text-brand-500 truncate text-sm font-medium transition-colors"
                                 >
                                   {bt.title}
                                 </Link>
@@ -1144,7 +1144,7 @@ export default function TimeTrackingPage() {
                                   {formatDuration(bt.totalMinutes)}
                                 </span>
                               </div>
-                              <div className="bg-surface-200/50 dark:bg-surface-700/50 mt-1 h-1.5 w-full overflow-hidden rounded-full">
+                              <div className="bg-surface-200/50 mt-1 h-1.5 w-full overflow-hidden rounded-full">
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: `${pct}%` }}
@@ -1183,7 +1183,7 @@ export default function TimeTrackingPage() {
                             animate="visible"
                             exit="hidden"
                             layout
-                            className="group border-surface-300/20 dark:border-surface-700/30 hover:bg-surface-100/80 dark:hover:bg-surface-800/30 flex items-center gap-3 rounded-xl border px-4 py-3 transition-all"
+                            className="group border-surface-300/20 hover:bg-surface-100/80 flex items-center gap-3 rounded-xl border px-4 py-3 transition-all"
                           >
                             <div className="bg-brand-500/10 text-brand-500 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                               {entry.entryType === 'timer' ? (
@@ -1197,7 +1197,7 @@ export default function TimeTrackingPage() {
                               <div className="flex items-center gap-2">
                                 <Link
                                   href={`/tasks/${entry.taskId}`}
-                                  className="text-surface-700 dark:text-surface-300 hover:text-brand-500 truncate text-sm font-medium transition-colors"
+                                  className="text-surface-700 hover:text-brand-500 truncate text-sm font-medium transition-colors"
                                 >
                                   {entry.task.title}
                                 </Link>
@@ -1236,7 +1236,7 @@ export default function TimeTrackingPage() {
                             <div className="shrink-0 text-right flex items-center gap-1.5">
                               {/* Correction status badge */}
                               {renderCorrectionBadge(entry.id)}
-                              <p className="text-surface-900 dark:text-surface-100 text-sm font-medium tabular-nums">
+                              <p className="text-surface-900 text-sm font-medium tabular-nums">
                                 {entry.durationMinutes != null
                                   ? formatDuration(entry.durationMinutes)
                                   : '—'}
@@ -1284,7 +1284,7 @@ export default function TimeTrackingPage() {
               initial={{ scale: 0.95, opacity: 0, y: -20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: -20 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-lg rounded-2xl border p-4 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-lg rounded-2xl border p-4 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative mb-3">
@@ -1295,7 +1295,7 @@ export default function TimeTrackingPage() {
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Search tasks to start timer..."
                   autoFocus
-                  className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border py-3 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border py-3 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2"
                 />
                 {searchLoading && (
                   <Loader2 className="text-surface-400 absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
@@ -1321,7 +1321,7 @@ export default function TimeTrackingPage() {
                         clearSearch();
                       }}
                       disabled={timerLoading}
-                      className="hover:bg-surface-200/50 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
+                      className="hover:bg-surface-200/50 text-surface-700 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
                     >
                       <div className="bg-brand-500/10 text-brand-500 flex h-8 w-8 items-center justify-center rounded-lg">
                         <Play className="h-4 w-4" />
@@ -1348,7 +1348,7 @@ export default function TimeTrackingPage() {
                 <p className="text-surface-500 text-xs">Select a task to start tracking</p>
                 <button
                   onClick={() => setSearchOpen(false)}
-                  className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                  className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   Cancel
                 </button>
@@ -1372,23 +1372,23 @@ export default function TimeTrackingPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Request Time Correction</h3>
+                <h3 className="text-surface-900 text-lg font-semibold">Request Time Correction</h3>
                 <button
                   onClick={() => setCorrectionDialogOpen(false)}
-                  className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+                  className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="border-surface-300/20 dark:border-surface-700/30 rounded-xl border p-3">
+                <div className="border-surface-300/20 rounded-xl border p-3">
                   <p className="text-surface-500 text-xs">
-                    Current duration: <span className="text-surface-900 dark:text-surface-100 font-semibold">{formatDuration(correctionCurrentMinutes)}</span>
+                    Current duration: <span className="text-surface-900 font-semibold">{formatDuration(correctionCurrentMinutes)}</span>
                   </p>
                 </div>
 
@@ -1403,7 +1403,7 @@ export default function TimeTrackingPage() {
                     value={correctionMinutes}
                     onChange={(e) => setCorrectionMinutes(e.target.value)}
                     placeholder="e.g. 45"
-                    className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                   {correctionCurrentMinutes > 0 && correctionMinutes && !isNaN(parseInt(correctionMinutes)) && (
                     <p className="text-surface-500 mt-1 text-xs">
@@ -1425,11 +1425,11 @@ export default function TimeTrackingPage() {
                     onChange={(e) => setCorrectionReason(e.target.value)}
                     placeholder="Explain why this correction is needed..."
                     rows={3}
-                    className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
-                <div className="bg-amber-500/5 text-amber-600 dark:text-amber-400 flex items-start gap-2 rounded-xl px-3 py-2 text-xs">
+                <div className="bg-amber-500/5 text-amber-600 flex items-start gap-2 rounded-xl px-3 py-2 text-xs">
                   <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <p>This will notify your manager for approval. The time entry will be updated once approved.</p>
                 </div>
@@ -1478,14 +1478,14 @@ export default function TimeTrackingPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="border-surface-300/30 bg-surface-50/95 dark:bg-surface-900/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-surface-900 dark:text-surface-100 text-lg font-semibold">Log Time Manually</h3>
+                <h3 className="text-surface-900 text-lg font-semibold">Log Time Manually</h3>
                 <button
                   onClick={() => setLogDialogOpen(false)}
-                  className="text-surface-500 hover:bg-surface-200/70 dark:hover:bg-surface-700 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+                  className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1512,7 +1512,7 @@ export default function TimeTrackingPage() {
                     value={logMinutes}
                     onChange={(e) => setLogMinutes(e.target.value)}
                     placeholder="e.g. 30"
-                    className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -1525,7 +1525,7 @@ export default function TimeTrackingPage() {
                     value={logDescription}
                     onChange={(e) => setLogDescription(e.target.value)}
                     placeholder="What did you work on?"
-                    className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
                 </div>
 
@@ -1609,7 +1609,7 @@ function TaskSearchSelect({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search tasks..."
-        className="border-surface-300/30 bg-surface-100 dark:bg-surface-800 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+        className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
       />
       {loading && (
         <div className="flex items-center gap-2 px-2 py-1">
@@ -1618,7 +1618,7 @@ function TaskSearchSelect({
         </div>
       )}
       {results.length > 0 && (
-        <div className="border-surface-300/20 dark:border-surface-700/30 space-y-0.5 rounded-xl border p-1">
+        <div className="border-surface-300/20 space-y-0.5 rounded-xl border p-1">
           {results.map((task) => (
             <button
               key={task.id}
@@ -1627,11 +1627,11 @@ function TaskSearchSelect({
                 setQuery(task.title);
                 setResults([]);
               }}
-              className={`hover:bg-surface-200/50 dark:hover:bg-surface-800 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
+              className={`hover:bg-surface-200/50 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                 selectedId === task.id ? 'bg-brand-500/10' : ''
               }`}
             >
-              <span className="text-surface-700 dark:text-surface-300 flex-1 truncate font-medium">{task.title}</span>
+              <span className="text-surface-700 flex-1 truncate font-medium">{task.title}</span>
               <span className="text-surface-500 shrink-0 text-xs">{task.taskIdDisplay}</span>
               {selectedId === task.id && (
                 <CheckCircle2 className="text-brand-500 h-3.5 w-3.5 shrink-0" />

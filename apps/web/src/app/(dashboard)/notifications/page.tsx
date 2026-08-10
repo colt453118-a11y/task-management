@@ -374,11 +374,11 @@ export default function NotificationsPage() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, x: -20 }}
         className={cn(
-          'group relative flex items-start gap-3 border-b border-surface-300/10 dark:border-surface-700/20 px-4 py-3.5 transition-all duration-200',
+          'group relative flex items-start gap-3 border-b border-surface-300/10 px-4 py-3.5 transition-all duration-200',
           !n.isRead && 'bg-brand-500/[0.02]',
           isSelected && 'bg-brand-500/5',
           !n.isRead && 'hover:bg-brand-500/[0.04]',
-          n.isRead && 'hover:bg-surface-200/30 dark:hover:bg-surface-800/30',
+          n.isRead && 'hover:bg-surface-200/30 ',
         )}
       >
         {/* Bulk mode checkbox */}
@@ -412,8 +412,8 @@ export default function NotificationsPage() {
                 className={cn(
                   'truncate text-sm leading-snug',
                   !n.isRead
-                    ? 'text-surface-900 dark:text-surface-100 font-semibold'
-                    : 'text-surface-600 dark:text-surface-400 font-normal',
+                    ? 'text-surface-900 font-semibold'
+                    : 'text-surface-600 font-normal',
                 )}
               >
                 {n.title}
@@ -475,7 +475,7 @@ export default function NotificationsPage() {
             <span className="text-surface-400">{formatRelativeDate(n.createdAt)}</span>
             {n.link && (
               <>
-                <span className="text-surface-300 dark:text-surface-600">·</span>
+                <span className="text-surface-300 ">·</span>
                 <a
                   href={n.link}
                   className="text-brand-500 hover:text-brand-400 hover:underline"
@@ -502,7 +502,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-surface-900 dark:text-surface-100 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+          <h1 className="text-surface-900 flex items-center gap-2.5 text-2xl font-bold tracking-tight">
             <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm">
               <BellRing className="h-4 w-4 text-white" />
             </div>
@@ -566,7 +566,7 @@ export default function NotificationsPage() {
             className="overflow-hidden"
           >
             <div className="bg-brand-500/10 border-brand-500/20 flex items-center gap-2 rounded-xl border px-4 py-2.5">
-              <span className="text-surface-900 dark:text-surface-100 text-sm font-medium">
+              <span className="text-surface-900 text-sm font-medium">
                 {selectedIds.size} selected
               </span>
               <div className="ml-auto flex items-center gap-1.5">
@@ -624,7 +624,7 @@ export default function NotificationsPage() {
       {/* Filter tabs */}
       <motion.div variants={itemVariants}>
         <div
-          className="bg-surface-200/50 dark:bg-surface-800/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
+          className="bg-surface-200/50 inline-flex items-center gap-0.5 rounded-xl p-0.5"
           role="tablist"
         >
           <button
@@ -634,14 +634,14 @@ export default function NotificationsPage() {
             className={cn(
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
               filter === 'all'
-                ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                ? 'bg-surface-50 text-surface-900 shadow-sm'
+                : 'text-surface-500 hover:text-surface-700 ',
             )}
           >
             <Bell className="-ml-0.5 mr-1.5 inline h-3.5 w-3.5" />
             All
             {total > 0 && (
-              <span className="bg-surface-300/30 dark:bg-surface-600/30 ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]">
+              <span className="bg-surface-300/30 ml-1.5 rounded-full px-1.5 py-0.5 text-[9px]">
                 {total}
               </span>
             )}
@@ -653,8 +653,8 @@ export default function NotificationsPage() {
             className={cn(
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
               filter === 'unread'
-                ? 'bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-100 shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                ? 'bg-surface-50 text-surface-900 shadow-sm'
+                : 'text-surface-500 hover:text-surface-700 ',
             )}
           >
             <BellOff className="-ml-0.5 mr-1.5 inline h-3.5 w-3.5" />
@@ -698,10 +698,10 @@ export default function NotificationsPage() {
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center py-16">
-              <div className="border-surface-300/20 bg-surface-100/50 dark:bg-surface-800/30 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
+              <div className="border-surface-300/20 bg-surface-100/50 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border">
                 <Inbox className="text-surface-400 h-7 w-7" />
               </div>
-              <h3 className="text-surface-900 dark:text-surface-100 text-base font-semibold">
+              <h3 className="text-surface-900 text-base font-semibold">
                 {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
               </h3>
               <p className="text-surface-500 mt-1.5 max-w-xs text-center text-sm">
@@ -726,10 +726,10 @@ export default function NotificationsPage() {
               {groupNotifications(notifications).map((group) => (
                 <div key={group.key}>
                   {/* Group header with scroll-shadow */}
-                  <motion.div className="sticky top-0 z-10 relative border-b border-surface-300/10 dark:border-surface-700/20 bg-surface-100/90 dark:bg-surface-900/90 px-4 py-2 backdrop-blur-sm">
+                  <motion.div className="sticky top-0 z-10 relative border-b border-surface-300/10 bg-surface-100/90 px-4 py-2 backdrop-blur-sm">
                     {/* Light-mode shadow */}
                     <motion.div
-                      className="pointer-events-none absolute top-full left-0 right-0 h-2 dark:hidden"
+                      className="pointer-events-none absolute top-full left-0 right-0 h-2 "
                       style={{
                         opacity: shadowSpring,
                         y: shadowParallaxSpring,
@@ -738,7 +738,7 @@ export default function NotificationsPage() {
                     />
                     {/* Dark-mode shadow */}
                     <motion.div
-                      className="pointer-events-none absolute top-full left-0 right-0 h-2 hidden dark:block"
+                      className="pointer-events-none absolute top-full left-0 right-0 h-2 hidden "
                       style={{
                         opacity: shadowSpring,
                         y: shadowParallaxSpring,
@@ -764,7 +764,7 @@ export default function NotificationsPage() {
 
           {/* Pagination */}
           {!loading && notifications.length > 0 && (
-            <div className="border-surface-300/10 dark:border-surface-700/20 flex items-center justify-between border-t px-4 py-3">
+            <div className="border-surface-300/10 flex items-center justify-between border-t px-4 py-3">
               <span className="text-surface-500 text-xs">
                 Showing {Math.min(offset + 1, total)}–{Math.min(offset + limit, total)} of {total}
               </span>
@@ -775,7 +775,7 @@ export default function NotificationsPage() {
                   className={cn(
                     'rounded-lg p-1.5 text-xs transition-all',
                     hasPrevious
-                      ? 'text-surface-600 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 hover:text-surface-900'
+                      ? 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-900'
                       : 'text-surface-300 cursor-not-allowed',
                   )}
                 >
@@ -787,7 +787,7 @@ export default function NotificationsPage() {
                   className={cn(
                     'rounded-lg p-1.5 text-xs transition-all',
                     hasMore
-                      ? 'text-surface-600 hover:bg-surface-200/50 dark:hover:bg-surface-700/50 hover:text-surface-900'
+                      ? 'text-surface-600 hover:bg-surface-200/50 hover:text-surface-900'
                       : 'text-surface-300 cursor-not-allowed',
                   )}
                 >
@@ -803,12 +803,12 @@ export default function NotificationsPage() {
 
           {/* Keyboard hint */}
           {notifications.length > 0 && !bulkMode && (
-            <div className="flex items-center justify-center gap-2 border-t border-surface-300/10 dark:border-surface-700/20 px-4 py-2 text-[10px] text-surface-400">
+            <div className="flex items-center justify-center gap-2 border-t border-surface-300/10 px-4 py-2 text-[10px] text-surface-400">
               <Sparkles className="h-3 w-3" />
               <span>Hover to mark as read or dismiss</span>
               {unreadCount > 0 && (
                 <>
-                  <span className="text-surface-300 dark:text-surface-600">·</span>
+                  <span className="text-surface-300 ">·</span>
                   <button
                     onClick={markAllAsRead}
                     disabled={working === 'all'}

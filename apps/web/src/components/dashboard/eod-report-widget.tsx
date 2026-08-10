@@ -221,7 +221,7 @@ export function EODReportWidget() {
               {snapshot && (
                 <Link
                   href={`/reports/snapshots/${snapshot.id}`}
-                  className="text-surface-400 hover:text-brand-500 dark:hover:text-brand-400 ml-1 truncate text-[10px] font-normal transition-colors"
+                  className="text-surface-400 hover:text-brand-500 ml-1 truncate text-[10px] font-normal transition-colors"
                   title={`View snapshot details — ${snapshot.label ?? snapshot.snapshotDate}`}
                 >
                   — {new Date(snapshot.createdAt).toLocaleDateString('en-US', {
@@ -233,7 +233,7 @@ export function EODReportWidget() {
             </div>
             <Link
               href="/reports"
-              className="text-surface-400 hover:text-brand-500 dark:hover:text-brand-400 flex items-center gap-1 text-[10px] font-medium transition-colors shrink-0"
+              className="text-surface-400 hover:text-brand-500 flex items-center gap-1 text-[10px] font-medium transition-colors shrink-0"
             >
               <FileText className="h-3 w-3" />
               Full Reports
@@ -281,7 +281,7 @@ export function EODReportWidget() {
                           <p className="text-surface-500 text-[9px] font-semibold uppercase tracking-wider sm:text-[10px]">
                             {metric.label}
                           </p>
-                          <p className="text-surface-900 dark:text-surface-100 mt-0.5 text-sm font-bold tracking-tight sm:text-base">
+                          <p className="text-surface-900 mt-0.5 text-sm font-bold tracking-tight sm:text-base">
                             {value}
                           </p>
                         </div>
@@ -299,7 +299,7 @@ export function EODReportWidget() {
 
               {/* AI Summary */}
               {aiLoading && (
-                <div className="bg-surface-200/50 dark:bg-surface-700/30 flex items-center gap-2 rounded-xl border border-surface-300/20 p-2.5">
+                <div className="bg-surface-200/50 flex items-center gap-2 rounded-xl border border-surface-300/20 p-2.5">
                   <Loader2 className="text-brand-500 h-3.5 w-3.5 animate-spin" />
                   <span className="text-surface-500 text-xs">Generating AI summary...</span>
                 </div>
@@ -308,15 +308,15 @@ export function EODReportWidget() {
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-brand-500/5 dark:bg-brand-500/10 rounded-xl border border-brand-500/20 p-3"
+                  className="bg-brand-500/5 rounded-xl border border-brand-500/20 p-3"
                 >
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <Sparkles className="text-brand-500 h-3 w-3" />
-                    <span className="text-surface-600 dark:text-surface-400 text-[9px] font-semibold uppercase tracking-wider">
+                    <span className="text-surface-600 text-[9px] font-semibold uppercase tracking-wider">
                       AI Summary
                     </span>
                   </div>
-                  <p className="text-surface-700 dark:text-surface-300 whitespace-pre-line text-xs leading-relaxed">
+                  <p className="text-surface-700 whitespace-pre-line text-xs leading-relaxed">
                     {aiSummary}
                   </p>
                 </motion.div>
@@ -357,7 +357,7 @@ export function EODReportWidget() {
               <div className="neon-card mb-3 flex h-10 w-10 items-center justify-center rounded-xl">
                 <Camera className="text-surface-400 h-5 w-5" />
               </div>
-              <p className="text-surface-700 dark:text-surface-300 text-sm font-medium">
+              <p className="text-surface-700 text-sm font-medium">
                 No EOD reports yet
               </p>
               <p className="text-surface-500 mt-0.5 max-w-[200px] text-xs">

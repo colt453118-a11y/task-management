@@ -106,18 +106,18 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
       <DialogContent className="border-surface-300/20 top-[10%] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:rounded-2xl">
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="border-surface-300/20 dark:border-surface-700/20 flex items-center justify-between border-b px-5 py-4">
+          <div className="border-surface-300/20 flex items-center justify-between border-b px-5 py-4">
             <div className="flex items-center gap-2.5">
               <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h2 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+                <h2 className="text-surface-900 text-sm font-semibold">
                   Quick Create Task
                 </h2>
                 <p className="text-surface-500 text-[11px]">
                   Press{' '}
-                  <kbd className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-800/80 rounded border px-1 py-0.5 font-mono text-[10px]">
+                  <kbd className="border-surface-300/20 bg-surface-100/80 rounded border px-1 py-0.5 font-mono text-[10px]">
                     Enter
                   </kbd>{' '}
                   to submit
@@ -146,7 +146,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
                 }}
                 placeholder="What needs to be done?"
                 className={cn(
-                  'bg-surface-100/80 placeholder:text-surface-400 dark:bg-surface-800/80 h-10 w-full rounded-xl border px-3 text-sm transition-all duration-200',
+                  'bg-surface-100/80 placeholder:text-surface-400 h-10 w-full rounded-xl border px-3 text-sm transition-all duration-200',
                   titleError
                     ? 'border-red-300 ring-1 ring-red-500/20'
                     : 'border-surface-300/30 hover:border-surface-400/40',
@@ -163,7 +163,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Add a description (optional)..."
-                className="border-surface-300/30 dark:border-surface-600/30 focus:border-brand-500 focus:ring-brand-500/20 min-h-[80px] rounded-xl transition-all duration-200 focus:ring-2"
+                className="border-surface-300/30 focus:border-brand-500 focus:ring-brand-500/20 min-h-[80px] rounded-xl transition-all duration-200 focus:ring-2"
               />
             </div>
 
@@ -177,7 +177,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
                 >
                   {priorityOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -195,7 +195,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                  className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -209,7 +209,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
+                className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/30 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border px-2.5 text-xs transition-all focus:outline-none focus:ring-2"
               >
                 <option value="">Unassigned</option>
                 {users.map((u) => (
@@ -230,7 +230,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
           </div>
 
           {/* Footer */}
-          <div className="border-surface-300/20 dark:border-surface-700/20 bg-surface-100/40 dark:bg-surface-800/40 flex items-center justify-between border-t px-5 py-3">
+          <div className="border-surface-300/20 bg-surface-100/40 flex items-center justify-between border-t px-5 py-3">
             <p className="text-surface-400 text-[10px]">
               You can also use{' '}
               <kbd className="border-surface-300/20 bg-surface-100/80 rounded border px-1 py-0.5 font-mono text-[10px]">

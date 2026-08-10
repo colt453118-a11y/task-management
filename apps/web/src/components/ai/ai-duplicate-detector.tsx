@@ -55,7 +55,7 @@ export function AIDuplicateDetector({
           <AlertTriangle className="text-amber-500 mt-0.5 h-4 w-4 shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <p className="text-amber-600 dark:text-amber-400 text-xs font-semibold">
+              <p className="text-amber-600 text-xs font-semibold">
                 Potential Duplicate{highConfidenceDuplicates.length > 1 ? 's' : ''} Detected
               </p>
               <button
@@ -76,7 +76,7 @@ export function AIDuplicateDetector({
                 >
                   <div className="flex min-w-0 items-center gap-1.5">
                     <Copy className="text-surface-400 h-3 w-3 shrink-0" />
-                    <span className="text-surface-600 dark:text-surface-400 truncate text-[10px]">
+                    <span className="text-surface-600 truncate text-[10px]">
                       {dup.title}
                     </span>
                   </div>

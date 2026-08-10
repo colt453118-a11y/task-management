@@ -599,10 +599,8 @@ test.describe('Command Palette (⌘K)', () => {
     const input = await openPalette(page);
     await input.focus();
 
-    // Default selection is the first nav command (Search).
-    // ArrowDown ×3 → Dashboard, Milestones, then Tasks.
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
+    // Default selection is the first nav command (Dashboard).
+    // ArrowDown ×1 → Tasks (the second nav command).
     await page.keyboard.press('ArrowDown');
 
     // The Tasks row should now show the active indicator (ArrowRight icon)
@@ -644,9 +642,15 @@ test.describe('Command Palette (⌘K)', () => {
     await expect(page.getByText('Payroll integration')).not.toBeVisible();
     await expect(page.getByRole('dialog').getByText('Jump to')).toBeVisible();
 
-    // Selection reset — Enter runs the first command (Search → /search)
+    // Selection reset to the top — the first nav command (Dashboard) is active again
+    await expect(
+      page.getByRole('dialog').getByRole('button', { name: 'Dashboard' }).locator('svg.lucide-arrow-right'),
+    ).toBeVisible();
+
+    // ArrowDown moves to the next command (Tasks); Enter runs it → navigates to /tasks
     await reopenedInput.focus();
+    await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/search/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tasks/, { timeout: 15_000 });
   });
 });

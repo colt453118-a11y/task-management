@@ -177,17 +177,17 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="border-surface-300/20 top-[10%] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:rounded-2xl">
         {/* Search header */}
-        <div className="border-surface-300/20 dark:border-surface-700/20 flex items-center gap-3 border-b px-5 py-4">
+        <div className="border-surface-300/20 flex items-center gap-3 border-b px-5 py-4">
           <div className="from-brand-400 to-brand-600 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br">
             <Keyboard className="h-4 w-4 text-white" />
           </div>
           <div className="flex-1">
-            <h2 className="text-surface-900 dark:text-surface-100 text-sm font-semibold">
+            <h2 className="text-surface-900 text-sm font-semibold">
               Keyboard Shortcuts
             </h2>
             <p className="text-surface-500 text-[11px]">
               Press{' '}
-              <kbd className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-800/80 rounded border px-1 py-0.5 font-mono text-[10px]">
+              <kbd className="border-surface-300/20 bg-surface-100/80 rounded border px-1 py-0.5 font-mono text-[10px]">
                 ?
               </kbd>{' '}
               anytime to open this panel
@@ -204,7 +204,7 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search shortcuts..."
-              className="border-surface-300/20 bg-surface-100/80 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 dark:bg-surface-800/80 h-9 w-full rounded-xl border pl-9 pr-3 text-xs transition-all duration-200 focus:outline-none focus:ring-2"
+              className="border-surface-300/20 bg-surface-100/80 placeholder:text-surface-400 focus:border-brand-500 focus:ring-brand-500/20 h-9 w-full rounded-xl border pl-9 pr-3 text-xs transition-all duration-200 focus:outline-none focus:ring-2"
               autoFocus
             />
           </div>
@@ -230,11 +230,11 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
                       key={shortcut.description}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="hover:bg-surface-200/50 dark:hover:bg-surface-800/50 flex items-center justify-between rounded-xl px-2.5 py-2 transition-colors"
+                      className="hover:bg-surface-200/50 flex items-center justify-between rounded-xl px-2.5 py-2 transition-colors"
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
                         <span className="text-surface-400 shrink-0">{shortcut.icon}</span>
-                        <span className="text-surface-600 dark:text-surface-400 truncate text-xs">
+                        <span className="text-surface-600 truncate text-xs">
                           {shortcut.description}
                         </span>
                       </div>
@@ -245,7 +245,7 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
                             <kbd
                               className={cn(
                                 'inline-flex h-5 min-w-[22px] items-center justify-center rounded-md border px-1.5 font-mono text-[10px] font-medium',
-                                'border-surface-300/20 bg-surface-100/80 text-surface-600 dark:bg-surface-800/80 dark:text-surface-400',
+                                'border-surface-300/20 bg-surface-100/80 text-surface-600 ',
                                 key.length > 1 && 'px-2',
                               )}
                             >
@@ -263,11 +263,11 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
         </div>
 
         {/* Footer */}
-        <div className="border-surface-300/20 dark:border-surface-700/20 bg-surface-100/40 dark:bg-surface-800/40 flex items-center gap-2 border-t px-5 py-3">
+        <div className="border-surface-300/20 bg-surface-100/40 flex items-center gap-2 border-t px-5 py-3">
           <Sparkles className="text-brand-500 h-3 w-3" />
           <p className="text-surface-500 text-[10px]">
             Tip: Hold{' '}
-            <kbd className="border-surface-300/20 bg-surface-100/80 dark:bg-surface-800/80 rounded border px-1 py-0.5 font-mono text-[9px]">
+            <kbd className="border-surface-300/20 bg-surface-100/80 rounded border px-1 py-0.5 font-mono text-[9px]">
               ⌘
             </kbd>{' '}
             and press any number key for quick navigation
