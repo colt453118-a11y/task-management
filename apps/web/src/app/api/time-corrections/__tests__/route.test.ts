@@ -122,6 +122,9 @@ function createChain<T = unknown>(resultsQueue: T[]) {
     update: vi.fn(() => chain),
     set: vi.fn(() => chain),
     delete: vi.fn(() => chain),
+    // Transactions run the callback with the same thenable chain as `tx`, so the
+    // queued results are consumed in order across the transaction body too.
+    transaction: vi.fn((cb: (tx: typeof chain) => unknown) => cb(chain)),
   };
   return chain;
 }
@@ -674,9 +677,9 @@ describe('PATCH /api/time-corrections — approve/reject', () => {
     mockRequirePermission.mockResolvedValue(undefined);
     mockDb.mockReturnValue(
       createChain([
-        [CORRECTION_REQUEST], // 120 → 150 (increase)
-        [],                   // update time entry
-        [],                   // update status
+        [CORRECTION_REQUEST],                 // gate: request found (pending)
+        [{ id: CORRECTION_REQUEST.id }],      // conditional transition wins (1 row)
+        [],                                   // update time entry
       ]),
     );
     await PATCH(
@@ -695,9 +698,9 @@ describe('PATCH /api/time-corrections — approve/reject', () => {
     mockRequirePermission.mockResolvedValue(undefined);
     mockDb.mockReturnValue(
       createChain([
-        [CORRECTION_REQUEST_DECREASE], // 120 → 60 (decrease)
-        [],                            // update time entry
-        [],                            // update status
+        [CORRECTION_REQUEST_DECREASE],            // gate: request found (pending)
+        [{ id: CORRECTION_REQUEST_DECREASE.id }], // conditional transition wins (1 row)
+        [],                                       // update time entry
       ]),
     );
     await PATCH(

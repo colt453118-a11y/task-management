@@ -18,6 +18,7 @@ export interface QueryChain {
   update: ReturnType<typeof vi.fn>;
   set: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
+  transaction: ReturnType<typeof vi.fn>;
   then: (resolve: (value: TerminalResult) => void) => void;
 }
 
@@ -53,6 +54,9 @@ export function createChain(resultsQueue: TerminalResult[]): QueryChain {
     update: vi.fn(() => chain),
     set: vi.fn(() => chain),
     delete: vi.fn(() => chain),
+    // Transactions execute the callback with the same thenable chain as `tx`,
+    // so queued results are consumed in order inside the transaction body too.
+    transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(chain)),
   };
   return chain as unknown as QueryChain;
 }

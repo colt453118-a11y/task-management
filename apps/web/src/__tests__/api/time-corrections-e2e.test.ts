@@ -251,9 +251,9 @@ describe('Time Corrections — full E2E flow', () => {
 
     mockDb.mockReturnValue(
       createChain([
-        [CORRECTION_REQUEST],
-        [],
-        [],
+        [CORRECTION_REQUEST],       // gate: request found (pending)
+        [{ id: REQ_ID }],           // conditional transition wins (1 row)
+        [],                         // update time entry
       ]),
     );
 
@@ -318,8 +318,8 @@ describe('Time Corrections — full E2E flow', () => {
     mockRequirePermission.mockResolvedValue(undefined);
     mockDb.mockReturnValue(
       createChain([
-        [{ ...CORRECTION_REQUEST, id: REQ_ID, requestedMinutes: 90 }],
-        [],
+        [{ ...CORRECTION_REQUEST, id: REQ_ID, requestedMinutes: 90 }], // gate: pending
+        [{ id: REQ_ID }],                                             // conditional transition wins
       ]),
     );
 
