@@ -43,6 +43,19 @@ export function handleApiError(
   code = 'INTERNAL_ERROR',
   status = 500,
 ): { error: { code: string; message: string }; status: number } {
+  // Preserve auth/permission errors rather than masking them as a generic 500:
+  // requireAuth → 401, and requirePermission / enforceOrgScope → 403. When these
+  // are thrown inside a route's own try/catch they reach here instead of the
+  // withAuth wrapper, so re-map them to their real status. Duck-typed on the
+  // AuthError shape to avoid importing the auth layer (circular dependency).
+  if (
+    error instanceof Error &&
+    error.name === 'AuthError' &&
+    typeof (error as { status?: unknown }).status === 'number'
+  ) {
+    const authErr = error as Error & { status: number; code?: string };
+    return apiError(authErr.message, authErr.code ?? 'FORBIDDEN', authErr.status);
+  }
   console.error(message, error);
   return apiError(message, code, status);
 }

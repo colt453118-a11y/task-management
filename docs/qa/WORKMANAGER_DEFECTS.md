@@ -85,3 +85,29 @@ New shared gate `apps/web/src/lib/api/cron-auth.ts` → `isCronAuthorized(reques
 
 ### Verification — FIXED + VERIFIED
 Unit tests 6/6; `typecheck`/`lint` green; live: dev endpoint still callable without a secret (dev path preserved) → 200.
+
+---
+
+## [WM-004] RBAC / cross-org denials returned 500 instead of 403/401
+
+**Severity:** P2 (access is correctly denied — wrong status code, poor hygiene, pollutes error monitoring)
+**Module:** API error handling (all routes)
+**Route:** every `[id]` route using `enforceOrgScope`, and every route calling `requirePermission` inside its own `try`
+
+### Finding
+`handleApiError(error, message)` ignored the error type and always returned its default 500. `requirePermission` and `enforceOrgScope` throw `AuthError(…, 403)` (and `requireAuth` → 401); when these are thrown inside a route's own `try/catch` (rather than bubbling to the `withAuth` wrapper, which does handle them) they were masked as **500 INTERNAL_ERROR**. So a permission-denied or cross-org request returned 500 instead of 403.
+
+### Evidence (live)
+Org A admin → `GET /api/tasks/{Org B task}` returned **`500 {"code":"INTERNAL_ERROR"}`** (access was still denied and the row unchanged — no data leak). Mass-assignment (`organizationId`/`status`/`createdBy` injected) was correctly rejected **400** by the `.strict()` schema.
+
+### Fix
+`handleApiError` now re-maps `AuthError`-shaped errors (duck-typed on `name === 'AuthError'` + numeric `status`, to avoid a circular import) to their real status/code. Fixes it for all routes at once.
+
+### Regression test
+`apps/web/src/lib/api/__tests__/handle-api-error.test.ts` — AuthError 403 → 403, 401 → 401, generic Error → 500 with a generic (non-leaking) message.
+
+### Verification — FIXED + VERIFIED
+Post-fix live: cross-org `GET`/`DELETE` → **403 FORBIDDEN** ("Cross-organization access denied"). `typecheck` + **1539 unit tests** + `lint` green.
+
+### Note — positive P0 result
+Multi-tenant isolation (tasks) and mass-assignment defenses **hold**: cross-org access is denied and the `.strict()` Zod schemas reject injected fields. This WM-004 was a status-code/hygiene defect, not an isolation bypass.
