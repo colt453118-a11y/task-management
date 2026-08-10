@@ -290,83 +290,101 @@ export const PATCH = withAuth(
 
       const { status: newStatus, reviewNote } = parsed.data;
 
-      // Find the correction request
-      const [correctionReq] = await db()
-        .select({
-          id: schema.timeCorrectionRequests.id,
-          organizationId: schema.timeCorrectionRequests.organizationId,
-          userId: schema.timeCorrectionRequests.userId,
-          timeEntryId: schema.timeCorrectionRequests.timeEntryId,
-          taskId: schema.timeCorrectionRequests.taskId,
-          originalMinutes: schema.timeCorrectionRequests.originalMinutes,
-          requestedMinutes: schema.timeCorrectionRequests.requestedMinutes,
-          status: schema.timeCorrectionRequests.status,
-        })
-        .from(schema.timeCorrectionRequests)
-        .where(eq(schema.timeCorrectionRequests.id, requestId))
-        .limit(1);
-
-      if (!correctionReq) {
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Correction request not found' } },
-          { status: 404 },
-        );
-      }
-
-      if (correctionReq.organizationId !== orgId) {
-        return NextResponse.json(
-          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
-          { status: 403 },
-        );
-      }
-
-      if (correctionReq.status !== 'pending') {
-        return NextResponse.json(
-          {
-            error: {
-              code: 'INVALID_STATE',
-              message: 'This request has already been reviewed',
-            },
-          },
-          { status: 422 },
-        );
-      }
-
       // Verify reviewer has permission
       await requirePermission(user.id, 'time:manage');
 
       const now = new Date();
 
-      // For approvals: update the time entry + recalc hours FIRST,
-      // then mark the correction as reviewed (data consistency)
-      if (newStatus === 'approved') {
-        await db()
-          .update(schema.timeEntries)
+      // The status transition and the time-entry update must be atomic and
+      // race-safe: two concurrent reviews of the same request must not both
+      // apply. We run them in one transaction gated by a conditional UPDATE
+      // (only one caller flips `pending → approved/rejected`). Derived work
+      // (task-hour recalculation) and the notification run after commit.
+      const outcome = await db().transaction(async (tx) => {
+        const [correctionReq] = await tx
+          .select({
+            id: schema.timeCorrectionRequests.id,
+            organizationId: schema.timeCorrectionRequests.organizationId,
+            userId: schema.timeCorrectionRequests.userId,
+            timeEntryId: schema.timeCorrectionRequests.timeEntryId,
+            taskId: schema.timeCorrectionRequests.taskId,
+            originalMinutes: schema.timeCorrectionRequests.originalMinutes,
+            requestedMinutes: schema.timeCorrectionRequests.requestedMinutes,
+            status: schema.timeCorrectionRequests.status,
+          })
+          .from(schema.timeCorrectionRequests)
+          .where(eq(schema.timeCorrectionRequests.id, requestId))
+          .limit(1);
+
+        if (!correctionReq) return { kind: 'not_found' as const };
+        if (correctionReq.organizationId !== orgId) return { kind: 'forbidden' as const };
+        if (correctionReq.status !== 'pending') return { kind: 'invalid_state' as const };
+
+        // Conditional transition — only one concurrent review wins.
+        const [reviewed] = await tx
+          .update(schema.timeCorrectionRequests)
           .set({
-            durationMinutes: correctionReq.requestedMinutes,
-            isCorrection: true,
-            correctionReason: correctionReq.requestedMinutes > correctionReq.originalMinutes
-              ? `Corrected: increased from ${correctionReq.originalMinutes}m to ${correctionReq.requestedMinutes}m`
-              : `Corrected: decreased from ${correctionReq.originalMinutes}m to ${correctionReq.requestedMinutes}m`,
+            status: newStatus,
+            reviewedBy: user.id,
+            reviewedAt: now,
+            reviewNote: reviewNote ?? null,
             updatedAt: now,
           })
-          .where(eq(schema.timeEntries.id, correctionReq.timeEntryId));
+          .where(
+            and(
+              eq(schema.timeCorrectionRequests.id, requestId),
+              eq(schema.timeCorrectionRequests.status, 'pending'),
+            ),
+          )
+          .returning({ id: schema.timeCorrectionRequests.id });
 
-        // Recalculate task hours
-        await recalcTaskHours(correctionReq.taskId);
+        if (!reviewed) return { kind: 'invalid_state' as const };
+
+        // On approval, apply the corrected duration to the time entry (in the
+        // same transaction so entry + request status commit together).
+        if (newStatus === 'approved') {
+          await tx
+            .update(schema.timeEntries)
+            .set({
+              durationMinutes: correctionReq.requestedMinutes,
+              isCorrection: true,
+              correctionReason:
+                correctionReq.requestedMinutes > correctionReq.originalMinutes
+                  ? `Corrected: increased from ${correctionReq.originalMinutes}m to ${correctionReq.requestedMinutes}m`
+                  : `Corrected: decreased from ${correctionReq.originalMinutes}m to ${correctionReq.requestedMinutes}m`,
+              updatedAt: now,
+            })
+            .where(eq(schema.timeEntries.id, correctionReq.timeEntryId));
+        }
+
+        return { kind: 'ok' as const, correctionReq };
+      });
+
+      if (outcome.kind === 'not_found') {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: 'Correction request not found' } },
+          { status: 404 },
+        );
+      }
+      if (outcome.kind === 'forbidden') {
+        return NextResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'Access denied' } },
+          { status: 403 },
+        );
+      }
+      if (outcome.kind === 'invalid_state') {
+        return NextResponse.json(
+          { error: { code: 'INVALID_STATE', message: 'This request has already been reviewed' } },
+          { status: 422 },
+        );
       }
 
-      // Update the correction request status (after time entry update on approval)
-      await db()
-        .update(schema.timeCorrectionRequests)
-        .set({
-          status: newStatus,
-          reviewedBy: user.id,
-          reviewedAt: now,
-          reviewNote: reviewNote ?? null,
-          updatedAt: now,
-        })
-        .where(eq(schema.timeCorrectionRequests.id, requestId));
+      const correctionReq = outcome.correctionReq;
+
+      // Recalculate task hours after the corrected entry is committed.
+      if (newStatus === 'approved') {
+        await recalcTaskHours(correctionReq.taskId);
+      }
 
       // Notify the requester
       await createNotification({
