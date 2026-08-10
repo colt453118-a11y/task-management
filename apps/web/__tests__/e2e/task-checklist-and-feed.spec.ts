@@ -662,3 +662,41 @@ test.describe('TaskActivityFeed', () => {
     await expect(page.getByText('Carol Williams')).toBeVisible();
   });
 });
+
+// ─── Regression: the "blank task detail" bug (#72) ──────────────
+//
+// The task detail page mounts its framer-motion tree late (after the Zustand
+// store resolves). A missed parent→child variant propagation left content stuck
+// at its `hidden` variant, and because that variant set `opacity: 0`, whole
+// sections rendered INVISIBLE in real browsers — the page looked blank.
+//
+// Every other check passed anyway: Playwright's toBeVisible()/innerText() and the
+// unit suite all ignore CSS opacity. This test closes that gap by asserting the
+// content is actually PAINTED (no ancestor pinned at opacity 0).
+test.describe('TaskDetail render', () => {
+  test('renders the task content painted, not opacity-0 blank', async ({ page }) => {
+    await mockPageApis(page);
+    await page.goto(`/tasks/${TASK_ID}`);
+
+    const title = page.getByText(MOCK_TASK.title);
+    await expect(title).toBeVisible({ timeout: 15_000 });
+
+    // Lowest computed opacity of any ancestor of the title up to <main>. The bug
+    // left an ancestor motion.div stuck at exactly 0.
+    const minAncestorOpacity = () =>
+      title.evaluate((el: Element) => {
+        let node: Element | null = el;
+        let min = 1;
+        while (node && node.tagName !== 'MAIN' && node !== document.body) {
+          const op = parseFloat(getComputedStyle(node).opacity);
+          if (!Number.isNaN(op)) min = Math.min(min, op);
+          node = node.parentElement;
+        }
+        return min;
+      });
+
+    // Poll so a transient enter-animation frame can't flake it; a real regression
+    // stays pinned at 0 and fails after the timeout.
+    await expect.poll(minAncestorOpacity, { timeout: 8_000 }).toBeGreaterThan(0);
+  });
+});
