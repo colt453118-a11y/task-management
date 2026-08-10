@@ -101,12 +101,19 @@ function formatDuration(minutes: number): string {
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+  visible: { opacity: 1, transition: { duration: 0.25, staggerChildren: 0.05 } },
 } as const;
 
+// NOTE: `hidden` intentionally does NOT set opacity to 0. This page mounts its
+// motion tree late (after the Zustand store resolves) and some sections mount
+// progressively as their data loads — under those conditions framer-motion's
+// parent→child "visible" propagation can miss a child, leaving it stuck at its
+// hidden variant. A slide-only entrance means that even if a section never
+// receives the "visible" state it stays fully visible (just un-slid) rather than
+// rendering the whole page blank. The container above still handles the fade-in.
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+  hidden: { y: 16 },
+  visible: { y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
 } as const;
 
 // ─── Page Component ─────────────────────────────────────────
