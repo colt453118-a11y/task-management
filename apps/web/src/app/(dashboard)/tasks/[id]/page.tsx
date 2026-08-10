@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState, startTransition } from 'react';
 import { useParams } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { StatusChip, PriorityChip } from '@/components/ui/chip';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor, RichTextViewer } from '@/components/tasks/rich-text-editor';
@@ -40,23 +41,6 @@ import {
 import { TaskDependencySection } from '@/components/tasks/task-dependency-section';
 
 // ─── Constants ──────────────────────────────────────────────
-
-const statusColors: Record<
-  string,
-  'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'
-> = {
-  draft: 'default',
-  open: 'primary',
-  in_progress: 'warning',
-  blocked: 'danger',
-  under_review: 'info',
-  on_hold: 'warning',
-  completed: 'success',
-  closed: 'primary',
-  reopened: 'warning',
-  cancelled: 'default',
-  archived: 'default',
-};
 
 const statusOptions = [
   'draft',
@@ -189,10 +173,11 @@ export default function TaskDetailPage() {
   // ── Fetch task data via Zustand store ─────────────────────
 
   useEffect(() => {
-    // store action is async, no cascading render
-    startTransition(() => {
-      fetchTaskDetail(taskId).finally(() => setLoading(false));
-    });
+    // NOTE: do NOT wrap in startTransition — the detail page renders `null` until
+    // the task loads, so the container <motion.div> mounts late; mounting it inside
+    // a transition made framer-motion skip the enter animation and leave the whole
+    // page stuck at its `initial="hidden"` (opacity 0) state → blank page.
+    fetchTaskDetail(taskId).finally(() => setLoading(false));
   }, [taskId, fetchTaskDetail]);
 
   // Derive notFound from store error
@@ -534,40 +519,34 @@ export default function TaskDetailPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="max-w-4xl space-y-6"
+      className="max-w-6xl space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <motion.div variants={itemVariants} className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => window.history.back()}
-            className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 flex h-9 w-9 items-center justify-center rounded-xl border transition-all"
+            className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
           </motion.button>
-          <div>
-            <div className="text-surface-500 flex items-center gap-2 text-sm">
-              <span className="font-mono text-xs">{task.taskIdDisplay}</span>
-              <Badge variant={statusColors[task.status] ?? 'default'}>
-                {task.status.replace(/_/g, ' ')}
-              </Badge>
-              <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                  task.priority === 'critical' ||
-                  task.priority === 'urgent' ||
-                  task.priority === 'high'
-                    ? 'bg-red-500/10 text-red-400'
-                    : task.priority === 'medium'
-                      ? 'bg-amber-500/10 text-amber-400'
-                      : 'bg-surface-200 text-surface-500'
-                }`}
-              >
-                {priorityLabel[task.priority] ?? task.priority}
-              </span>
+          <div className="min-w-0">
+            <div className="text-surface-500 mb-1.5 flex items-center gap-1.5 text-xs font-medium">
+              <Link href="/tasks" className="hover:text-surface-700 transition-colors">
+                Tasks
+              </Link>
+              <span className="text-surface-600">/</span>
+              <span className="font-mono">{task.taskIdDisplay}</span>
             </div>
-            <h1 className="text-surface-900 mt-1 text-xl font-semibold">{task.title}</h1>
+            <h1 className="font-display text-surface-900 text-2xl font-bold tracking-tight">
+              {task.title}
+            </h1>
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <StatusChip status={task.status} />
+              <PriorityChip priority={task.priority} />
+            </div>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
