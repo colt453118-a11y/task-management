@@ -62,3 +62,26 @@ Add a real-Postgres integration harness (the CI `test` job already provisions a 
 
 ### Verification status
 OPEN (recommendation; not yet implemented).
+
+---
+
+## [WM-003] Cron/scheduled endpoints fail OPEN when `CRON_SECRET` is unset
+
+**Severity:** P2 (unauthenticated trigger of scheduled work; no data disclosure)
+**Module:** Cron / Automation
+**Route:** `POST /api/cron/check-deadlines`, `POST /api/cron/generate-eod-snapshot`, `POST /api/automation/check-overdue`
+
+### Finding
+Two of the three scheduled endpoints guarded with `if (CRON_SECRET && authHeader !== CRON_SECRET && queryToken !== CRON_SECRET)`. When `CRON_SECRET` is **unset** (falsy) the whole condition is false, so the guard is skipped and the endpoint is **publicly triggerable — including in production**. An operator who forgets to set `CRON_SECRET` (it is not in the launch checklist) leaves deadline-notification, overdue-automation, and EOD-snapshot jobs open to anonymous triggering → notification/email spam, duplicate EOD snapshots, DoS. `check-overdue` already failed closed in production; the two cron routes did not.
+
+### Evidence
+`grep` of the guards (fail-open `&&` form) in `check-deadlines`/`generate-eod-snapshot`; `check-overdue` used the correct `!CRON_SECRET → dev-only` form.
+
+### Fix
+New shared gate `apps/web/src/lib/api/cron-auth.ts` → `isCronAuthorized(request)` that **fails closed**: no secret ⇒ allowed only outside production; configured ⇒ requires `Authorization: Bearer <secret>` or `?token=`/`?secret=`. All three routes now use it. Added `CRON_SECRET` to the production launch checklist.
+
+### Regression test
+`apps/web/src/lib/api/__tests__/cron-auth.test.ts` — 6 cases incl. "no secret + production → deny" and "secret set but none provided → deny".
+
+### Verification — FIXED + VERIFIED
+Unit tests 6/6; `typecheck`/`lint` green; live: dev endpoint still callable without a secret (dev path preserved) → 200.

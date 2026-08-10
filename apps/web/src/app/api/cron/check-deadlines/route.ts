@@ -3,10 +3,9 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { and, isNull, lte, gte, not, inArray } from 'drizzle-orm';
 import { createNotification } from '@/lib/notifications';
+import { isCronAuthorized } from '@/lib/api/cron-auth';
 
 export const runtime = 'nodejs';
-
-const CRON_SECRET = process.env.CRON_SECRET;
 
 const TERMINAL_STATUSES = ['completed', 'closed', 'archived', 'cancelled'] as const;
 
@@ -53,11 +52,8 @@ async function findTasksWithDeadlines(
  */
 export const POST = async (request: NextRequest) => {
   try {
-    // ── Auth ──────────────────────────────────────────────────
-    const authHeader = request.headers.get('authorization')?.replace('Bearer ', '');
-    const queryToken = request.nextUrl.searchParams.get('token');
-
-    if (CRON_SECRET && authHeader !== CRON_SECRET && queryToken !== CRON_SECRET) {
+    // ── Auth (fails closed — see lib/api/cron-auth) ───────────
+    if (!isCronAuthorized(request)) {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Invalid or missing CRON_SECRET' } },
         { status: 401 },
