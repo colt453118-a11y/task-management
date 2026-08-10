@@ -77,6 +77,15 @@ export const MOCK_CREATED_TEAM = {
   createdAt: new Date().toISOString(),
 } as const;
 
+export const MOCK_CREATED_DEPARTMENT = {
+  id: 'dept-new',
+  name: 'Marketing',
+  code: 'MKT',
+  description: 'Brand and growth',
+  headUserId: null,
+  isActive: true,
+} as const;
+
 // ═══════════════════════════════════════════════════════════════
 //  Mock Helpers
 // ═══════════════════════════════════════════════════════════════
@@ -103,6 +112,14 @@ export async function mockTeamsApi(
     createErrorStatus?: number;
     /** If set, the POST endpoint will fulfill with this error body. */
     createErrorBody?: Record<string, unknown>;
+    /** If set, POST /api/departments will fulfill with this error status. */
+    createDeptErrorStatus?: number;
+    /** If set, POST /api/departments will fulfill with this error body. */
+    createDeptErrorBody?: Record<string, unknown>;
+    /** If set, DELETE /api/departments/[id] will fulfill with this error status. */
+    deleteDeptErrorStatus?: number;
+    /** If set, DELETE /api/departments/[id] will fulfill with this error body. */
+    deleteDeptErrorBody?: Record<string, unknown>;
   } = {},
 ) {
   const {
@@ -112,6 +129,10 @@ export async function mockTeamsApi(
     delay,
     createErrorStatus,
     createErrorBody,
+    createDeptErrorStatus,
+    createDeptErrorBody,
+    deleteDeptErrorStatus,
+    deleteDeptErrorBody,
   } = options;
 
   // GET /api/teams — list teams and departments
@@ -155,6 +176,60 @@ export async function mockTeamsApi(
       status: 201,
       contentType: 'application/json',
       body: JSON.stringify({ team: MOCK_CREATED_TEAM }),
+    });
+  });
+
+  // POST /api/departments — create department
+  await page.route('**/api/departments', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+
+    if (createDeptErrorStatus) {
+      await route.fulfill({
+        status: createDeptErrorStatus,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          createDeptErrorBody ?? {
+            error: { code: 'VALIDATION_ERROR', message: 'Name is required' },
+          },
+        ),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({ department: MOCK_CREATED_DEPARTMENT }),
+    });
+  });
+
+  // DELETE /api/departments/[id] — delete department
+  await page.route('**/api/departments/*', async (route) => {
+    if (route.request().method() !== 'DELETE') {
+      await route.fallback();
+      return;
+    }
+
+    if (deleteDeptErrorStatus) {
+      await route.fulfill({
+        status: deleteDeptErrorStatus,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          deleteDeptErrorBody ?? {
+            error: { code: 'FORBIDDEN', message: 'Not allowed' },
+          },
+        ),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true }),
     });
   });
 }

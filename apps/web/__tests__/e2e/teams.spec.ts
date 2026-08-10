@@ -262,4 +262,101 @@ test.describe('Teams Page', () => {
       page.getByRole('heading', { name: /create team/i }),
     ).not.toBeVisible();
   });
+
+  // ─── Departments: create & delete ────────────────────────────
+
+  test('creates a department successfully via modal', async ({ page }) => {
+    await mockTeamsApi(page);
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+
+    // Open the New Department modal from the header
+    await page.getByRole('button', { name: /new department/i }).first().click();
+    await expect(page.getByRole('heading', { name: /create department/i })).toBeVisible();
+
+    // Fill the form
+    await page.getByPlaceholder(/e\.g\. Marketing/i).fill('Marketing');
+    await page.getByPlaceholder('e.g. MKT', { exact: true }).fill('MKT');
+    await page.getByPlaceholder(/optional description/i).fill('Brand and growth');
+
+    // Submit
+    await page.getByRole('button', { name: /create$/i }).first().click();
+
+    // New department appears and the modal closes
+    await expect(page.getByText('Marketing')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: /create department/i })).not.toBeVisible();
+  });
+
+  test('shows validation error for empty department name', async ({ page }) => {
+    await mockTeamsApi(page);
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: /new department/i }).first().click();
+    await expect(page.getByRole('heading', { name: /create department/i })).toBeVisible();
+
+    // Submit with an empty name
+    await page.getByRole('button', { name: /create$/i }).first().click();
+
+    await expect(page.getByText(/department name is required/i)).toBeVisible();
+  });
+
+  test('deletes a department after confirmation', async ({ page }) => {
+    await mockTeamsApi(page, { teams: [] });
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+
+    // Click the per-card delete button (opacity-0 until hover, but Playwright treats it as visible)
+    await page.getByRole('button', { name: 'Delete Engineering' }).click();
+
+    // Confirmation modal appears naming the department
+    await expect(page.getByRole('heading', { name: /delete department/i })).toBeVisible();
+    await expect(page.getByText(/any teams in this department will become unassigned/i)).toBeVisible();
+
+    // Confirm — the modal's own "Delete" button (exact) is distinct from the card buttons
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    // The department card is removed
+    await expect(page.getByText('Engineering')).toHaveCount(0, { timeout: 5_000 });
+  });
+
+  test('cancels department deletion', async ({ page }) => {
+    await mockTeamsApi(page, { teams: [] });
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Delete Engineering' }).click();
+    await expect(page.getByRole('heading', { name: /delete department/i })).toBeVisible();
+
+    // Cancel — the department is untouched
+    await page.getByRole('button', { name: /cancel/i }).click();
+    await expect(page.getByRole('heading', { name: /delete department/i })).not.toBeVisible();
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+  });
+
+  test('shows error when department deletion fails', async ({ page }) => {
+    await mockTeamsApi(page, {
+      teams: [],
+      deleteDeptErrorStatus: 403,
+      deleteDeptErrorBody: { error: { code: 'FORBIDDEN', message: 'Not allowed' } },
+    });
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Delete Engineering' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    // Error surfaces in the modal, which stays open, and the card remains
+    await expect(page.getByText(/not allowed/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: /delete department/i })).toBeVisible();
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+  });
 });
