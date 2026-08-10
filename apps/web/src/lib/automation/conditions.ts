@@ -152,32 +152,3 @@ export function evaluateConditions(
 
   return conditions.every((c) => evaluateConditionOrGroup(c, data));
 }
-
-/**
- * Get the human-readable label for a condition.
- */
-export function getConditionLabel(condition: Condition): string {
-  const fieldLabel = condition.field
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (s) => s.toUpperCase());
-
-  const operatorLabels: Record<string, string> = {
-    eq: 'is',
-    neq: 'is not',
-    contains: 'contains',
-    gt: '>',
-    lt: '<',
-    gte: '>=',
-    lte: '<=',
-    is_empty: 'is empty',
-    is_not_empty: 'is not empty',
-  };
-
-  const opLabel = operatorLabels[condition.operator] ?? condition.operator;
-  const valLabel =
-    condition.operator === 'is_empty' || condition.operator === 'is_not_empty'
-      ? ''
-      : ` ${String(condition.value)}`;
-
-  return `${fieldLabel} ${opLabel}${valLabel}`;
-}

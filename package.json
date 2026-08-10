@@ -21,7 +21,6 @@
     "db:studio": "pnpm --filter @workmanagement/database db:studio"
   },
   "dependencies": {
-    "@node-rs/argon2": "^2.0.2",
     "@workmanagement/database": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },
