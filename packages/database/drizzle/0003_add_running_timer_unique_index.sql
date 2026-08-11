@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "idx_time_entries_one_running_timer" ON "time_entries" USING btree ("user_id") WHERE "time_entries"."end_time" is null and "time_entries"."entry_type" = 'timer';

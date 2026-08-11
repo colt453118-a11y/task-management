@@ -232,3 +232,22 @@ Extended `apps/web/src/__tests__/security/sanitize.test.ts` (+4): `id` stripped 
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1579 unit tests** (4 new; 55 in the sanitize suite) + `lint` + `build` all green.
+
+---
+
+## [WM-011] Timer "start" is a check-then-insert race — a user can end up with two running timers
+
+**Severity:** P2 (data-integrity race — corrupts time tracking; same class as WM-001)
+**Module:** Time tracking · **Files:** `apps/web/src/app/api/tasks/[id]/time-entries/route.ts`, `packages/database/src/schema/tasks.ts` (+ migration `0003`), `apps/web/src/lib/db-errors.ts` (new)
+
+### Finding
+Starting a timer (`POST /api/tasks/[id]/time-entries`, `entryType: 'timer'`) did a **check-then-act**: `SELECT` for a running entry (`end_time IS NULL`), reject if one exists, then `INSERT` a new running row. The check and the insert are separate statements with no atomicity, so two concurrent "start" requests both pass the check (neither sees the other's uncommitted row) and both insert → the user has **two running timers**, silently double-counting time. (`INSERT … WHERE NOT EXISTS` would not fix this under READ COMMITTED either — the subquery can't see the concurrent uncommitted insert.) Same non-atomic-invariant class as WM-001.
+
+### Fix
+DB-enforced invariant: a **partial unique index** `idx_time_entries_one_running_timer` on `time_entries(user_id) WHERE end_time IS NULL AND entry_type = 'timer'` (schema + generated migration `0003_add_running_timer_unique_index.sql`) makes "at most one running timer per user" impossible to violate, regardless of concurrency or which code path inserts. The route keeps its pre-check for the friendly common-case message and now catches the unique-violation from a raced insert — new `isUniqueViolation(err, constraint)` helper (`lib/db-errors.ts`, postgres.js SQLSTATE `23505` + `constraint_name`) → same `409 CONFLICT` ("You already have a running timer") instead of a 500. Only `timer` entries are constrained, so open manual entries are unaffected.
+
+### Regression test
+`apps/web/src/lib/__tests__/db-errors.test.ts` — 4 cases (matches `23505` with/without a named constraint; ignores other SQLSTATEs; safe on non-object input). The invariant itself is enforced by Postgres and applied in CI via `db:migrate` (the E2E DB). Note the standing WM-002 gap: a true concurrent-burst assertion needs the real-DB integration harness.
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1583 unit tests** (4 new) + `lint` + `build` all green; migration generates cleanly (single `CREATE UNIQUE INDEX`).
