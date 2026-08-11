@@ -3,12 +3,17 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
-import { eq, and, or, isNull } from 'drizzle-orm';
+import { isUniqueViolation } from '@/lib/db-errors';
+import { wouldCreateCycle } from '@/lib/api/dependency-cycle';
+import { eq, and, or, isNull, inArray, sql } from 'drizzle-orm';
 import { READONLY_STATUSES } from '@/lib/api/validation';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
+
+/** Internal sentinel: adding the edge would make the dependency graph cyclic. */
+class DependencyCycleError extends Error {}
 
 const DependencyCreateSchema = z
   .object({
@@ -172,10 +177,62 @@ export const POST = withAuth(
         );
       }
 
-      const [dependency] = await db()
-        .insert(schema.taskDependencies)
-        .values({ taskId, dependsOnTaskId, dependencyType })
-        .returning();
+      let dependency;
+      try {
+        dependency = await db().transaction(async (tx) => {
+          // Serialize dependency mutations for this org so a concurrent add
+          // can't race a cycle past the check below (TOCTOU). The lock is held
+          // until the transaction commits/rolls back.
+          await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`taskdeps:${orgId}`}))`);
+
+          // Reject an edge that would make the depends-on graph cyclic (WM-013).
+          const fetchDeps = async (taskIds: string[]): Promise<string[]> => {
+            const rows = await tx
+              .select({ dependsOnTaskId: schema.taskDependencies.dependsOnTaskId })
+              .from(schema.taskDependencies)
+              .innerJoin(schema.tasks, eq(schema.taskDependencies.dependsOnTaskId, schema.tasks.id))
+              .where(
+                and(
+                  inArray(schema.taskDependencies.taskId, taskIds),
+                  // orgId is guaranteed non-null past checkTaskAccessOrRespond above.
+                  eq(schema.tasks.organizationId, orgId!),
+                  isNull(schema.tasks.deletedAt),
+                ),
+              );
+            return rows.map((r) => r.dependsOnTaskId);
+          };
+          if (await wouldCreateCycle(taskId, dependsOnTaskId, fetchDeps)) {
+            throw new DependencyCycleError();
+          }
+
+          const [row] = await tx
+            .insert(schema.taskDependencies)
+            .values({ taskId, dependsOnTaskId, dependencyType })
+            .returning();
+          return row;
+        });
+      } catch (txError) {
+        if (txError instanceof DependencyCycleError) {
+          return NextResponse.json(
+            {
+              error: {
+                code: 'INVALID_STATE',
+                message: 'This dependency would create a circular dependency',
+              },
+            },
+            { status: 422 },
+          );
+        }
+        // A unique index guards against duplicates; a concurrent add that raced
+        // past the check above lands here — return the same 409, not a 500.
+        if (isUniqueViolation(txError, 'idx_task_deps_unique')) {
+          return NextResponse.json(
+            { error: { code: 'CONFLICT', message: 'Dependency already exists' } },
+            { status: 409 },
+          );
+        }
+        throw txError;
+      }
 
       if (!dependency) {
         return NextResponse.json(
