@@ -167,3 +167,23 @@ New `isPublicWebhookUrl()` guard (`url-guard.ts`) rejects non-`http(s)` schemes 
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1563 unit tests** (21 new) + `lint` + `build` all green.
+
+---
+
+## [WM-008] SSE notification stream never re-checks auth — revoked/expired/deactivated users keep receiving live events
+
+**Severity:** P2 (revocation bypass — session invalidation / account deactivation does not terminate an open stream)
+**Module:** Notifications (real-time) · **Files:** `apps/web/src/app/api/notifications/sse/route.ts`, `apps/web/src/lib/notifications/stream-auth.ts` (new), `apps/web/src/lib/auth/api-auth.ts` (export `getUserStatus`)
+
+### Finding
+`GET /api/notifications/sse` authenticated **once** at the handshake (`getCurrentSession()`), then held the connection open indefinitely (15s heartbeat, 60s poll, LISTEN/NOTIFY push) with **no re-validation**. So after a user logs out (Better Auth deletes the session row), the session expires, or an admin deactivates the account (`DELETE /api/users/[id]` → `deletedAt`/`isActive:false`), an already-open browser tab **kept receiving that user's live notifications** until the tab happened to close — a server restart was the only other stop. Two gaps: (a) no mid-stream re-check; (b) the handshake only checked *session presence*, so a deactivated-but-still-logged-in user could even open a **fresh** stream.
+
+### Fix
+- New `revalidateStreamAuth(sessionId, userId)` (`lib/notifications/stream-auth.ts`): (1) session row still exists (missing ⇒ logged out/revoked), (2) not past `expiresAt`, (3) account still active — delegates to the now-exported canonical `getUserStatus` (soft-delete/suspend/deactivate). Fails closed on a session-lookup error (drop → client reconnects & re-auths).
+- SSE route now (a) rejects the **handshake** with 403 if the account is inactive, and (b) runs `revalidateStreamAuth` on a **30s interval**; on any invalid result it emits an `expired` event and tears the stream down. Teardown refactored into one idempotent `cleanup()` (disposer array) shared by disconnect/enqueue-failure/revocation. Bounded revocation window ≤30s; after teardown the browser reconnects and is rejected at the handshake (401/403) → EventSource backoff → poll fallback.
+
+### Regression test
+`apps/web/src/lib/notifications/__tests__/stream-auth.test.ts` — 7 cases: valid; `session_revoked` (row gone); `session_expired`; `account_disabled` for soft-deleted / suspended / `isActive:false`; fail-closed on session-lookup throw.
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1570 unit tests** (7 new) + `lint` + `build` all green. Existing SSE tests (notification-listener 25, dashboard-sse-integration 8) still pass.

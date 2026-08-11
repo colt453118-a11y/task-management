@@ -168,7 +168,7 @@ interface UserStatus {
   organizationId: string | null;
 }
 
-async function getUserStatus(userId: string): Promise<UserStatus> {
+export async function getUserStatus(userId: string): Promise<UserStatus> {
   try {
     const db = getDb();
     const [user] = await db
