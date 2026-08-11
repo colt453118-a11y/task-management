@@ -86,8 +86,13 @@ const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   th: ['scope', 'colspan', 'rowspan'],
   // Lists
   ol: ['start', 'reversed', 'type'],
-  // Wildcard — applied to every tag
-  '*': ['class', 'id'],
+  // Wildcard — applied to every tag.
+  // NOTE: `id` is intentionally NOT allowed. A user-controlled `id` on
+  // rich-text elements enables DOM-clobbering (an element named e.g.
+  // `id="attributes"` can shadow real DOM/JS properties and, paired with a
+  // gadget, escalate to XSS). TipTap's output never needs `id`, so we keep
+  // only `class` for styling. (WM-010)
+  '*': ['class'],
 };
 
 // ─── Tags to strip entirely (body + content) ──────────────────

@@ -210,6 +210,36 @@ describe('sanitizeHtml', () => {
     // The SVG tag is stripped but the inner safe content is preserved
     expect(result).toContain('Safe');
   });
+
+  // ── DOM clobbering (WM-010) ────────────────────────────────
+  // User-controlled `id`/`name` on rich-text elements can shadow real DOM/JS
+  // properties (DOM clobbering). We strip `id` while keeping `class` for style.
+
+  it('strips user-controlled id attributes', () => {
+    const input = '<p id="attributes">Text</p>';
+    const result = sanitizeHtml(input);
+    expect(result).not.toContain('id=');
+    expect(result).toContain('Text');
+  });
+
+  it('strips id from a DOM-clobbering anchor while keeping the text', () => {
+    const input = '<a id="attributes" href="https://example.com">x</a>';
+    const result = sanitizeHtml(input);
+    expect(result).not.toContain('id=');
+    expect(result).toContain('href="https://example.com"');
+  });
+
+  it('does not allow the name attribute (clobbering vector)', () => {
+    const input = '<img name="body" src="https://example.com/a.png">';
+    const result = sanitizeHtml(input);
+    expect(result).not.toContain('name=');
+  });
+
+  it('preserves the class attribute for legitimate styling', () => {
+    const input = '<p class="text-lg">Styled</p>';
+    const result = sanitizeHtml(input);
+    expect(result).toContain('class="text-lg"');
+  });
 });
 
 // ─── sanitizeRichText ─────────────────────────────────────────

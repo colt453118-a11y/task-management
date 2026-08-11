@@ -210,3 +210,25 @@ Generous limits — only clearly-abnormal configs trip them, and every trip is l
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1575 unit tests** (5 new) + `lint` + `build` all green.
+
+---
+
+## [WM-010] Rich-text (TipTap) XSS sweep — defenses verified strong; DOM-clobbering hardened
+
+**Severity:** P3 (hardening — no exploitable hole found)
+**Module:** Rich text / sanitization · **File:** `apps/web/src/lib/sanitize.ts`
+
+### Sweep result (what was audited)
+Full sweep of the rich-text → storage → render path. **The XSS posture is strong:**
+- **One render sink app-wide.** The only `dangerouslySetInnerHTML` in the entire repo is `components/tasks/rich-text-editor.tsx`, and it renders `sanitizeHtml(content)`. Every other surface (emails via `@react-email` JSX, notifications, search results) renders content as escaped React text. CSV export has its own formula-injection guard (`__tests__/security/csv-sanitization.test.ts`).
+- **Sanitize-on-write (defense in depth).** Task description (`POST`/`PATCH /api/tasks`) and comment create (`POST /api/tasks/[id]/comments`) run `sanitizeRichText` before storage. There is no comment-edit route; task-template descriptions are plain capped strings.
+- **Reputable sanitizer.** `sanitizeHtml` uses the `xss` (js-xss) library with a tag/attr allow-list, `stripIgnoreTagBody` for `script/style/iframe/object/...`, `javascript:`/`vbscript:`/`data:` scheme blocking on `href`/`src`, and a CSS-property allow-list. Backed by 51 existing regression tests (script/iframe/object/embed/style/form removal, event-handler stripping, dangerous URI schemes, nested-tag bypass, SVG `onload`, CSS filtering, comment cases).
+
+### Finding + fix (the one real hardening)
+The wildcard attribute allow-list permitted a user-controlled **`id`** on every tag (`'*': ['class', 'id']`) — a **DOM-clobbering** vector (an element `id="attributes"`/`id="body"` can shadow real DOM/JS properties and, with a gadget, escalate). TipTap never emits `id`, so removed it — allow-list is now `'*': ['class']` (styling preserved). `name` was already disallowed.
+
+### Regression test
+Extended `apps/web/src/__tests__/security/sanitize.test.ts` (+4): `id` stripped from a paragraph and from a clobbering anchor (href preserved); `name` not allowed; `class` preserved.
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1579 unit tests** (4 new; 55 in the sanitize suite) + `lint` + `build` all green.
