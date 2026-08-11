@@ -270,3 +270,23 @@ Covered by `isUniqueViolation` unit tests (WM-011). The wiring is uniform 4-line
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1583 unit tests** + `lint` + `build` all green.
+
+---
+
+## [WM-013] Task dependencies can form cycles — no acyclicity check on add (deadlocks the graph)
+
+**Severity:** P2 (data/graph integrity — a cycle deadlocks scheduling/gantt; also a TOCTOU under concurrency)
+**Module:** Tasks / dependencies · **Files:** `apps/web/src/app/api/tasks/[id]/dependencies/route.ts`, `apps/web/src/lib/api/dependency-cycle.ts` (new)
+
+### Finding
+`POST /api/tasks/[id]/dependencies` blocked only self-dependencies (`A depends on A`) — it never checked the wider graph. A user could add `A depends on B` and then `B depends on A` (or any longer chain) to create a **cycle**, leaving tasks that mutually block each other, which deadlocks dependency-aware scheduling/gantt. The `dependencies/deep` route only *reports* `hasCycle` after the fact; nothing *prevented* creating one. Even with a check, concurrent adds are a TOCTOU: two complementary edges added at once each pass an independent check and together close a loop.
+
+### Fix
+- New pure, testable helper `wouldCreateCycle(source, dependsOn, fetchDeps)` (`lib/api/dependency-cycle.ts`): adding `source → dependsOn` closes a loop iff `dependsOn` already transitively depends on `source`; it walks the depends-on graph breadth-first from `dependsOn` (batched via `fetchDeps`, with a visited-set so pre-existing cycles can't hang it).
+- The route now runs the cycle check **and** the insert inside a `db().transaction`, guarded by a per-org Postgres advisory lock (`pg_advisory_xact_lock(hashtext('taskdeps:'+orgId))`) so concurrent dependency mutations for an org are serialized — closing the TOCTOU (same atomicity approach as WM-001). A would-be cycle returns **422** (`This dependency would create a circular dependency`); the raced-duplicate 409 mapping (WM-012) is preserved.
+
+### Regression test
+`apps/web/src/lib/api/__tests__/dependency-cycle.test.ts` — 7 cases: self-loop; direct reverse edge; transitive cycle (B→C→A); non-closing edge allowed; empty graph; termination on a pre-existing stored cycle; batched frontier lookups (one query per BFS level).
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1590 unit tests** (7 new) + `lint` + `build` all green.
