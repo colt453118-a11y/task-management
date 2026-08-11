@@ -5,6 +5,7 @@ import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
+import { isPublicWebhookUrl } from '@/lib/webhooks/url-guard';
 
 export const runtime = 'nodejs';
 
@@ -76,12 +77,12 @@ export const POST = withAuth(
         );
       }
 
-      // Validate URL format
-      try {
-        new URL(url);
-      } catch {
+      // Validate URL — reject SSRF targets (localhost / private / link-local /
+      // cloud-metadata addresses) and non-http(s) schemes.
+      const urlCheck = isPublicWebhookUrl(url);
+      if (!urlCheck.ok) {
         return NextResponse.json(
-          { error: { code: 'VALIDATION_ERROR', message: 'Invalid webhook URL' } },
+          { error: { code: 'VALIDATION_ERROR', message: urlCheck.reason } },
           { status: 400 },
         );
       }
@@ -206,15 +207,14 @@ export const PATCH = withAuth(
 
       if (name !== undefined) updateData.name = name;
       if (url !== undefined) {
-        try {
-          new URL(url);
-          updateData.url = url;
-        } catch {
+        const urlCheck = isPublicWebhookUrl(url);
+        if (!urlCheck.ok) {
           return NextResponse.json(
-            { error: { code: 'VALIDATION_ERROR', message: 'Invalid webhook URL' } },
+            { error: { code: 'VALIDATION_ERROR', message: urlCheck.reason } },
             { status: 400 },
           );
         }
+        updateData.url = url;
       }
       if (events !== undefined) updateData.events = events;
       if (isActive !== undefined) updateData.isActive = isActive;
