@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { withAuth } from '@/lib/auth/api-auth';
+import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { getDb, schema } from '@workmanagement/database';
 import { eq, and, isNull } from 'drizzle-orm';
 import {
@@ -26,6 +26,9 @@ async function reindexHandler(
   _req: NextRequest,
   ctx: { user: { id: string }; orgId: string | null },
 ) {
+  // Re-indexing is an admin/maintenance operation — gate it (bubbles to withAuth → 403).
+  await requirePermission(ctx.user.id, 'settings:manage');
+
   if (!ctx.orgId) {
     return NextResponse.json(
       { error: { code: 'VALIDATION_ERROR', message: 'No organization context' } },

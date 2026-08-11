@@ -101,7 +101,11 @@ export function withAuth(
       // Initialize request-scoped permission cache and run the handler
       // inside the AsyncLocalStorage context so all requirePermission() calls
       // within this request share the 3-query result.
-      return permissionStorage.run(new Map(), async () => {
+      //
+      // `await` is required: without it a rejection thrown inside the handler
+      // (e.g. requirePermission → AuthError 403) escapes this try/catch and
+      // surfaces as a generic 500 instead of the intended status.
+      return await permissionStorage.run(new Map(), async () => {
         // Apply rate limiting after authentication if configured
         if (rateLimit) {
           const identifier = rateLimit.key === 'ip' ? ipFromRequest(req) : user.id;

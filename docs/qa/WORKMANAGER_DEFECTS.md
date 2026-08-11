@@ -111,3 +111,40 @@ Post-fix live: cross-org `GET`/`DELETE` → **403 FORBIDDEN** ("Cross-organizati
 
 ### Note — positive P0 result
 Multi-tenant isolation (tasks) and mass-assignment defenses **hold**: cross-org access is denied and the `.strict()` Zod schemas reject injected fields. This WM-004 was a status-code/hygiene defect, not an isolation bypass.
+
+---
+
+## [WM-005] RBAC gap — Slack integration + search reindex had no permission check
+
+**Severity:** P2 (any org member could change an org-wide integration / trigger maintenance)
+**Module:** Settings / Search · **Route:** `GET/POST/DELETE /api/settings/slack`, `POST /api/settings/slack/test`, `POST /api/settings/slack/preview`, `POST /api/search/reindex`
+
+### Finding
+These routes used only `withAuth` (authentication) with **no `requirePermission`**, unlike the peer `settings/ai` (`settings:view`/`settings:manage`) and `webhooks` (`integration:*`). So any authenticated org member — including a **`viewer`** — could create/update/delete the org's Slack webhook, send test/preview messages, or trigger a full Meilisearch reindex.
+
+### Evidence (live, low-priv `viewer` user)
+Controls behaved: `GET /api/tasks` → 200, gated `POST /api/departments` → 403. Gaps: `POST /api/settings/slack` → **400** (reached validation), `POST /api/search/reindex` → **500** (reached reindex logic) — both *past* authorization.
+
+### Fix
+Added `requirePermission(user.id, 'settings:manage')` to all mutating Slack routes + reindex, and `'settings:view'` to Slack GET. The Slack webhook was already restricted to `hooks.slack.com` (SSRF-safe). Post-fix: `viewer` → **403** on all; admin (has `settings:manage`) → 200.
+
+### Verification — FIXED + VERIFIED (see also WM-006, required for the bubbled checks to return 403)
+
+---
+
+## [WM-006] `withAuth` swallowed handler-thrown errors → 500 instead of 401/403
+
+**Severity:** P2 (authorization *worked* — wrong status; and it silently defeated WM-005-style checks placed before a route's own try)
+**Module:** Auth wrapper · **File:** `apps/web/src/lib/auth/api-auth.ts`
+
+### Finding
+`withAuth` ran the handler via `return permissionStorage.run(async () => handler(...))` **without `await`**. Its `try/catch` — whose whole purpose is to map `AuthError → 401/403` — therefore never caught errors thrown *inside* the handler; they escaped as an unhandled rejection and surfaced as a generic **500**. Any `requirePermission`/`enforceOrgScope` that bubbled (rather than being caught locally by `handleApiError`) returned 500. Discovered while fixing WM-005: the new `requirePermission` calls in `search/reindex` + `settings/slack/{test,preview}` returned 500, and the dev log showed the `AuthError` was thrown but mis-mapped.
+
+### Fix
+`return await permissionStorage.run(...)` — one word, so the wrapper's `try/catch` catches handler errors and maps them correctly.
+
+### Regression test
+`apps/web/src/lib/auth/__tests__/with-auth.test.ts` — a handler throwing `AuthError(403)` → 403 (fails if `await` is removed); 401 case; success pass-through.
+
+### Verification — FIXED + VERIFIED
+Post-fix live: `viewer` → **403** on all four WM-005 endpoints; admin → 200; unauthenticated still blocked. `typecheck` + **1542 unit tests** + `build` + `lint` green.
