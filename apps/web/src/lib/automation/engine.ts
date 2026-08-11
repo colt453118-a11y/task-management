@@ -28,6 +28,13 @@ export interface AutomationContext {
   data: Record<string, unknown>;
   /** Previous values (for update events) */
   previousValues?: Record<string, unknown>;
+  /**
+   * Depth of the automation trigger chain (0 = triggered directly by a user or
+   * cron action). Any re-entrant caller (an action that emits another event)
+   * MUST pass `chainDepth: (context.chainDepth ?? 0) + 1` so the engine can
+   * hard-stop runaway loops. See MAX_CHAIN_DEPTH (WM-009).
+   */
+  chainDepth?: number;
 }
 
 export interface ExecutionResult {
@@ -122,6 +129,22 @@ export const CONDITION_FIELDS = [
   { value: 'isOverdue', label: 'Is Overdue' },
 ] as const;
 
+// ─── Runaway / loop protection (WM-009) ─────────────────────
+//
+// A single trigger event fans out to every matching rule, and each rule can
+// run several actions. Actions currently write straight to the DB, so they do
+// not re-emit events — but that makes the system loop-safe only by accident.
+// These bounds keep automation work finite regardless of how rules are
+// configured, or how actions are wired up in the future:
+//   - MAX_CHAIN_DEPTH        hard-stops re-entrancy (defense in depth for the
+//                            day an action routes back through the event layer);
+//   - MAX_RULES_PER_EVENT    caps rule fan-out per event;
+//   - MAX_ACTIONS_PER_EVENT  caps total actions run per event.
+// so one cheap edit can never spawn unbounded writes/notifications.
+export const MAX_CHAIN_DEPTH = 5;
+export const MAX_RULES_PER_EVENT = 50;
+export const MAX_ACTIONS_PER_EVENT = 100;
+
 // ─── Core Engine ────────────────────────────────────────────
 
 /**
@@ -133,6 +156,20 @@ export async function evaluateAutomationRules(
   context: AutomationContext,
 ): Promise<ExecutionResult[]> {
   const results: ExecutionResult[] = [];
+
+  // ── Loop guard: refuse to recurse past the chain-depth limit ──
+  const chainDepth = context.chainDepth ?? 0;
+  if (chainDepth > MAX_CHAIN_DEPTH) {
+    console.warn(
+      `[automation] chain depth ${chainDepth} exceeded MAX_CHAIN_DEPTH (${MAX_CHAIN_DEPTH}) ` +
+        `for ${event} on ${context.entityType}:${context.entityId} — halting to prevent a loop`,
+    );
+    return results;
+  }
+
+  // Running budget of actions across every rule in this event.
+  let actionsRun = 0;
+  let budgetWarned = false;
 
   try {
     const db = getDb();
@@ -152,7 +189,17 @@ export async function evaluateAutomationRules(
 
     if (rules.length === 0) return results;
 
-    for (const rule of rules) {
+    // Cap rule fan-out so a single event can't spawn unbounded work.
+    let rulesToRun = rules;
+    if (rules.length > MAX_RULES_PER_EVENT) {
+      console.warn(
+        `[automation] ${rules.length} rules matched ${event} (org ${context.organizationId}); ` +
+          `capping at MAX_RULES_PER_EVENT (${MAX_RULES_PER_EVENT})`,
+      );
+      rulesToRun = rules.slice(0, MAX_RULES_PER_EVENT);
+    }
+
+    for (const rule of rulesToRun) {
       const ruleStart = Date.now();
       const actionResults: Array<{ type: string; success: boolean; message?: string }> = [];
 
@@ -181,9 +228,27 @@ export async function evaluateAutomationRules(
             (rawActions as Array<{ type: string; config: Record<string, unknown> }>) ?? [];
 
           for (const action of actions) {
+            if (actionsRun >= MAX_ACTIONS_PER_EVENT) {
+              if (!budgetWarned) {
+                console.warn(
+                  `[automation] action budget (${MAX_ACTIONS_PER_EVENT}) reached for ${event} ` +
+                    `(org ${context.organizationId}); skipping remaining actions`,
+                );
+                budgetWarned = true;
+              }
+              actionResults.push({
+                type: action.type,
+                success: false,
+                message: `Skipped: action budget (${MAX_ACTIONS_PER_EVENT}) exceeded`,
+              });
+              continue;
+            }
+            actionsRun++;
             const actionStart = Date.now();
             try {
-              await executeAction(action, context);
+              // Pass an incremented chain depth so any event an action emits is
+              // bounded by MAX_CHAIN_DEPTH (defense in depth against loops).
+              await executeAction(action, { ...context, chainDepth: chainDepth + 1 });
               actionResults.push({
                 type: action.type,
                 success: true,

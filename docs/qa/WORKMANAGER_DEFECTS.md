@@ -187,3 +187,26 @@ New `isPublicWebhookUrl()` guard (`url-guard.ts`) rejects non-`http(s)` schemes 
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1570 unit tests** (7 new) + `lint` + `build` all green. Existing SSE tests (notification-listener 25, dashboard-sse-integration 8) still pass.
+
+---
+
+## [WM-009] Automation engine has no runaway/loop guard — one event can fan out to unbounded rule/action execution
+
+**Severity:** P2 (resource-exhaustion amplification via misconfigured or malicious admin rules; latent infinite-loop risk)
+**Module:** Automation · **File:** `apps/web/src/lib/automation/engine.ts`
+
+### Finding
+`evaluateAutomationRules(event, context)` runs **every** enabled rule matching a trigger, and each rule runs **all** of its actions — with **no cap** on rules-per-event, actions-per-event, or any trigger-chain depth. So one cheap task edit (`PATCH /api/tasks/[id]` fires automation fire-and-forget) can fan out to arbitrarily many DB writes / notifications / emails, bounded only by how many rules/actions an admin configured. There is **no infinite loop today** — the action implementations (`change_status`, `assign`, `escalate`, …) write **straight to the DB** rather than through the event-emitting API layer, so they don't re-trigger the engine — but that safety is accidental: the moment an action is (correctly) routed through the task-update path so downstream consumers fire, mutual/self-referential rules would loop forever with nothing to stop them.
+
+### Fix
+Added bounded execution to the engine (exported constants for testability):
+- `MAX_CHAIN_DEPTH` (5) — `AutomationContext` now carries an optional `chainDepth`; the engine refuses (logs + returns `[]`, before any DB access) once depth exceeds the limit, and passes `chainDepth + 1` into `executeAction`, so any future event an action emits is depth-bounded → **no infinite loops even if actions start re-emitting**.
+- `MAX_RULES_PER_EVENT` (50) — caps rule fan-out per event (logs when it trips).
+- `MAX_ACTIONS_PER_EVENT` (100) — running budget across all rules in the event; excess actions are skipped and recorded as failed (`Skipped: action budget exceeded`), with a single warning.
+Generous limits — only clearly-abnormal configs trip them, and every trip is logged.
+
+### Regression test
+`apps/web/src/lib/automation/__tests__/engine-loop-guard.test.ts` — 5 cases: hard-stop past `MAX_CHAIN_DEPTH` (DB never touched); runs at the boundary depth; rule fan-out capped at `MAX_RULES_PER_EVENT`; action budget caps at `MAX_ACTIONS_PER_EVENT` with the rest marked skipped; `executeAction` receives `chainDepth + 1`.
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1575 unit tests** (5 new) + `lint` + `build` all green.
