@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
-import { withAuth } from '@/lib/auth/api-auth';
+import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { eq, and, isNull } from 'drizzle-orm';
 import { testSlackWebhook } from '@/lib/slack/webhook';
 
@@ -10,8 +10,9 @@ export const runtime = 'nodejs';
 // ─── GET - Get Slack integration ─────────────────────────────
 
 export const GET = withAuth(
-  async (_request: NextRequest, { orgId }) => {
+  async (_request: NextRequest, { user, orgId }) => {
     try {
+      await requirePermission(user.id, 'settings:view');
       const [integration] = await db()
         .select()
         .from(schema.slackIntegrations)
@@ -41,6 +42,7 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (request: NextRequest, { user, orgId }) => {
     try {
+      await requirePermission(user.id, 'settings:manage');
       const body = await request.json();
       const { webhookUrl } = body;
 
@@ -111,8 +113,9 @@ export const POST = withAuth(
 // ─── DELETE - Remove Slack integration ───────────────────────
 
 export const DELETE = withAuth(
-  async (_request: NextRequest, { orgId }) => {
+  async (_request: NextRequest, { user, orgId }) => {
     try {
+      await requirePermission(user.id, 'settings:manage');
       const [existing] = await db()
         .select()
         .from(schema.slackIntegrations)

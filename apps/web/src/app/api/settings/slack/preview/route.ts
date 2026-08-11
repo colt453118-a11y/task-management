@@ -1,12 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth/api-auth';
+import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { sendSlackNotification } from '@/lib/slack/webhook';
 
 export const runtime = 'nodejs';
 
 export const POST = withAuth(
-  async (_request: NextRequest, { orgId }) => {
+  async (_request: NextRequest, { user, orgId }) => {
+    await requirePermission(user.id, 'settings:manage');
     try {
       if (!orgId) {
         return NextResponse.json(
