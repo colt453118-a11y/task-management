@@ -148,3 +148,22 @@ Added `requirePermission(user.id, 'settings:manage')` to all mutating Slack rout
 
 ### Verification — FIXED + VERIFIED
 Post-fix live: `viewer` → **403** on all four WM-005 endpoints; admin → 200; unauthenticated still blocked. `typecheck` + **1542 unit tests** + `build` + `lint` green.
+
+---
+
+## [WM-007] Outbound webhooks are an SSRF vector — no guard on the user-supplied URL
+
+**Severity:** P2 (server-side request forgery; a low-priv target is the cloud metadata endpoint / internal services)
+**Module:** Webhooks · **Files:** `apps/web/src/app/api/webhooks/route.ts`, `apps/web/src/lib/webhooks/deliver.ts`, `apps/web/src/lib/webhooks/url-guard.ts` (new)
+
+### Finding
+Webhook subscriptions store a user-supplied URL that the **server** later fetches. Create/update (`POST`/`PATCH /api/webhooks`) validated the URL only with `new URL(url)` — a syntax check that happily accepts `http://169.254.169.254/…` (cloud instance-metadata / IAM credentials), `http://127.0.0.1:9200/…` (internal Elasticsearch/admin), and RFC-1918 hosts. The delivery path (`deliver.ts`) then `fetch`ed that URL with default redirect-following, so even a public URL could 30x-redirect into the same internal targets. Classic SSRF: the app server becomes a proxy into the private network / metadata plane.
+
+### Fix
+New `isPublicWebhookUrl()` guard (`url-guard.ts`) rejects non-`http(s)` schemes and any host that is loopback, `0.0.0.0/8`, RFC-1918 (`10/8`, `172.16/12`, `192.168/16`), link-local `169.254/16` (incl. `169.254.169.254`), multicast/reserved, `localhost`/`*.localhost`, and IPv6 loopback/ULA/link-local. Applied at **create + update** (returns the specific reason as a 400 `VALIDATION_ERROR`) and **again at delivery time** (defense in depth — a subscription may predate the guard). Delivery now also sets `redirect: 'error'` so a 30x can't bounce into an internal target. Documented limitation: this blocks *literal* private hosts, not DNS-rebinding (public host that resolves to a private IP); redirect-blocking narrows that, and connect-time IP pinning is a tracked follow-up.
+
+### Regression test
+`apps/web/src/lib/webhooks/__tests__/url-guard.test.ts` — 21 cases: blocks localhost/`127.0.0.1`/`169.254.169.254`/all RFC-1918/`0.0.0.0`/`[::1]` and non-http(s) schemes (`ftp`/`file`/`gopher`); allows `hooks.slack.com`/`example.com`/`172.32.0.1` (just outside `172.16/12`); rejects empty/non-string.
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1563 unit tests** (21 new) + `lint` + `build` all green.
