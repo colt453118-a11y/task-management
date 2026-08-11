@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { organizations, users, departments, teams } from './index';
 import { projects, milestones } from './projects';
 
@@ -264,6 +264,13 @@ export const timeEntries = pgTable(
     taskIdx: index('idx_time_entries_task').on(table.taskId),
     userIdx: index('idx_time_entries_user').on(table.userId),
     userDateIdx: index('idx_time_entries_user_date').on(table.userId, table.startTime),
+    // At most one *running* timer per user. A partial unique index makes this a
+    // DB-enforced invariant so concurrent "start timer" requests can't both pass
+    // an app-level check-then-insert and leave a user with two running timers
+    // (WM-011). Only timer-type entries with no end_time are constrained.
+    oneRunningTimerPerUser: uniqueIndex('idx_time_entries_one_running_timer')
+      .on(table.userId)
+      .where(sql`${table.endTime} is null and ${table.entryType} = 'timer'`),
   }),
 );
 

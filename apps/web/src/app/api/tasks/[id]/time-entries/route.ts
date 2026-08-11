@@ -6,6 +6,10 @@ import { createAuditEntry } from '@/lib/audit';
 import { eq, desc, and, isNull, isNotNull } from 'drizzle-orm';
 import { TimeEntryCreateSchema, validationError } from '@/lib/api/validation';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
+import { isUniqueViolation } from '@/lib/db-errors';
+
+/** Partial unique index guaranteeing at most one running timer per user. */
+const RUNNING_TIMER_INDEX = 'idx_time_entries_one_running_timer';
 
 export const runtime = 'nodejs';
 
@@ -115,18 +119,37 @@ export const POST = withAuth(
       }
 
       const now = new Date();
-      const [entry] = await db()
-        .insert(schema.timeEntries)
-        .values({
-          taskId,
-          userId: user.id,
-          startTime: entryType === 'timer' ? now : body.startTime ? new Date(body.startTime) : now,
-          endTime: entryType === 'timer' ? null : body.startTime ? now : null,
-          durationMinutes: entryType === 'timer' ? null : (durationMinutes ?? null),
-          entryType,
-          description: description ?? null,
-        })
-        .returning();
+      let entry;
+      try {
+        [entry] = await db()
+          .insert(schema.timeEntries)
+          .values({
+            taskId,
+            userId: user.id,
+            startTime: entryType === 'timer' ? now : body.startTime ? new Date(body.startTime) : now,
+            endTime: entryType === 'timer' ? null : body.startTime ? now : null,
+            durationMinutes: entryType === 'timer' ? null : (durationMinutes ?? null),
+            entryType,
+            description: description ?? null,
+          })
+          .returning();
+      } catch (insertError) {
+        // A DB partial unique index guarantees one running timer per user. If a
+        // concurrent "start timer" slipped past the check above, the second
+        // insert violates it here — surface the same friendly 409 instead of 500.
+        if (isUniqueViolation(insertError, RUNNING_TIMER_INDEX)) {
+          return NextResponse.json(
+            {
+              error: {
+                code: 'CONFLICT',
+                message: 'You already have a running timer. Stop it first.',
+              },
+            },
+            { status: 409 },
+          );
+        }
+        throw insertError;
+      }
 
       if (!entry) {
         return NextResponse.json(
