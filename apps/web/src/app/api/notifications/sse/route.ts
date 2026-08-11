@@ -3,11 +3,16 @@ import type { NextRequest } from 'next/server';
 import { getDb, schema } from '@workmanagement/database';
 import { eq, and, gt, desc, sql } from 'drizzle-orm';
 import { getCurrentSession } from '@/lib/auth/session';
+import { getUserStatus } from '@/lib/auth/api-auth';
 import { registerSSEConnection, subscribeToBus } from '@/lib/notifications/listener';
 import type { NotificationEvent } from '@/lib/notifications/listener';
+import { revalidateStreamAuth } from '@/lib/notifications/stream-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+/** How often a live stream re-checks that its session/account is still valid. */
+const REVALIDATE_INTERVAL_MS = 30_000;
 
 /**
  * Server-Sent Events endpoint for real-time notification delivery.
@@ -36,6 +41,20 @@ export async function GET(req: NextRequest) {
   }
 
   const userId = session.user.id;
+  const sessionId = session.session.id;
+
+  // Reject at the handshake if the account is no longer active (deactivated /
+  // suspended / soft-deleted) — otherwise a deactivated-but-still-logged-in
+  // user could open a fresh stream. Mid-stream revocation is handled by the
+  // periodic re-check inside the stream (WM-008).
+  const { isActive } = await getUserStatus(userId);
+  if (!isActive) {
+    return NextResponse.json(
+      { error: { code: 'FORBIDDEN', message: 'Account is not active' } },
+      { status: 403 },
+    );
+  }
+
   const encoder = new TextEncoder();
 
   // Track last poll time — used by the fallback poll only
@@ -126,6 +145,29 @@ export async function GET(req: NextRequest) {
         console.error('[SSE] Failed to register listener:', err);
       }
 
+      // ── Idempotent teardown for all timers/subscriptions ──
+      // Each resource pushes its disposer onto `teardowns`; cleanup() runs
+      // them once (client disconnect, enqueue failure, or revocation).
+      let closed = false;
+      const teardowns: Array<() => void> = [unsubBus];
+      if (unregister) teardowns.push(unregister);
+      const cleanup = () => {
+        if (closed) return;
+        closed = true;
+        for (const dispose of teardowns) {
+          try {
+            dispose();
+          } catch {
+            // best-effort
+          }
+        }
+        try {
+          controller.close();
+        } catch {
+          // Already closed
+        }
+      };
+
       // ── Fallback poll (60s) — catches anything missed by ──
       // both the bus and LISTEN/NOTIFY (e.g., bus listener limit
       // exceeded, transient DB blip)
@@ -173,29 +215,34 @@ export async function GET(req: NextRequest) {
           console.error('[SSE] Fallback poll error:', err);
         }
       }, 60_000);
+      teardowns.push(() => clearInterval(fallbackPoll));
 
       // ── Heartbeat every 15 seconds ────────────────────────
       const heartbeatInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode('event: heartbeat\ndata: {}\n\n'));
         } catch {
-          clearInterval(heartbeatInterval);
-          clearInterval(fallbackPoll);
+          cleanup();
         }
       }, 15_000);
+      teardowns.push(() => clearInterval(heartbeatInterval));
+
+      // ── Re-validate session/account every 30s (WM-008) ────
+      // The handshake authenticates once; without this a logged-out, expired,
+      // or deactivated user would keep receiving live events until the tab
+      // closes. On failure we notify the client and tear the stream down; it
+      // reconnects and is rejected at the handshake (401/403).
+      const revalidateInterval = setInterval(async () => {
+        const result = await revalidateStreamAuth(sessionId, userId);
+        if (!result.valid) {
+          sendEvent('expired', { reason: result.reason });
+          cleanup();
+        }
+      }, REVALIDATE_INTERVAL_MS);
+      teardowns.push(() => clearInterval(revalidateInterval));
 
       // ── Clean up on client disconnect ─────────────────────
-      req.signal.addEventListener('abort', () => {
-        unsubBus();
-        unregister?.();
-        clearInterval(fallbackPoll);
-        clearInterval(heartbeatInterval);
-        try {
-          controller.close();
-        } catch {
-          // Already closed
-        }
-      });
+      req.signal.addEventListener('abort', cleanup);
     },
   });
 
