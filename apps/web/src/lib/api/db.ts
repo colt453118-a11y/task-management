@@ -1,5 +1,5 @@
 import { getDb, schema } from '@workmanagement/database';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export { schema };
 
@@ -61,38 +61,36 @@ export function handleApiError(
 }
 
 /**
- * Recalculate a task's `actualHours` based on all its time entries.
- * Called after approving a time correction request.
+ * Recalculate a task's `actualHours` from the SUM of all its time entries.
+ * Called after a time entry is created/updated or a correction is approved.
+ *
+ * Done as a single atomic `UPDATE … SET actual_hours = (SELECT SUM …)` so a
+ * concurrent recalc can't lost-update the total: the previous SELECT-then-
+ * UPDATE could read fewer entries and then write its stale sum last (WM-014).
+ * The SUM is re-read at UPDATE time, so the result always reflects committed
+ * entries. Failures are silent — hours are recalculated on the next update.
  *
  * Returns the new total hours as a string, or `null` on failure.
- * Failures are silent — hours are recalculated on the next update.
  */
 export async function recalcTaskHours(
   taskId: string,
 ): Promise<string | null> {
   try {
-    const allEntries = await db()
-      .select({ durationMinutes: schema.timeEntries.durationMinutes })
-      .from(schema.timeEntries)
-      .where(
-        and(
-          eq(schema.timeEntries.taskId, taskId),
-          isNotNull(schema.timeEntries.durationMinutes),
-        ),
-      );
-
-    const totalMinutes = allEntries.reduce(
-      (sum, e) => sum + (e.durationMinutes ?? 0),
-      0,
-    );
-    const totalHours = (totalMinutes / 60).toFixed(2);
-
-    await db()
+    const [row] = await db()
       .update(schema.tasks)
-      .set({ actualHours: totalHours, updatedAt: new Date() })
-      .where(eq(schema.tasks.id, taskId));
+      .set({
+        actualHours: sql`ROUND(COALESCE((
+          SELECT SUM(${schema.timeEntries.durationMinutes})
+          FROM ${schema.timeEntries}
+          WHERE ${schema.timeEntries.taskId} = ${taskId}
+            AND ${schema.timeEntries.durationMinutes} IS NOT NULL
+        ), 0) / 60.0, 2)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.tasks.id, taskId))
+      .returning({ actualHours: schema.tasks.actualHours });
 
-    return totalHours;
+    return row?.actualHours ?? null;
   } catch {
     return null;
   }

@@ -290,3 +290,22 @@ Covered by `isUniqueViolation` unit tests (WM-011). The wiring is uniform 4-line
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1590 unit tests** (7 new) + `lint` + `build` all green.
+
+---
+
+## [WM-014] Task-hours recompute is a non-atomic SELECT-then-UPDATE (lost-update under concurrency)
+
+**Severity:** P3 (derived analytics value can go stale under concurrency; self-heals on next recompute)
+**Module:** Analytics / time tracking · **File:** `apps/web/src/lib/api/db.ts` (`recalcTaskHours`)
+
+### Finding
+`recalcTaskHours(taskId)` recomputed a task's cached `actualHours` by **`SELECT`ing all time entries, summing in JS, then `UPDATE`ing** — two separate statements. It correctly recomputes from scratch (no incremental read-modify-write), but the SELECT and UPDATE aren't atomic, so two concurrent recomputes can lost-update: recalc-A reads the entries (missing a just-committed entry), recalc-B reads all + writes the correct total, then recalc-A writes its **stale** total last. `actualHours` is then wrong until the next time entry triggers another recompute. It's called after every time-entry create/update and correction approval, so overlap is plausible.
+
+### Fix
+Collapsed to a single atomic statement: `UPDATE tasks SET actual_hours = ROUND(COALESCE((SELECT SUM(duration_minutes) FROM time_entries WHERE task_id = $1 AND duration_minutes IS NOT NULL), 0) / 60.0, 2) …`. The SUM is re-read at UPDATE time, so the write always reflects committed entries regardless of interleaving — no stale-read window. Same "recompute atomically in SQL" spirit as the WM-001 balance math. Behavior/format unchanged (2-decimal string); returns the new value via `RETURNING`.
+
+### Regression test
+Covered indirectly by the time-corrections suite (which mocks `recalcTaskHours`). The atomicity is a single-statement DB property; a true concurrent assertion needs the real-DB harness (WM-002).
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1590 unit tests** + `lint` + `build` all green.
