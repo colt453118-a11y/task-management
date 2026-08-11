@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { isUniqueViolation } from '@/lib/db-errors';
 import { eq, and, or, isNull } from 'drizzle-orm';
 import { READONLY_STATUSES } from '@/lib/api/validation';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
@@ -172,10 +173,23 @@ export const POST = withAuth(
         );
       }
 
-      const [dependency] = await db()
-        .insert(schema.taskDependencies)
-        .values({ taskId, dependsOnTaskId, dependencyType })
-        .returning();
+      let dependency;
+      try {
+        [dependency] = await db()
+          .insert(schema.taskDependencies)
+          .values({ taskId, dependsOnTaskId, dependencyType })
+          .returning();
+      } catch (insertError) {
+        // A unique index guards against duplicates; a concurrent add that raced
+        // past the check above lands here — return the same 409, not a 500.
+        if (isUniqueViolation(insertError, 'idx_task_deps_unique')) {
+          return NextResponse.json(
+            { error: { code: 'CONFLICT', message: 'Dependency already exists' } },
+            { status: 409 },
+          );
+        }
+        throw insertError;
+      }
 
       if (!dependency) {
         return NextResponse.json(

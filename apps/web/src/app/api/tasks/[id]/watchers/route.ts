@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { isUniqueViolation } from '@/lib/db-errors';
 import { eq, and, isNull } from 'drizzle-orm';
 import { getTaskIdFromPath, checkTaskAccessOrRespond } from '@/lib/api/task-helpers';
 
@@ -86,14 +87,27 @@ export const POST = withAuth(
         );
       }
 
-      const [watcher] = await db()
-        .insert(schema.taskWatchers)
-        .values({
-          taskId,
-          userId: user.id,
-          watchType: 'watching',
-        })
-        .returning();
+      let watcher;
+      try {
+        [watcher] = await db()
+          .insert(schema.taskWatchers)
+          .values({
+            taskId,
+            userId: user.id,
+            watchType: 'watching',
+          })
+          .returning();
+      } catch (insertError) {
+        // A unique index guards against duplicates; a concurrent watch that
+        // raced past the check above lands here — return the same 409, not 500.
+        if (isUniqueViolation(insertError, 'idx_task_watchers_unique')) {
+          return NextResponse.json(
+            { error: { code: 'CONFLICT', message: 'Already watching this task' } },
+            { status: 409 },
+          );
+        }
+        throw insertError;
+      }
 
       if (!watcher) {
         return NextResponse.json(

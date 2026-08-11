@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { createAuditEntry } from '@/lib/audit';
+import { isUniqueViolation } from '@/lib/db-errors';
 import { eq, and, isNull } from 'drizzle-orm';
 import { TeamMemberAddSchema, validationError } from '@/lib/api/validation';
 
@@ -99,14 +100,27 @@ export const POST = withAuth(
         );
       }
 
-      const [member] = await db()
-        .insert(schema.teamMembers)
-        .values({
-          teamId,
-          userId: targetUserId,
-          role,
-        })
-        .returning();
+      let member;
+      try {
+        [member] = await db()
+          .insert(schema.teamMembers)
+          .values({
+            teamId,
+            userId: targetUserId,
+            role,
+          })
+          .returning();
+      } catch (insertError) {
+        // A unique index guards against duplicates; a concurrent add that raced
+        // past the check above lands here — return the same 409, not a 500.
+        if (isUniqueViolation(insertError, 'idx_team_members_unique')) {
+          return NextResponse.json(
+            { error: { code: 'CONFLICT', message: 'User is already a member of this team' } },
+            { status: 409 },
+          );
+        }
+        throw insertError;
+      }
 
       if (!member) {
         return NextResponse.json(

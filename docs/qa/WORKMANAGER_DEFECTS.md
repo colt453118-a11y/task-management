@@ -251,3 +251,22 @@ DB-enforced invariant: a **partial unique index** `idx_time_entries_one_running_
 
 ### Verification — FIXED + VERIFIED
 `typecheck` (3 pkgs) + **1583 unit tests** (4 new) + `lint` + `build` all green; migration generates cleanly (single `CREATE UNIQUE INDEX`).
+
+---
+
+## [WM-012] Raced duplicate inserts return 500 instead of 409 (dependencies / watchers / team members)
+
+**Severity:** P3 (hygiene — data integrity already safe; wrong status code + error-monitor noise under a concurrent-duplicate race)
+**Module:** Tasks / Teams · **Files:** `apps/web/src/app/api/tasks/[id]/dependencies/route.ts`, `.../tasks/[id]/watchers/route.ts`, `.../teams/[id]/members/route.ts`
+
+### Finding
+Three "add a relationship" routes follow the same check-then-insert shape as WM-011 — `SELECT` for an existing row, reject with a friendly **409** if found, else `INSERT`. Unlike the timer, **data integrity here was never at risk**: each table already has a unique index (`idx_task_deps_unique`, `idx_task_watchers_unique`, `idx_team_members_unique`), so a raced duplicate can't create a duplicate row. But the losing insert throws a unique-violation the route didn't catch, so it surfaced as a generic **500** (via `handleApiError`) instead of the same 409 the non-raced path returns — a status-code wart that also pollutes error monitoring (same spirit as WM-004).
+
+### Fix
+Wrapped each insert and mapped the specific unique-violation to the route's existing 409, reusing the WM-011 helper `isUniqueViolation(err, <indexName>)`. Non-unique errors still rethrow to `handleApiError`. No behavior change on the common path.
+
+### Regression test
+Covered by `isUniqueViolation` unit tests (WM-011). The wiring is uniform 4-line try/catch per route; a true raced-duplicate assertion needs the real-DB harness (WM-002).
+
+### Verification — FIXED + VERIFIED
+`typecheck` (3 pkgs) + **1583 unit tests** + `lint` + `build` all green.
