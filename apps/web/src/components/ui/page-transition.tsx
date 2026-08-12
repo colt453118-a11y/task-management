@@ -9,9 +9,14 @@ interface PageTransitionProps {
   className?: string;
 }
 
+// Entrance is slide-only (no opacity fade): content paints at full opacity on
+// first render, so it's eligible for LCP immediately instead of waiting for a
+// fade to complete. (Same reasoning as the task-detail blank-page fix.) The
+// exit still fades for a graceful leave, which doesn't affect the entering
+// page's LCP.
 const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
+  initial: { y: 12 },
+  animate: { y: 0 },
   exit: { opacity: 0, y: -12 },
 } as const;
 
