@@ -521,7 +521,7 @@ export default function AnalyticsPage() {
                           labelLine={false}
                         >
                           {pieData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.color} />
+                            <Cell key={idx} fill={entry.color} aria-label={`${entry.name}: ${entry.value}`} />
                           ))}
                         </Pie>
                         <Tooltip content={<ChartTooltip />} />

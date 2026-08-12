@@ -38,9 +38,9 @@ interface LeaveRequestItem {
 // ─── Constants ──────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50 ', dot: 'bg-amber-500' },
-  approved: { label: 'Approved', color: 'text-emerald-600 bg-emerald-50 ', dot: 'bg-emerald-500' },
-  rejected: { label: 'Rejected', color: 'text-red-600 bg-red-50 ', dot: 'bg-red-500' },
+  pending: { label: 'Pending', color: 'text-amber-700 bg-amber-50 ', dot: 'bg-amber-500' },
+  approved: { label: 'Approved', color: 'text-emerald-700 bg-emerald-50 ', dot: 'bg-emerald-500' },
+  rejected: { label: 'Rejected', color: 'text-red-700 bg-red-50 ', dot: 'bg-red-500' },
   cancelled: { label: 'Cancelled', color: 'text-surface-500 bg-surface-100 ', dot: 'bg-surface-400' },
 } as const;
 

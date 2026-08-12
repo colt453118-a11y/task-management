@@ -175,7 +175,7 @@ describe('Sidebar', () => {
       expect(await screen.findByText('Notifications')).toBeInTheDocument();
 
       // Find and click the close button (X icon in mobile header)
-      const closeBtn = screen.getByRole('button', { name: '' });
+      const closeBtn = screen.getByRole('button', { name: 'Close menu' });
       closeBtn.click();
 
       // Wait for drawer to close after state update

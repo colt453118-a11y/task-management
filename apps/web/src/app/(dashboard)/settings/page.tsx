@@ -186,7 +186,7 @@ const channelMeta: Record<ChannelKey, { label: string; description: string; icon
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({ enabled, onChange, disabled, ariaLabel }: { enabled: boolean; onChange: (v: boolean) => void; disabled?: boolean; ariaLabel?: string }) {
   return (
     <button
       type="button"
@@ -197,6 +197,7 @@ function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
       role="switch"
       aria-checked={enabled}
+      aria-label={ariaLabel}
     >
       <span
         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
@@ -664,6 +665,7 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="text"
+                      aria-label={field.label}
                       value={field.value}
                       disabled
                       placeholder={field.placeholder}
@@ -850,6 +852,7 @@ export default function SettingsPage() {
                             <span className="text-surface-500 text-xs">No roles</span>
                           )}
                           <select
+                            aria-label="Assign role to user"
                             value=""
                             onChange={(e) => { if (e.target.value) assignRole(user.id, e.target.value); }}
                             className="border-surface-300/30 bg-surface-100 hover:border-surface-400/30 ml-2 h-7 rounded-lg border px-2 text-xs transition-all"
@@ -1011,6 +1014,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <Toggle
+                        ariaLabel={`${channelMeta[key]!.label} notifications`}
                         enabled={notifPrefs.channels?.[key] ?? false}
                         onChange={(v) => setNotifPrefs((prev) => ({ ...prev, channels: { ...(prev.channels ?? {}), [key]: v } }))}
                         disabled={key === 'push' || (key === 'slack' && slackConnected === false)}
@@ -1057,6 +1061,7 @@ export default function SettingsPage() {
                             <Play className="h-3.5 w-3.5" />
                           </button>
                           <Toggle
+                            ariaLabel="Notification sound"
                             enabled={notifPrefs.media?.soundEnabled ?? true}
                             onChange={(v) => setNotifPrefs((prev) => ({ ...prev, media: { ...(prev.media ?? {}), soundEnabled: v } }))}
                           />
@@ -1095,6 +1100,7 @@ export default function SettingsPage() {
                             <Play className="h-3.5 w-3.5" />
                           </button>
                           <Toggle
+                            ariaLabel="Vibration feedback"
                             enabled={notifPrefs.media?.hapticEnabled ?? true}
                             onChange={(v) => setNotifPrefs((prev) => ({ ...prev, media: { ...(prev.media ?? {}), hapticEnabled: v } }))}
                           />
@@ -1143,6 +1149,7 @@ export default function SettingsPage() {
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">In-app</span>
                             <Toggle
+                              ariaLabel={`${notifTypeMeta[k]!.label}: in-app`}
                               enabled={tc.inApp ?? true}
                               onChange={(v) => updateTypeChannel(k, 'inApp', v)}
                             />
@@ -1151,6 +1158,7 @@ export default function SettingsPage() {
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Email</span>
                             <Toggle
+                              ariaLabel={`${notifTypeMeta[k]!.label}: email`}
                               enabled={tc.email ?? (notifPrefs.channels?.email ?? true)}
                               onChange={(v) => updateTypeChannel(k, 'email', v)}
                             />
@@ -1159,6 +1167,7 @@ export default function SettingsPage() {
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Push</span>
                             <Toggle
+                              ariaLabel={`${notifTypeMeta[k]!.label}: push`}
                               enabled={tc.push ?? false}
                               onChange={(v) => updateTypeChannel(k, 'push', v)}
                               disabled
@@ -1168,6 +1177,7 @@ export default function SettingsPage() {
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="text-surface-400 text-[9px] font-medium uppercase tracking-wider">Slack</span>
                             <Toggle
+                              ariaLabel={`${notifTypeMeta[k]!.label}: Slack`}
                               enabled={tc.slack ?? (notifPrefs.channels?.slack ?? false)}
                               onChange={(v) => updateTypeChannel(k, 'slack', v)}
                             />
@@ -1197,6 +1207,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <Toggle
+                      ariaLabel="Send digest email"
                       enabled={notifPrefs.digest?.enabled ?? false}
                       onChange={(v) => setNotifPrefs((prev) => ({ ...prev, digest: { ...(prev.digest ?? {}), enabled: v } }))}
                     />
@@ -1210,6 +1221,7 @@ export default function SettingsPage() {
                     >
                       <label className="text-surface-500 text-xs font-medium uppercase tracking-wider">Frequency</label>
                       <select
+                        aria-label="Digest frequency"
                         value={notifPrefs.digest?.frequency ?? 'daily'}
                         onChange={(e) => setNotifPrefs((prev) => ({ ...prev, digest: { ...(prev.digest ?? {}), frequency: e.target.value as 'daily' | 'weekly' | 'never' } }))}
                         className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 rounded-xl border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"

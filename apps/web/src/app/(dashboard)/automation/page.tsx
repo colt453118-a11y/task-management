@@ -829,12 +829,14 @@ export default function AutomationPage() {
                             </button>
                             <button
                               onClick={() => openEditForm(rule)}
+                              aria-label="Edit rule"
                               className="text-surface-500 hover:text-brand-500 hover:bg-surface-200/70 rounded-lg p-1.5 transition-all"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => setShowDeleteConfirm(rule.id)}
+                              aria-label="Delete rule"
                               className="text-surface-500 hover:text-error hover:bg-error/5 rounded-lg p-1.5 transition-all"
                             >
                               <Trash2 className="h-3.5 w-3.5" />

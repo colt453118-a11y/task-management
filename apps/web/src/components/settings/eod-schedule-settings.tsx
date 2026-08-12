@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: EODSettings = {
 
 // ─── Toggle Component ───────────────────────────────────────
 
-function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({ enabled, onChange, disabled, ariaLabel }: { enabled: boolean; onChange: (v: boolean) => void; disabled?: boolean; ariaLabel?: string }) {
   return (
     <button
       type="button"
@@ -53,6 +53,7 @@ function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
       role="switch"
       aria-checked={enabled}
+      aria-label={ariaLabel}
     >
       <span
         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
@@ -173,6 +174,7 @@ export function EODScheduleSettings() {
             The cron job runs at this time to capture the day&apos;s task data.
           </p>
           <select
+            aria-label="Preferred generation time"
             value={settings.preferredTime}
             onChange={(e) => setSettings((prev) => ({ ...prev, preferredTime: e.target.value }))}
             className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full max-w-xs rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
@@ -207,6 +209,7 @@ export function EODScheduleSettings() {
             </div>
           </div>
           <Toggle
+            ariaLabel="AI summaries for EOD snapshots"
             enabled={settings.aiSummaryEnabled}
             onChange={(v) => setSettings((prev) => ({ ...prev, aiSummaryEnabled: v }))}
           />

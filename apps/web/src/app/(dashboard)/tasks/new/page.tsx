@@ -214,6 +214,7 @@ export default function NewTaskPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
+          aria-label="Go back"
           className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 flex h-9 w-9 items-center justify-center rounded-xl border transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -284,6 +285,7 @@ export default function NewTaskPage() {
                   Priority
                 </label>
                 <select
+                  aria-label="Priority"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
                   className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
@@ -302,6 +304,7 @@ export default function NewTaskPage() {
                 </label>
                 <input
                   type="date"
+                  aria-label="Due date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
@@ -317,6 +320,7 @@ export default function NewTaskPage() {
                   Assignee
                 </label>
                 <select
+                  aria-label="Assignee"
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
                   className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"
@@ -335,6 +339,7 @@ export default function NewTaskPage() {
                   Project
                 </label>
                 <select
+                  aria-label="Project"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   className="border-surface-300/20 bg-surface-100/80 hover:border-surface-400/40 focus:border-brand-500 focus:ring-brand-500/25 h-10 w-full rounded-xl border px-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2"

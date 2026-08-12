@@ -1044,7 +1044,7 @@ export default function TimeTrackingPage() {
                     onClick={() => setScope(s)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       scope === s
-                        ? 'bg-brand-500 text-white shadow-sm'
+                        ? 'bg-brand-400 text-white shadow-sm'
                         : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 '
                     }`}
                   >
@@ -1062,6 +1062,7 @@ export default function TimeTrackingPage() {
               </span>
               <button
                 onClick={refresh}
+                aria-label="Refresh entries"
                 className="text-surface-500 hover:text-surface-700 hover:bg-surface-200/50 rounded-lg p-1.5 transition-all"
               >
                 <Loader2 className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />

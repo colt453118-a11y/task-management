@@ -388,7 +388,7 @@ export default function DashboardPage() {
           >
             <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span className="sm:inline">{tab.label}</span>
-            <span className="text-surface-400 hidden text-[10px] sm:inline">— {tab.description}</span>
+            <span className="text-surface-600 hidden text-[10px] sm:inline">— {tab.description}</span>
           </button>
         ))}
       </motion.div>

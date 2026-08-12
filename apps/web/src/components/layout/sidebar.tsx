@@ -219,6 +219,7 @@ export function Sidebar() {
         {isMobile && (
           <button
             onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
             className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all duration-200"
           >
             <X className="h-4 w-4" />

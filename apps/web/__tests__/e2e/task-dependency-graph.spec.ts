@@ -256,7 +256,7 @@ test.describe('TaskDependencyGraph', () => {
     await expect(page.getByText(MOCK_TASK.title).first()).toBeVisible({ timeout: 15_000 });
 
     // Graph mode active by default — the SVG force-directed graph is rendered
-    await expect(page.getByTestId(DEP_GRAPH.toggleGraph)).toHaveClass(/bg-brand-500/);
+    await expect(page.getByTestId(DEP_GRAPH.toggleGraph)).toHaveClass(/bg-brand-400/);
     await expect(page.getByTestId(DEP_GRAPH.graphView)).toBeVisible();
 
     // Header shows dependency count
@@ -285,7 +285,7 @@ test.describe('TaskDependencyGraph', () => {
 
     // Click "List" toggle
     await page.getByTestId(DEP_GRAPH.toggleList).click();
-    await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-500/);
+    await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-400/);
 
     // List view shows count headers
     await expect(page.getByText('Blocked by (2)')).toBeVisible();
@@ -295,7 +295,7 @@ test.describe('TaskDependencyGraph', () => {
 
     // Switch back to graph view
     await page.getByTestId(DEP_GRAPH.toggleGraph).click();
-    await expect(page.getByTestId(DEP_GRAPH.toggleGraph)).toHaveClass(/bg-brand-500/);
+    await expect(page.getByTestId(DEP_GRAPH.toggleGraph)).toHaveClass(/bg-brand-400/);
 
     // List-specific count headers disappear
     await expect(page.getByText('Blocked by (2)')).not.toBeVisible();
@@ -796,7 +796,7 @@ test.describe('TaskDependencyGraph — Visual Regression', () => {
     // Switch to list view while empty — view toggle shows \"List\" active
     // but content shows empty state since there are no deps
     await page.getByTestId(DEP_GRAPH.toggleList).click();
-    await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-500/);
+    await expect(page.getByTestId(DEP_GRAPH.toggleList)).toHaveClass(/bg-brand-400/);
     await expect(page.getByTestId(DEP_GRAPH.emptyState)).toBeVisible();
 
     await expect(page).toHaveScreenshot('dependency-graph-list-empty.png', {
