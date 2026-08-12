@@ -40,6 +40,25 @@ const eslintConfig = tseslint.config(
     },
   },
 
+  // Promote high-signal accessibility rules from warn → error so a11y
+  // regressions fail CI instead of being ignorable warnings. The jsx-a11y
+  // plugin itself is provided by eslint-config-next/core-web-vitals; here we
+  // only raise severities. The codebase is currently clean of these.
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      'jsx-a11y/alt-text': 'error',
+      'jsx-a11y/anchor-has-content': 'error',
+      'jsx-a11y/aria-props': 'error',
+      'jsx-a11y/aria-proptypes': 'error',
+      'jsx-a11y/aria-role': 'error',
+      'jsx-a11y/aria-unsupported-elements': 'error',
+      'jsx-a11y/role-has-required-aria-props': 'error',
+      'jsx-a11y/role-supports-aria-props': 'error',
+      'jsx-a11y/no-redundant-roles': 'error',
+    },
+  },
+
   // Overrides for test files
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**'],
