@@ -195,6 +195,7 @@ export default function DepartmentDetailPage() {
             size="icon"
             onClick={() => window.history.back()}
             className="shrink-0"
+            aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
