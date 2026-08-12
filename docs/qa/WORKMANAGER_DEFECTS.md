@@ -60,8 +60,34 @@ Every one of the ~1530 unit tests **mocks the database** (`vi.mock('@/lib/api/db
 ### Recommended fix
 Add a real-Postgres integration harness (the CI `test` job already provisions a Postgres service) that applies migrations to a throwaway DB and runs a small set of **data-integrity** integration tests — starting with concurrent leave/time-correction approvals, then tenant-isolation and constraint tests. Track as its own workstream.
 
+### Fix — RESOLVED (harness stood up)
+New opt-in integration project `vitest.integration.config.ts` (node env, no DB mock, single-fork/serial) running `src/__integration__/**/*.test.ts` via `pnpm test:integration`; helpers (`__integration__/helpers/db.ts`) connect to the real `DATABASE_URL`, truncate + seed fixtures per test, and skip when no DB is configured. CI's `ci` job now runs `db:migrate` + `test:integration` against its Postgres service. First tests assert the real invariants under genuine concurrency: **WM-011** (partial unique index rejects a second concurrent running timer), **WM-014** (`recalcTaskHours` atomic recompute + concurrent-recompute convergence), **WM-013** (`wouldCreateCycle` over a live dependency graph incl. termination on a stored cycle). **On its first run the harness caught a real bug — see WM-015.** Remaining data-integrity tests (leave-approval race, tenant isolation) are follow-ups to grow on this harness.
+
 ### Verification status
-OPEN (recommendation; not yet implemented).
+RESOLVED — harness + 8 integration tests green against real Postgres 17; wired into CI.
+
+---
+
+## [WM-015] `isUniqueViolation` missed Drizzle-wrapped errors — raced-insert 409s silently returned 500
+
+**Severity:** P2 (wrong status code under a concurrent-duplicate race; the fix for WM-011/WM-012's friendly 409 never actually fired)
+**Module:** DB error handling · **File:** `apps/web/src/lib/db-errors.ts`
+**Found by:** the WM-002 integration harness (first run)
+
+### Finding
+`isUniqueViolation(err, constraint)` read the SQLSTATE `code`/`constraint_name` off the **top level** of the error. But Drizzle throws a `DrizzleQueryError` that wraps the raw postgres.js error on **`.cause`** — so for a real raced insert, `err.code` is `undefined` and the check returns **false**. The WM-011 timer route and the WM-012 dependency/watcher/team-member routes all rely on this helper to map a raced unique-violation to a friendly **409**; because it never matched, those raced inserts fell through to `handleApiError` and returned a generic **500** instead. Data integrity was still protected (the unique index holds), but the intended status code was wrong. The helper's unit tests only fed it *synthetic* top-level errors (`{ code: '23505', … }`), so they passed while the real path was broken — exactly the gap WM-002 exists to close.
+
+### Evidence
+Integration test (`__integration__/running-timer.test.ts`): two concurrent running-timer inserts → the loser's `reason` had keys `['query','params','cause']`, `code: undefined`, and `cause.code === '23505'` / `cause.constraint_name === 'idx_time_entries_one_running_timer'`. `isUniqueViolation(reason, …)` returned `false`.
+
+### Fix
+`isUniqueViolation` now walks the (bounded, depth ≤ 5) `.cause` chain, matching the `23505` (and optional constraint name) wherever it appears — raw driver error or Drizzle-wrapped. Restores the intended 409 mapping for WM-011 and WM-012 without any route changes.
+
+### Regression test
+Integration test above (real raced insert → `isUniqueViolation` true, 1 running timer) + a unit case in `lib/__tests__/db-errors.test.ts` asserting a `{ cause: { code:'23505', constraint_name } }` wrapper matches.
+
+### Verification — FIXED + VERIFIED
+`typecheck` + unit suite + **8 real-DB integration tests** green; the running-timer race now maps correctly.
 
 ---
 
