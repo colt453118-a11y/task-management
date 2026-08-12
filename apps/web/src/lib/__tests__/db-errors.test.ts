@@ -18,6 +18,19 @@ describe('isUniqueViolation (WM-011)', () => {
     expect(isUniqueViolation({ code: '23502' })).toBe(false); // not-null violation
   });
 
+  it('unwraps a Drizzle-wrapped error (23505 on .cause) — WM-015', () => {
+    // Drizzle throws a DrizzleQueryError with the raw driver error on `.cause`;
+    // a top-level-only check would miss it (real DB integration test caught this).
+    const wrapped = {
+      name: 'Error',
+      query: 'insert into ...',
+      cause: { code: '23505', constraint_name: 'idx_time_entries_one_running_timer' },
+    };
+    expect(isUniqueViolation(wrapped)).toBe(true);
+    expect(isUniqueViolation(wrapped, 'idx_time_entries_one_running_timer')).toBe(true);
+    expect(isUniqueViolation(wrapped, 'some_other_index')).toBe(false);
+  });
+
   it('is false for non-error / non-object inputs', () => {
     expect(isUniqueViolation(null)).toBe(false);
     expect(isUniqueViolation(undefined)).toBe(false);
