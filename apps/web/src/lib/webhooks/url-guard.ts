@@ -8,9 +8,10 @@
 // redirects at fetch time.
 //
 // NOTE: this blocks *literal* private/loopback/link-local hosts. It does not by
-// itself defeat DNS-rebinding (a public hostname that resolves to a private IP);
-// the delivery path additionally disables redirects. A stricter guard would pin
-// the resolved IP at connect time — tracked as a follow-up.
+// itself defeat DNS-rebinding (a public hostname that resolves to a private IP).
+// That gap is closed at delivery time by `pinned-lookup.ts`, whose custom undici
+// dispatcher validates and pins the resolved IP at connect time; the delivery
+// path also disables redirects.
 
 function ipv4Parts(host: string): number[] | null {
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
@@ -19,7 +20,7 @@ function ipv4Parts(host: string): number[] | null {
   return parts.every((p) => p >= 0 && p <= 255) ? parts : null;
 }
 
-function isPrivateOrReservedHost(hostname: string): boolean {
+export function isPrivateOrReservedHost(hostname: string): boolean {
   const h = hostname
     .toLowerCase()
     .replace(/^\[|\]$/g, '') // strip IPv6 brackets
