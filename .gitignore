@@ -49,3 +49,8 @@ docker/data/
 
 # Misc
 *.tsbuildinfo
+
+# Stray browser profiles from local Lighthouse/axe runs (never commit)
+*lighthouse.[0-9]*
+C:\\Users*
+**/AppData/**
