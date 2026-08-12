@@ -129,7 +129,7 @@ export function TaskDependencyGraph({
               onClick={() => setViewMode('graph')}
               className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${
                 viewMode === 'graph'
-                  ? 'bg-brand-500 text-white shadow-sm'
+                  ? 'bg-brand-400 text-white shadow-sm'
                   : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50'
               }`}
               data-testid={DEP_GRAPH.toggleGraph}
@@ -140,7 +140,7 @@ export function TaskDependencyGraph({
               onClick={() => setViewMode('list')}
               className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${
                 viewMode === 'list'
-                  ? 'bg-brand-500 text-white shadow-sm'
+                  ? 'bg-brand-400 text-white shadow-sm'
                   : 'text-surface-500 hover:text-surface-700 hover:bg-surface-200/50'
               }`}
               data-testid={DEP_GRAPH.toggleList}

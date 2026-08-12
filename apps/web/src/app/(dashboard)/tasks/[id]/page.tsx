@@ -535,6 +535,7 @@ export default function TaskDetailPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => window.history.back()}
+            aria-label="Go back"
             className="border-surface-300/20 bg-surface-100/80 text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -930,6 +931,7 @@ export default function TaskDetailPage() {
               <div>
                 <label className="text-surface-500 mb-1 block text-xs font-medium">Status</label>
                 <select
+                  aria-label="Status"
                   value={task.status}
                   onChange={(e) => updateField('status', e.target.value)}
                   disabled={updating === 'status'}
@@ -947,6 +949,7 @@ export default function TaskDetailPage() {
               <div>
                 <label className="text-surface-500 mb-1 block text-xs font-medium">Priority</label>
                 <select
+                  aria-label="Priority"
                   value={task.priority}
                   onChange={(e) => updateField('priority', e.target.value)}
                   disabled={updating === 'priority'}

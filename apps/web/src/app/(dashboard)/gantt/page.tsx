@@ -417,6 +417,7 @@ export default function GanttPage() {
                       {isProject && (
                         <button
                           onClick={() => toggleProject(item.id)}
+                          aria-label={isExpanded ? 'Collapse project' : 'Expand project'}
                           className="text-surface-400 hover:text-surface-600 rounded p-0.5 transition-colors"
                         >
                           {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}

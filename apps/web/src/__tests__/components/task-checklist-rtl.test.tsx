@@ -142,8 +142,8 @@ describe('TaskChecklist (React Testing Library)', () => {
     const input = screen.getByPlaceholderText('Add checklist item...');
     fireEvent.change(input, { target: { value: 'New item' } });
 
-    // Click the add button (has empty accessible name since only a Plus icon)
-    const addButton = screen.getByRole('button', { name: '' });
+    // Click the add button (labelled for a11y)
+    const addButton = screen.getByRole('button', { name: 'Add checklist item' });
     fireEvent.click(addButton);
 
     // New item should appear
@@ -197,7 +197,7 @@ describe('TaskChecklist (React Testing Library)', () => {
     await screen.findByText('No checklist items yet. Add one below.');
 
     // Add button should be disabled when input is empty/whitespace
-    const addButton = screen.getByRole('button', { name: '' });
+    const addButton = screen.getByRole('button', { name: 'Add checklist item' });
     expect(addButton).toBeDisabled();
 
     // Input should show placeholder
@@ -231,7 +231,7 @@ describe('TaskChecklist (React Testing Library)', () => {
 
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => postPromise);
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add checklist item' }));
 
     // Spinner should appear on the add button
     await waitFor(() => {

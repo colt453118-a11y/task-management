@@ -508,7 +508,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, wipLimits }: Kan
                 className={cn(
                   'flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-medium transition-all sm:px-2 sm:text-[11px]',
                   swimlaneMode === opt.key
-                    ? 'bg-brand-500 text-white shadow-sm'
+                    ? 'bg-brand-400 text-white shadow-sm'
                     : 'text-surface-500 hover:text-surface-700 ',
                 )}
                 title={opt.label}

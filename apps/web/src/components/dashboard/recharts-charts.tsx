@@ -65,11 +65,12 @@ export default function RechartsCharts({ donutData, barData, total, pieColors }:
                         animationBegin={200}
                         animationDuration={1200}
                       >
-                        {donutData.map((_, idx) => (
+                        {donutData.map((entry, idx) => (
                           <Cell
                             key={idx}
                             fill={pieColors[idx % pieColors.length]}
                             stroke="transparent"
+                            aria-label={`${entry.name}: ${entry.value}`}
                           />
                         ))}
                       </Pie>

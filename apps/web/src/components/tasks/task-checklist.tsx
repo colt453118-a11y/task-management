@@ -589,6 +589,7 @@ export function TaskChecklist({ taskId, taskStatus }: TaskChecklistProps) {
             onClick={addItem}
             disabled={!newItemContent.trim() || adding}
             data-testid={CHECKLIST.addBtn}
+            aria-label="Add checklist item"
             className="h-8 w-8 shrink-0 rounded-lg p-0"
           >
             {adding ? (
