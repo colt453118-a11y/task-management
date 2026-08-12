@@ -230,6 +230,8 @@ against its Postgres service.
 | **WM-011** | Two *concurrent* running-timer inserts → the partial unique index rejects one; exactly one running timer remains; manual entries are unconstrained. |
 | **WM-014** | `recalcTaskHours` sums correctly, ignores null durations, and two racing recomputes converge (no stale write). |
 | **WM-013** | `wouldCreateCycle` over a live `task_dependencies` graph detects a transitive cycle, allows a non-closing edge, and terminates on a stored cycle. |
+| **WM-001** | 12 *concurrent* leave approvals of one pending request → exactly one wins, the rest see `invalid_state`, and the balance is deducted **once** (used 5 / pending 0, not 12×). Mirrors the route's conditional-UPDATE transaction. |
+| **Tenant isolation** | Org-scoped queries never return another org's rows; the real `enforceOrgScope` denies a cross-org row, allows same-org, and fails closed on a null org. |
 
 **Bug caught on first run — WM-015 (P2).** `isUniqueViolation` read the SQLSTATE off the top-level
 error, but Drizzle wraps the driver error on `.cause`, so a real raced insert returned `false` — the
@@ -238,6 +240,6 @@ integrity always held; only the status code was wrong). Fixed by walking the bou
 The helper's unit tests only fed synthetic top-level errors, so they were green while the real path
 was broken — precisely the failure mode WM-002 exists to surface.
 
-**Result.** 8 integration tests green against real Postgres (locally on a throwaway DB and in CI);
-`1591` unit tests green. **Follow-up:** grow the harness with a leave-approval-race test (WM-001) and
-tenant-isolation/constraint tests.
+**Result.** **13 integration tests** green against real Postgres (locally on a throwaway DB and in
+CI); `1591` unit tests green. The harness was grown 2026-08-13 with the WM-001 leave-approval-race
+and multi-tenant-isolation tests. **Follow-up:** extend further as new DB-level invariants land.
