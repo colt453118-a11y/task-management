@@ -101,8 +101,6 @@ fix was re-verified against the live server with the original reproduction.
 These were **not** assessed here and are candidate follow-on workstreams:
 
 - **Real-DB integration testing** — see WM-002 (open) and §5.
-- **Production-mode retest** — all live verification used the dev server; prod-only breakage
-  (`output: standalone` server entry, session-cookie/login under prod build) is unverified.
 - **Frontend audit** — responsive/layout, accessibility (a11y), and client performance.
 - **Load / stress / soak testing** — throughput and behavior under sustained concurrency at scale.
 - **Dependency CVE deep-dive** — beyond CI's `Security (secrets + deps)` job.
@@ -117,7 +115,7 @@ These were **not** assessed here and are candidate follow-on workstreams:
 |---|------|:--:|--------|---------------------|
 | R1 | **Concurrency fixes not asserted under real concurrency.** WM-011/013/014 rely on DB properties (partial-unique index, advisory lock, single-statement SQL) that are correct-by-construction but have **no live-DB regression test**. A future refactor could silently regress them and the suite would stay green. | P1 | WM-002 | **Open.** Stand up the real-Postgres integration harness (CI `test` job already provisions Postgres). Start with concurrent leave/timer/dependency asserts. |
 | R2 | **SSRF via DNS rebinding.** WM-007 blocks *literal* private hosts and disables redirect-following, but a **public hostname that resolves to a private IP** is not blocked. | P2 (narrowed) | WM-007 note | **Mitigated, not eliminated.** Redirect-blocking narrows it; connect-time IP pinning is the tracked follow-up. |
-| R3 | **Prod-mode behavior unverified.** Live checks ran against the dev server only. | Medium | Scope | **Open** — master-plan item: build the prod image and smoke real login + key CRUD. |
+| R3 | **Prod-mode behavior unverified.** Live checks ran against the dev server only. | Medium | Scope | **✅ Closed 2026-08-12** — production build smoked as `node .next/standalone/apps/web/server.js` (`NODE_ENV=production`): real login + task/project CRUD + WM-003 prod fail-closed + security headers + SSR/asset render all pass, no prod-only breakage. See §9. *(Residual: full browser/visual + a11y pass is R4.)* |
 | R4 | **Frontend a11y / responsive / perf unassessed.** | Medium | Scope | **Open** — master-plan item; surface findings for review before any mass UI edit. |
 | R5 | **Automation limits are generous defaults**, not tuned to real workloads (`MAX_CHAIN_DEPTH=5`, `MAX_RULES_PER_EVENT=50`, `MAX_ACTIONS_PER_EVENT=100`). | Low | WM-009 | **Accepted** — every trip is logged; revisit if logs show legitimate configs tripping. |
 
@@ -148,8 +146,7 @@ recorded so the assurance is on the record:
 1. **Build the real-DB integration harness (WM-002 / R1)** — highest-value residual work. Assert
    the concurrency invariants (leave approval, single running timer, dependency acyclicity,
    hours recompute) against a live throwaway Postgres, plus tenant-isolation and constraint tests.
-2. **Production-mode retest (R3)** — build the prod image and smoke real login + key CRUD to catch
-   prod-only breakage before real users.
+2. ~~**Production-mode retest (R3)**~~ — ✅ **done 2026-08-12** (§9); no prod-only breakage found.
 3. **Frontend responsive / a11y / perf audit (R4)** — open-ended; surface findings for review
    before mass UI edits (subjective changes need owner sign-off).
 4. **SSRF connect-time IP pinning (R2)** — close the DNS-rebinding gap on outbound webhooks.
@@ -163,10 +160,49 @@ start of this engagement: 13 confirmed defects fixed, verified, and merged with 
 coverage and green CI, and no critical (P0) defect found. Multi-tenant isolation and
 mass-assignment — the highest-blast-radius properties — were probed and hold.
 
-**Not yet release-signed-off**, because: (1) the real-DB integration harness (WM-002) is still
-open, so the concurrency fixes are proven by construction but not under live concurrency; and
-(2) no production-mode retest or frontend audit has been performed. Those three items are the
-gate to a full go/no-go sign-off.
+The **production-mode retest is now done** (§9, 2026-08-12) — the prod build boots and behaves
+correctly with no prod-only breakage, closing residual-risk R3.
+
+**Still not release-signed-off**, because two gates remain: (1) the real-DB integration harness
+(WM-002) is still open, so the concurrency fixes are proven by construction but not under live
+concurrency; and (2) the frontend a11y/responsive/perf audit (R4) has not been performed. Those
+two items are the remaining gate to a full go/no-go sign-off.
 
 *Full per-defect evidence, reproduction steps, root causes, fixes, and regression tests:
 [`WORKMANAGER_DEFECTS.md`](./WORKMANAGER_DEFECTS.md).*
+
+---
+
+## 9. Production-mode retest (2026-08-12)
+
+**Method.** Applied the WM-011 partial-unique index to bring the dev DB schema to `main`, then ran
+the real production build (`pnpm build`, `output: standalone`) and served it exactly as the
+container does — `node .next/standalone/apps/web/server.js` with `NODE_ENV=production` (`next start`
+does **not** work with standalone output) — against live Postgres 17 + Redis. All checks below are
+against that production binary, not the dev server.
+
+| Check | Result |
+|-------|--------|
+| Boot + `GET /api/health` | ✅ 200 — database + redis both `healthy` |
+| Real login (`POST /api/auth/sign-in/email`) → session | ✅ 200, session cookie issued; `get-session` valid |
+| Task CRUD | ✅ create 201 → read 200 → update 200 → delete 200 → confirm-gone 404 |
+| Project CRUD | ✅ create 201 → delete 200 |
+| Unauth API gating | ✅ `GET /api/tasks` (no session) → 307 → `/auth/login?redirect=…` (middleware) |
+| **WM-003 in production** | ✅ cron with no configured secret **fails closed** → 401 (the prod-gated property) |
+| Security headers (prod) | ✅ CSP, HSTS (`max-age=63072000; preload`), `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy |
+| SSR + static assets | ✅ `/auth/login` 200 HTML; authed `/tasks` 200 HTML with `/_next/static` chunks 200 |
+| Server logs | ✅ no errors / unhandled rejections / 500s — only benign dev-secret warnings |
+
+**Notes / non-blocking observations.**
+- The dev `.env` ships `CRON_SECRET=` **empty** and a short, low-entropy `AUTH_SECRET`; Better Auth
+  warns on the latter. Both are expected in dev — production must set a strong `AUTH_SECRET` and a
+  real `CRON_SECRET` (already on the launch checklist; the empty-secret prod deny is WM-003 working
+  as designed, i.e. the cron jobs stay disabled until the secret is set).
+- `DELETE` on tasks/projects is a **soft delete** (row tombstoned, hidden from the app; API 404s it).
+- **Not covered here (→ R4):** a real *browser/visual* render + a11y pass. The server returns
+  populated HTML with assets, but the 2026-08-10 blank-page defect was a client-side (opacity)
+  issue invisible to SSR/curl; it is fixed on `main` with an e2e regression guard, and a full
+  visual pass belongs to the frontend audit.
+
+**Environment left clean:** prod server stopped, throwaway smoke rows purged, WorkManager infra
+brought back down; the unrelated co-tenant project on the host was not touched.
