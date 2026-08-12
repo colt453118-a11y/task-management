@@ -75,3 +75,58 @@ export async function seedBase(): Promise<{ orgId: string; userId: string; taskI
   const taskId = await insertTask(orgId, userId);
   return { orgId, userId, taskId };
 }
+
+// ─── Leave fixtures ─────────────────────────────────────────
+
+export async function insertLeaveType(organizationId: string, name = 'Annual'): Promise<string> {
+  const [row] = await testDb()
+    .insert(schema.leaveTypes)
+    .values({ organizationId, name, slug: `lt-${randomUUID().slice(0, 8)}` })
+    .returning({ id: schema.leaveTypes.id });
+  return row!.id;
+}
+
+export async function insertLeaveBalance(
+  organizationId: string,
+  userId: string,
+  leaveTypeId: string,
+  year: number,
+  opts: { allocated?: number; used?: number; pending?: number } = {},
+): Promise<string> {
+  const [row] = await testDb()
+    .insert(schema.leaveBalances)
+    .values({
+      organizationId,
+      userId,
+      leaveTypeId,
+      year,
+      allocatedDays: opts.allocated ?? 20,
+      usedDays: opts.used ?? 0,
+      pendingDays: opts.pending ?? 0,
+    })
+    .returning({ id: schema.leaveBalances.id });
+  return row!.id;
+}
+
+export async function insertLeaveRequest(
+  organizationId: string,
+  userId: string,
+  leaveTypeId: string,
+  opts: { daysCount?: number; startDate?: string; endDate?: string; status?: string } = {},
+): Promise<string> {
+  const start = opts.startDate ?? '2026-03-02';
+  const [row] = await testDb()
+    .insert(schema.leaveRequests)
+    .values({
+      organizationId,
+      userId,
+      leaveTypeId,
+      startDate: start,
+      endDate: opts.endDate ?? '2026-03-06',
+      daysCount: opts.daysCount ?? 5,
+      reason: 'Integration test',
+      status: opts.status ?? 'pending',
+    })
+    .returning({ id: schema.leaveRequests.id });
+  return row!.id;
+}
