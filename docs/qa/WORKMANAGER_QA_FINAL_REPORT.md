@@ -114,7 +114,7 @@ These were **not** assessed here and are candidate follow-on workstreams:
 | # | Risk | Severity | Origin | Status / mitigation |
 |---|------|:--:|--------|---------------------|
 | R1 | **Concurrency fixes not asserted under real concurrency.** WM-011/013/014 relied on DB properties (partial-unique index, advisory lock, single-statement SQL) with **no live-DB regression test**. | P1 | WM-002 | **✅ Closed 2026-08-13 (WM-002).** Real-Postgres integration harness (`test:integration`, run in CI after migrations) now asserts these under genuine concurrency; it caught **WM-015** on its first run. Residual: grow the harness (leave-approval race, tenant isolation). See §10. |
-| R2 | **SSRF via DNS rebinding.** WM-007 blocks *literal* private hosts and disables redirect-following, but a **public hostname that resolves to a private IP** is not blocked. | P2 (narrowed) | WM-007 note | **Mitigated, not eliminated.** Redirect-blocking narrows it; connect-time IP pinning is the tracked follow-up. |
+| R2 | **SSRF via DNS rebinding.** WM-007 blocked *literal* private hosts + redirects, but a **public hostname resolving to a private IP** was not. | P2 | WM-007 note | **✅ Closed 2026-08-13.** Delivery now uses a custom undici dispatcher (`pinned-lookup.ts`) whose **connect-time `lookup` validates the resolved IP and pins the socket to it** — a public host resolving to a private/reserved address is refused, no TOCTOU. +6 unit tests. |
 | R3 | **Prod-mode behavior unverified.** Live checks ran against the dev server only. | Medium | Scope | **✅ Closed 2026-08-12** — production build smoked as `node .next/standalone/apps/web/server.js` (`NODE_ENV=production`): real login + task/project CRUD + WM-003 prod fail-closed + security headers + SSR/asset render all pass, no prod-only breakage. See §9. *(Residual: full browser/visual + a11y pass is R4.)* |
 | R4 | **Frontend a11y / responsive / perf.** | Medium | Scope | **Mostly closed 2026-08-12/13.** Static + live axe/Lighthouse audit done; a11y fixes shipped (reduced-motion, skip-link, jsx-a11y gate, then labels/names/contrast) → axe **0 violations** across 21 pages (PRs #97/#98/#99). Responsive/landmarks verified sound. **Residual (open): LCP 3.8–4.9s** — architectural (client-fetch-after-mount → RSC/streaming), tracked separately. |
 | R5 | **Automation limits are generous defaults**, not tuned to real workloads (`MAX_CHAIN_DEPTH=5`, `MAX_RULES_PER_EVENT=50`, `MAX_ACTIONS_PER_EVENT=100`). | Low | WM-009 | **Accepted** — every trip is logged; revisit if logs show legitimate configs tripping. |
@@ -149,7 +149,8 @@ recorded so the assurance is on the record:
 2. ~~**Production-mode retest (R3)**~~ — ✅ **done 2026-08-12** (§9); no prod-only breakage found.
 3. ~~**Frontend a11y audit (R4)**~~ — ✅ **done 2026-08-12/13**; axe 0 violations across 21 pages
    (#97/#98/#99). *Open:* **LCP perf** (3.8–4.9s) — architectural (RSC/streaming), tracked separately.
-4. **SSRF connect-time IP pinning (R2)** — close the DNS-rebinding gap on outbound webhooks.
+4. ~~**SSRF connect-time IP pinning (R2)**~~ — ✅ **done 2026-08-13**; webhook delivery pins the
+   resolved IP at connect time (`pinned-lookup.ts`).
 
 ---
 
@@ -166,11 +167,10 @@ concurrency (WM-001…014), the **production-mode retest** (§9, no prod-only br
 (axe 0 violations across 21 pages). The concurrency fixes are no longer merely proven by
 construction — they are exercised under real concurrency in CI.
 
-**Verdict: release-ready from a QA standpoint**, with two **non-blocking** follow-ups tracked as
-residual items — **LCP page-load performance** (3.8–4.9s; architectural) and **SSRF DNS-rebinding**
-(connect-time IP pinning) — plus the standing out-of-scope areas in §4 (load testing, infra/secrets,
-dependency CVE deep-dive). Growing the integration harness (leave-approval race, tenant isolation)
-is a recommended fast-follow.
+**Verdict: release-ready from a QA standpoint.** The one remaining **non-blocking** residual item is
+**LCP page-load performance** (3.8–4.9s; architectural), plus the standing out-of-scope areas in §4
+(load testing, infra/secrets, dependency CVE deep-dive). Every other residual raised during the
+engagement (R1–R4) is now closed.
 
 *Full per-defect evidence, reproduction steps, root causes, fixes, and regression tests:
 [`WORKMANAGER_DEFECTS.md`](./WORKMANAGER_DEFECTS.md).*

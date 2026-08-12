@@ -2,6 +2,7 @@ import { getDb, schema } from '@workmanagement/database';
 import { eq, and, sql } from 'drizzle-orm';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { isPublicWebhookUrl } from './url-guard';
+import { safeWebhookDispatcher } from './pinned-lookup';
 
 // ─── Event Types ───────────────────────────────────────────────
 
@@ -104,7 +105,10 @@ async function deliverToEndpoint(
       body: JSON.stringify(payload),
       signal: controller.signal,
       redirect: 'error', // never follow redirects (could point at an internal target)
-    });
+      // Pin the connection to a validated public IP — defeats DNS-rebinding
+      // (a public host that resolves to a private/internal address).
+      dispatcher: safeWebhookDispatcher,
+    } as RequestInit & { dispatcher: unknown });
 
     clearTimeout(timer);
     const durationMs = Date.now() - startTime;
