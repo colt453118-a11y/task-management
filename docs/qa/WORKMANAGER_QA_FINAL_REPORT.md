@@ -116,7 +116,7 @@ These were **not** assessed here and are candidate follow-on workstreams:
 | R1 | **Concurrency fixes not asserted under real concurrency.** WM-011/013/014 relied on DB properties (partial-unique index, advisory lock, single-statement SQL) with **no live-DB regression test**. | P1 | WM-002 | **✅ Closed 2026-08-13 (WM-002).** Real-Postgres integration harness (`test:integration`, run in CI after migrations) now asserts these under genuine concurrency; it caught **WM-015** on its first run. Residual: grow the harness (leave-approval race, tenant isolation). See §10. |
 | R2 | **SSRF via DNS rebinding.** WM-007 blocked *literal* private hosts + redirects, but a **public hostname resolving to a private IP** was not. | P2 | WM-007 note | **✅ Closed 2026-08-13.** Delivery now uses a custom undici dispatcher (`pinned-lookup.ts`) whose **connect-time `lookup` validates the resolved IP and pins the socket to it** — a public host resolving to a private/reserved address is refused, no TOCTOU. +6 unit tests. |
 | R3 | **Prod-mode behavior unverified.** Live checks ran against the dev server only. | Medium | Scope | **✅ Closed 2026-08-12** — production build smoked as `node .next/standalone/apps/web/server.js` (`NODE_ENV=production`): real login + task/project CRUD + WM-003 prod fail-closed + security headers + SSR/asset render all pass, no prod-only breakage. See §9. *(Residual: full browser/visual + a11y pass is R4.)* |
-| R4 | **Frontend a11y / responsive / perf.** | Medium | Scope | **Mostly closed 2026-08-12/13.** Static + live axe/Lighthouse audit done; a11y fixes shipped (reduced-motion, skip-link, jsx-a11y gate, then labels/names/contrast) → axe **0 violations** across 21 pages (PRs #97/#98/#99). Responsive/landmarks verified sound. **Residual (open): LCP 3.8–4.9s** — architectural (client-fetch-after-mount → RSC/streaming), tracked separately. |
+| R4 | **Frontend a11y / responsive / perf.** | Medium | Scope | **Mostly closed 2026-08-12/13.** Static + live axe/Lighthouse audit done; a11y fixes shipped (reduced-motion, skip-link, jsx-a11y gate, then labels/names/contrast) → axe **0 violations** across 21 pages (PRs #97/#98/#99). Responsive/landmarks verified sound. **LCP (perf): pilot fixed on the dashboard 2026-08-14 (PR #107).** Root cause confirmed = client-fetch-after-mount (page painted a shimmer, then fetched + computed metrics in `useEffect`). Fix = convert the dashboard index to a **React Server Component** that loads initial metrics server-side (via the existing hardened API routes with cookies forwarded — no duplicated authz) and hands them to a client shell seeded from props (with a graceful client-fetch fallback). Measured locally (prod build, cold cache, 4× CPU throttle, authed, n=6): **LCP 2012 ms → 236 ms (−88%)**; content now paints at first paint; hydration clean; all dashboard E2E pass unchanged (fake-session test path falls back to client fetch). **Rollout to the remaining `(dashboard)` pages approved by owner — in progress, one page/PR, same pattern.** |
 | R5 | **Automation limits are generous defaults**, not tuned to real workloads (`MAX_CHAIN_DEPTH=5`, `MAX_RULES_PER_EVENT=50`, `MAX_ACTIONS_PER_EVENT=100`). | Low | WM-009 | **Accepted** — every trip is logged; revisit if logs show legitimate configs tripping. |
 
 ---
@@ -148,7 +148,8 @@ recorded so the assurance is on the record:
    tests.
 2. ~~**Production-mode retest (R3)**~~ — ✅ **done 2026-08-12** (§9); no prod-only breakage found.
 3. ~~**Frontend a11y audit (R4)**~~ — ✅ **done 2026-08-12/13**; axe 0 violations across 21 pages
-   (#97/#98/#99). *Open:* **LCP perf** (3.8–4.9s) — architectural (RSC/streaming), tracked separately.
+   (#97/#98/#99). **LCP perf: dashboard RSC pilot done 2026-08-14 (#107), −88% locally; rollout to
+   remaining pages in progress.** See R4.
 4. ~~**SSRF connect-time IP pinning (R2)**~~ — ✅ **done 2026-08-13**; webhook delivery pins the
    resolved IP at connect time (`pinned-lookup.ts`).
 
@@ -167,10 +168,12 @@ concurrency (WM-001…014), the **production-mode retest** (§9, no prod-only br
 (axe 0 violations across 21 pages). The concurrency fixes are no longer merely proven by
 construction — they are exercised under real concurrency in CI.
 
-**Verdict: release-ready from a QA standpoint.** The one remaining **non-blocking** residual item is
-**LCP page-load performance** (3.8–4.9s; architectural), plus the standing out-of-scope areas in §4
-(load testing, infra/secrets, dependency CVE deep-dive). Every other residual raised during the
-engagement (R1–R4) is now closed.
+**Verdict: release-ready from a QA standpoint.** The remaining **non-blocking** item is
+**LCP page-load performance** — now being addressed: the root cause (client-fetch-after-mount) was
+confirmed and the **dashboard RSC fix shipped (PR #107, −88% LCP locally)**; the same conversion is
+rolling out to the other `(dashboard)` pages (one PR each). Plus the standing out-of-scope areas in §4
+(load testing, infra/secrets, dependency CVE deep-dive). Every residual raised during the
+engagement (R1–R4) is now closed or in active remediation.
 
 *Full per-defect evidence, reproduction steps, root causes, fixes, and regression tests:
 [`WORKMANAGER_DEFECTS.md`](./WORKMANAGER_DEFECTS.md).*
