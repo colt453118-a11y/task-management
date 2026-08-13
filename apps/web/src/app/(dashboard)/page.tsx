@@ -1,6 +1,10 @@
-import { headers } from 'next/headers';
 import { getCurrentSession } from '@/lib/auth/session';
-import { computeDashboardMetrics } from '@/lib/dashboard/metrics';
+import { serverFetchJson } from '@/lib/api/server-fetch';
+import {
+  computeDashboardMetrics,
+  type MetricTask,
+  type MetricProject,
+} from '@/lib/dashboard/metrics';
 import { DashboardClient } from './dashboard-client';
 
 // This page reads per-request auth (cookies/headers) and must never be
@@ -11,52 +15,29 @@ export const dynamic = 'force-dynamic';
  * Load the initial dashboard metrics on the server so the first paint
  * already contains real content (no client fetch-after-mount waterfall).
  *
- * We deliberately call the existing HTTP API routes (with the caller's
- * cookies forwarded) rather than querying the database directly: the
- * routes carry the role-aware, tenant-scoped visibility rules
- * (task:view vs task:view_all, assigned/created/mentioned filtering).
- * Reusing them keeps a single source of truth for authorization and
- * avoids the kind of divergence that leaks another tenant's data.
+ * Data comes from the existing HTTP API routes (via `serverFetchJson`, which
+ * forwards the caller's cookies) so the role-aware, tenant-scoped visibility
+ * rules stay the single source of truth — see that helper for the rationale.
  *
  * Returns null on any failure; the client shell then falls back to its
  * own client-side fetch, so the dashboard degrades gracefully.
  */
 async function loadInitialDashboard() {
-  try {
-    const h = await headers();
-    const cookie = h.get('cookie') ?? '';
-    if (!cookie) return null;
+  const [session, tasksData, projectsData, usersData] = await Promise.all([
+    getCurrentSession(),
+    serverFetchJson<{ tasks: MetricTask[] }>('/api/tasks?limit=500'),
+    serverFetchJson<{ projects: MetricProject[] }>('/api/projects?limit=500'),
+    serverFetchJson<{ users: unknown[] }>('/api/users?limit=500'),
+  ]);
 
-    const host = h.get('x-forwarded-host') ?? h.get('host');
-    if (!host) return null;
-    const proto = h.get('x-forwarded-proto') ?? 'http';
-    const base = `${proto}://${host}`;
-    const init = { headers: { cookie }, cache: 'no-store' as const };
+  if (!tasksData || !projectsData || !usersData) return null;
 
-    const [session, tasksRes, projectsRes, usersRes] = await Promise.all([
-      getCurrentSession(),
-      fetch(`${base}/api/tasks?limit=500`, init),
-      fetch(`${base}/api/projects?limit=500`, init),
-      fetch(`${base}/api/users?limit=500`, init),
-    ]);
-
-    if (!tasksRes.ok || !projectsRes.ok || !usersRes.ok) return null;
-
-    const [{ tasks }, { projects }, { users }] = await Promise.all([
-      tasksRes.json(),
-      projectsRes.json(),
-      usersRes.json(),
-    ]);
-
-    const userName = session?.user?.name ?? 'User';
-    const metrics = computeDashboardMetrics(tasks, projects, users, {
-      myUserId: session?.user?.id ?? null,
-      userName,
-    });
-    return { metrics, userName };
-  } catch {
-    return null;
-  }
+  const userName = session?.user?.name ?? 'User';
+  const metrics = computeDashboardMetrics(tasksData.tasks, projectsData.projects, usersData.users, {
+    myUserId: session?.user?.id ?? null,
+    userName,
+  });
+  return { metrics, userName };
 }
 
 export default async function DashboardPage() {
