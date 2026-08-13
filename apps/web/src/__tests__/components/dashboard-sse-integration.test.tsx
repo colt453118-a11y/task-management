@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import DashboardPage from '@/app/(dashboard)/page';
+import { DashboardClient } from '@/app/(dashboard)/dashboard-client';
+
+// The dashboard page is now an async server component that hands initial
+// metrics to this client shell. Passing initialMetrics={null} exercises the
+// client-fetch fallback path (mocked below) — the same behavior these SSE
+// tests were written against.
+const DashboardPage = () => <DashboardClient initialMetrics={null} initialUserName="Test User" />;
 
 // ─── Controllable mock state ───────────────────────────────
 
