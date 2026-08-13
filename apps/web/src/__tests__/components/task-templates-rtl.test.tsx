@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TaskTemplatesPage from '@/app/(dashboard)/task-templates/page';
+import { TaskTemplatesClient } from '@/app/(dashboard)/task-templates/task-templates-client';
+
+// The page is now an async server component that hands initial templates to this
+// client shell. Passing initialTemplates={null} exercises the client-fetch
+// fallback path (mocked below) — the behavior these tests were written against.
+const TaskTemplatesPage = () => <TaskTemplatesClient initialTemplates={null} />;
 
 // ─── Helpers ────────────────────────────────────────────────────
 
