@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SnapshotDetailPage from '@/app/(dashboard)/reports/snapshots/[id]/page';
+import { SnapshotDetailClient } from '@/app/(dashboard)/reports/snapshots/[id]/snapshot-detail-client';
+
+// The route's page.tsx is now an async server component that loads data and
+// hands it to SnapshotDetailClient. These tests exercise the client shell's
+// fallback path (no server data → client fetch), so render it directly with
+// initialSnapshot=null to drive the mocked-fetch behavior the suite asserts.
+function SnapshotDetailPage() {
+  return <SnapshotDetailClient initialSnapshot={null} initialSnapshots={[]} />;
+}
 
 // ─── Mock next/navigation ──────────────────────────────────
 
