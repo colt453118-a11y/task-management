@@ -17,6 +17,7 @@ import {
   Loader2,
   Check,
   Mail,
+  Pencil,
 } from 'lucide-react';
 
 export type UserRecord = {
@@ -67,6 +68,12 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
 
+  // Edit modal state (editUser === null means closed)
+  const [editUser, setEditUser] = useState<UserRecord | null>(null);
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', designation: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
   const handleDeactivate = async (userId: string) => {
     if (!window.confirm('Deactivate this user? They will lose access immediately.')) return;
     setDeactivatingId(userId);
@@ -81,6 +88,56 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
       window.alert(err instanceof Error ? err.message : 'Failed to deactivate user');
     } finally {
       setDeactivatingId(null);
+    }
+  };
+
+  const openEdit = (user: UserRecord) => {
+    setEditUser(user);
+    setEditForm({
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      designation: user.designation ?? '',
+    });
+    setEditError(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editUser) return;
+    setSavingEdit(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`/api/users/${editUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: editForm.firstName.trim() || null,
+          lastName: editForm.lastName.trim() || null,
+          designation: editForm.designation.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to update user');
+      }
+      const data = await res.json();
+      const updated = data.user as UserRecord | undefined;
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === editUser.id
+            ? updated ?? {
+                ...u,
+                firstName: editForm.firstName.trim() || null,
+                lastName: editForm.lastName.trim() || null,
+                designation: editForm.designation.trim() || null,
+              }
+            : u,
+        ),
+      );
+      setEditUser(null);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Failed to update user');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -293,17 +350,25 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                     )}
                   </div>
                 </div>
-                {user.isActive && (
-                  <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex justify-end gap-1">
+                  <button
+                    onClick={() => openEdit(user)}
+                    aria-label={`Edit ${user.firstName ?? user.name ?? user.email}`}
+                    className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-700 rounded-md px-2 py-1 text-xs font-medium opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+                  >
+                    <Pencil className="mr-1 inline h-3 w-3" />
+                    Edit
+                  </button>
+                  {user.isActive && (
                     <button
                       onClick={() => handleDeactivate(user.id)}
                       disabled={deactivatingId === user.id}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-red-400 opacity-0 transition hover:bg-red-500/10 group-hover:opacity-100 disabled:opacity-50"
+                      className="rounded-md px-2 py-1 text-xs font-medium text-red-400 opacity-0 transition hover:bg-red-500/10 group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-50"
                     >
                       {deactivatingId === user.id ? 'Deactivating…' : 'Deactivate'}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </motion.div>
             </motion.div>
           ))}
@@ -396,6 +461,98 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Member Modal */}
+      <AnimatePresence>
+        {editUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="border-surface-300/30 bg-surface-50/95 w-full max-w-md rounded-2xl border p-6 shadow-lg backdrop-blur-xl"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-surface-900 flex items-center gap-2 text-lg font-semibold">
+                  <Pencil className="h-4 w-4" /> Edit Member
+                </h3>
+                <button
+                  onClick={() => setEditUser(null)}
+                  className="text-surface-500 hover:bg-surface-200 rounded-lg p-1"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-surface-500 -mt-1 truncate text-xs">{editUser.email}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                      First name
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                      placeholder="e.g. Jordan"
+                      autoFocus
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                      Last name
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                      placeholder="e.g. Rivera"
+                      className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Designation
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.designation}
+                    onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
+                    placeholder="e.g. Frontend Developer"
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                {editError && (
+                  <div className="bg-error/5 text-error flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {editError}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setEditUser(null)} className="rounded-xl">
+                    Cancel
+                  </Button>
+                  <Button onClick={saveEdit} disabled={savingEdit} className="rounded-xl">
+                    {savingEdit ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1 h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
