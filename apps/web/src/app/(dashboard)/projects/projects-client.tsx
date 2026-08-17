@@ -9,7 +9,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderOpen, AlertCircle, X, Plus, Loader2, Check, Search } from 'lucide-react';
+import {
+  FolderOpen,
+  AlertCircle,
+  X,
+  Plus,
+  Loader2,
+  Check,
+  Search,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 
 export type Project = {
   id: string;
@@ -56,8 +66,9 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  // Create modal state
-  const [showCreate, setShowCreate] = useState(false);
+  // Create / edit modal state (editingId === null means create)
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     code: '',
@@ -65,8 +76,13 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
     startDate: '',
     endDate: '',
   });
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -100,41 +116,103 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
     : projects;
 
   const openCreate = () => {
+    setEditingId(null);
     setForm({ name: '', code: '', description: '', startDate: '', endDate: '' });
-    setCreateError(null);
-    setShowCreate(true);
+    setFormError(null);
+    setShowForm(true);
   };
 
-  const createProject = async () => {
+  const openEdit = (project: Project) => {
+    setEditingId(project.id);
+    setForm({
+      name: project.name,
+      code: project.code ?? '',
+      description: project.description ?? '',
+      startDate: project.startDate ? project.startDate.slice(0, 10) : '',
+      endDate: project.endDate ? project.endDate.slice(0, 10) : '',
+    });
+    setFormError(null);
+    setShowForm(true);
+  };
+
+  const saveProject = async () => {
     if (!form.name.trim()) {
-      setCreateError('Project name is required');
+      setFormError('Project name is required');
       return;
     }
-    setCreating(true);
-    setCreateError(null);
+    setSaving(true);
+    setFormError(null);
     try {
+      const isEdit = editingId !== null;
+      // On edit, send the managed fields explicitly (code/description/dates are
+      // nullable) so they can be cleared; on create, only include what was filled.
       const body: Record<string, unknown> = { name: form.name.trim() };
-      if (form.code.trim()) body.code = form.code.trim();
-      if (form.description.trim()) body.description = form.description.trim();
-      if (form.startDate) body.startDate = new Date(form.startDate).toISOString();
-      if (form.endDate) body.endDate = new Date(form.endDate).toISOString();
+      if (isEdit) {
+        body.code = form.code.trim() || null;
+        body.description = form.description.trim() || null;
+        body.startDate = form.startDate ? new Date(form.startDate).toISOString() : null;
+        body.endDate = form.endDate ? new Date(form.endDate).toISOString() : null;
+      } else {
+        if (form.code.trim()) body.code = form.code.trim();
+        if (form.description.trim()) body.description = form.description.trim();
+        if (form.startDate) body.startDate = new Date(form.startDate).toISOString();
+        if (form.endDate) body.endDate = new Date(form.endDate).toISOString();
+      }
 
-      const res = await fetch('/api/projects', {
-        method: 'POST',
+      const res = await fetch(isEdit ? `/api/projects/${editingId}` : '/api/projects', {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error?.message ?? 'Failed to create project');
+        throw new Error(data.error?.message ?? `Failed to ${isEdit ? 'update' : 'create'} project`);
       }
-      const data = await res.json();
-      setProjects((prev) => [data.project, ...prev]);
-      setShowCreate(false);
+
+      if (isEdit) {
+        // PATCH returns { success: true }, so update the row from the sent values.
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === editingId
+              ? {
+                  ...p,
+                  name: body.name as string,
+                  code: (body.code as string | null) ?? null,
+                  description: (body.description as string | null) ?? null,
+                  startDate: (body.startDate as string | null) ?? null,
+                  endDate: (body.endDate as string | null) ?? null,
+                }
+              : p,
+          ),
+        );
+      } else {
+        const data = await res.json();
+        setProjects((prev) => [data.project, ...prev]);
+      }
+      setShowForm(false);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Failed to create project');
+      setFormError(err instanceof Error ? err.message : 'Failed to save project');
     } finally {
-      setCreating(false);
+      setSaving(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/projects/${deleteTarget.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to delete project');
+      }
+      setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete project');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -248,16 +326,36 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                 className="neon-card group relative overflow-hidden rounded-2xl p-5"
               >
                 <div className="from-brand-500 to-brand-400 absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r opacity-60" />
-                <div className="mb-3 flex items-start justify-between">
+                <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-surface-900 truncate font-semibold">{project.name}</h3>
                     {project.code && (
                       <p className="text-surface-500 mt-0.5 font-mono text-xs">{project.code}</p>
                     )}
                   </div>
-                  <Badge variant={statusBadge[project.status] ?? 'default'} size="sm">
-                    {project.status}
-                  </Badge>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(project)}
+                        aria-label={`Edit ${project.name}`}
+                        className="text-surface-400 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(project)}
+                        aria-label={`Delete ${project.name}`}
+                        className="text-surface-400 hover:bg-error/10 hover:text-error rounded-lg p-1.5 transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <Badge variant={statusBadge[project.status] ?? 'default'} size="sm">
+                      {project.status}
+                    </Badge>
+                  </div>
                 </div>
                 {project.description && (
                   <p className="text-surface-500 mb-3 line-clamp-2 text-sm leading-relaxed">
@@ -294,9 +392,9 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
         </div>
       )}
 
-      {/* Create Project Modal */}
+      {/* Create / Edit Project Modal */}
       <AnimatePresence>
-        {showCreate && (
+        {showForm && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -310,9 +408,11 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
               className="gradient-border-card w-full max-w-md p-6 shadow-xl"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-surface-900 text-lg font-semibold">New Project</h3>
+                <h3 className="text-surface-900 text-lg font-semibold">
+                  {editingId ? 'Edit Project' : 'New Project'}
+                </h3>
                 <button
-                  onClick={() => setShowCreate(false)}
+                  onClick={() => setShowForm(false)}
                   className="text-surface-500 hover:bg-surface-200/70 hover:text-surface-600 rounded-lg p-1.5 transition-all"
                 >
                   <X className="h-4 w-4" />
@@ -376,25 +476,82 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                     />
                   </div>
                 </div>
-                {createError && (
+                {formError && (
                   <div className="bg-error/5 text-error flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    {createError}
+                    {formError}
                   </div>
                 )}
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setShowCreate(false)}>
+                  <Button variant="outline" onClick={() => setShowForm(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={createProject} disabled={creating}>
-                    {creating ? (
+                  <Button onClick={saveProject} disabled={saving}>
+                    {saving ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Check className="mr-1 h-4 w-4" />
                     )}
-                    Create
+                    {editingId ? 'Save' : 'Create'}
                   </Button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Project Confirmation Modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="gradient-border-card w-full max-w-md p-6 shadow-xl"
+            >
+              <div className="mb-2 flex items-center gap-3">
+                <div className="bg-error/10 text-error flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-surface-900 text-lg font-semibold">Delete project</h3>
+              </div>
+              <p className="text-surface-500 text-sm">
+                Delete <span className="text-surface-700 font-semibold">{deleteTarget.name}</span>?
+                Its tasks will no longer be grouped under this project. This can&apos;t be undone.
+              </p>
+              {deleteError && (
+                <div className="bg-error/5 text-error mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {deleteError}
+                </div>
+              )}
+              <div className="mt-5 flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="bg-error hover:bg-error/90 text-white"
+                >
+                  {deleting ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-1 h-4 w-4" />
+                  )}
+                  Delete
+                </Button>
               </div>
             </motion.div>
           </motion.div>

@@ -110,6 +110,10 @@ export async function mockProjectsApi(
     createErrorStatus?: number;
     /** If set, the POST endpoint will fulfill with this error body. */
     createErrorBody?: Record<string, unknown>;
+    /** If set, the PATCH endpoint will fulfill with this error status. */
+    updateErrorStatus?: number;
+    /** If set, the DELETE endpoint will fulfill with this error status. */
+    deleteErrorStatus?: number;
   } = {},
 ) {
   const {
@@ -118,6 +122,8 @@ export async function mockProjectsApi(
     delay,
     createErrorStatus,
     createErrorBody,
+    updateErrorStatus,
+    deleteErrorStatus,
   } = options;
 
   // GET /api/projects — list projects
@@ -163,5 +169,48 @@ export async function mockProjectsApi(
       contentType: 'application/json',
       body: JSON.stringify({ project: MOCK_CREATED_PROJECT }),
     });
+  });
+
+  // PATCH /api/projects/:id — update; DELETE /api/projects/:id — soft delete.
+  // The glob '*' matches the id segment but not '/api/projects' itself, so it
+  // never intercepts the list/create routes above.
+  await page.route('**/api/projects/*', async (route) => {
+    const method = route.request().method();
+
+    if (method === 'PATCH') {
+      if (updateErrorStatus) {
+        await route.fulfill({
+          status: updateErrorStatus,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'Update failed' } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+      return;
+    }
+
+    if (method === 'DELETE') {
+      if (deleteErrorStatus) {
+        await route.fulfill({
+          status: deleteErrorStatus,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Delete failed' } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+      return;
+    }
+
+    await route.fallback();
   });
 }

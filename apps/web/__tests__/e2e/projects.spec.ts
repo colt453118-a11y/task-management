@@ -274,4 +274,88 @@ test.describe('Projects Page', () => {
     // Modal should close
     await expect(page.getByRole('heading', { name: /new project/i })).not.toBeVisible();
   });
+
+  test('edits a project via the edit button and prefilled modal', async ({ page }) => {
+    await mockProjectsApi(page);
+
+    await page.goto('/projects');
+
+    await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Open the edit modal for a specific project (hover-revealed button)
+    await page.getByRole('button', { name: 'Edit Website Redesign' }).click();
+    await expect(page.getByRole('heading', { name: /edit project/i })).toBeVisible();
+
+    // The form should be prefilled with the project's current values
+    const nameInput = page.getByPlaceholder(/e\.g\. Q4 Product Launch/i);
+    await expect(nameInput).toHaveValue('Website Redesign');
+
+    // Change the name and save
+    await nameInput.fill('Website Redesign v2');
+    await page.getByRole('button', { name: /save$/i }).first().click();
+
+    // Modal closes and the card reflects the new name
+    await expect(page.getByRole('heading', { name: /edit project/i })).not.toBeVisible();
+    await expect(page.getByText('Website Redesign v2').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('deletes a project via the delete confirmation', async ({ page }) => {
+    await mockProjectsApi(page);
+
+    await page.goto('/projects');
+
+    await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Backend Migration').first()).toBeVisible();
+
+    // Open the delete confirmation for a specific project
+    await page.getByRole('button', { name: 'Delete Backend Migration' }).click();
+    await expect(page.getByRole('heading', { name: /delete project/i })).toBeVisible();
+
+    // Confirm the deletion (exact "Delete" — the card buttons are "Delete <name>")
+    await page.getByRole('button', { name: /^delete$/i }).click();
+
+    // Modal closes and the project is removed from the list
+    await expect(page.getByRole('heading', { name: /delete project/i })).not.toBeVisible();
+    await expect(page.getByText('Backend Migration')).not.toBeVisible({ timeout: 5_000 });
+  });
+
+  test('cancels the delete confirmation without removing the project', async ({ page }) => {
+    await mockProjectsApi(page);
+
+    await page.goto('/projects');
+
+    await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('button', { name: 'Delete Backend Migration' }).click();
+    await expect(page.getByRole('heading', { name: /delete project/i })).toBeVisible();
+
+    // Cancel keeps the project
+    await page.getByRole('button', { name: /cancel/i }).click();
+    await expect(page.getByRole('heading', { name: /delete project/i })).not.toBeVisible();
+    await expect(page.getByText('Backend Migration').first()).toBeVisible();
+  });
+
+  test('shows an error when deleting a project fails', async ({ page }) => {
+    await mockProjectsApi(page, { deleteErrorStatus: 500 });
+
+    await page.goto('/projects');
+
+    await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('button', { name: 'Delete Website Redesign' }).click();
+    await expect(page.getByRole('heading', { name: /delete project/i })).toBeVisible();
+    await page.getByRole('button', { name: /^delete$/i }).click();
+
+    // The error surfaces and the modal stays open
+    await expect(page.getByText(/delete failed/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: /delete project/i })).toBeVisible();
+  });
 });
