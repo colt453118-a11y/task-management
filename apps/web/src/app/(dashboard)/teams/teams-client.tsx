@@ -8,7 +8,18 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Building2, GitBranch, AlertCircle, Plus, X, Loader2, Check, Trash2 } from 'lucide-react';
+import {
+  Users,
+  Building2,
+  GitBranch,
+  AlertCircle,
+  Plus,
+  X,
+  Loader2,
+  Check,
+  Trash2,
+  Pencil,
+} from 'lucide-react';
 
 export type Team = {
   id: string;
@@ -73,6 +84,16 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
   const [deptToDelete, setDeptToDelete] = useState<Department | null>(null);
   const [deletingDept, setDeletingDept] = useState(false);
   const [deleteDeptError, setDeleteDeptError] = useState<string | null>(null);
+
+  // Rename (edit) modal state — shared by teams and departments.
+  const [renameTarget, setRenameTarget] = useState<{
+    kind: 'team' | 'department';
+    id: string;
+    label: string;
+  } | null>(null);
+  const [renameForm, setRenameForm] = useState({ name: '', description: '' });
+  const [savingRename, setSavingRename] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -194,6 +215,63 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
     }
   };
 
+  const openRenameTeam = (team: Team) => {
+    setRenameTarget({ kind: 'team', id: team.id, label: team.name });
+    setRenameForm({ name: team.name, description: team.description ?? '' });
+    setRenameError(null);
+  };
+
+  const openRenameDept = (dept: Department) => {
+    setRenameTarget({ kind: 'department', id: dept.id, label: dept.name });
+    setRenameForm({ name: dept.name, description: dept.description ?? '' });
+    setRenameError(null);
+  };
+
+  const saveRename = async () => {
+    if (!renameTarget) return;
+    if (!renameForm.name.trim()) {
+      setRenameError('Name is required');
+      return;
+    }
+    setSavingRename(true);
+    setRenameError(null);
+    try {
+      const path = renameTarget.kind === 'team' ? 'teams' : 'departments';
+      const body = {
+        name: renameForm.name.trim(),
+        description: renameForm.description.trim() || null,
+      };
+      const res = await fetch(`/api/${path}/${renameTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message ?? 'Failed to save changes');
+      }
+      // PATCH returns { success: true }, so update the row from the sent values.
+      if (renameTarget.kind === 'team') {
+        setTeams((prev) =>
+          prev.map((t) =>
+            t.id === renameTarget.id ? { ...t, name: body.name, description: body.description } : t,
+          ),
+        );
+      } else {
+        setDepartments((prev) =>
+          prev.map((d) =>
+            d.id === renameTarget.id ? { ...d, name: body.name, description: body.description } : d,
+          ),
+        );
+      }
+      setRenameTarget(null);
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setSavingRename(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -280,7 +358,7 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
                 <Link href={`/teams/departments/${dept.id}`} className="block">
                   <div className="neon-card relative overflow-hidden rounded-2xl p-5">
                     <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
-                    <h3 className="text-surface-900 mb-2 truncate pr-9 font-semibold">
+                    <h3 className="text-surface-900 mb-2 truncate pr-16 font-semibold">
                       {dept.name}
                     </h3>
                     {dept.code && (
@@ -296,14 +374,24 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
                     </div>
                   </div>
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => requestDeleteDept(dept)}
-                  aria-label={`Delete ${dept.name}`}
-                  className="text-surface-400 hover:bg-error/10 hover:text-error absolute right-3 top-3 z-10 rounded-lg p-1.5 opacity-0 transition-all focus:opacity-100 focus:outline-none group-hover:opacity-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="absolute right-3 top-3 z-10 flex items-center gap-1 opacity-0 transition-all focus-within:opacity-100 group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => openRenameDept(dept)}
+                    aria-label={`Rename ${dept.name}`}
+                    className="text-surface-400 hover:bg-surface-200/70 hover:text-surface-700 rounded-lg p-1.5 transition-all focus:outline-none"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => requestDeleteDept(dept)}
+                    aria-label={`Delete ${dept.name}`}
+                    className="text-surface-400 hover:bg-error/10 hover:text-error rounded-lg p-1.5 transition-all focus:outline-none"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -318,32 +406,43 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {teams.map((team, i) => (
-              <Link key={team.id} href={`/teams/${team.id}`}>
-                <motion.div
-                  variants={itemVariants}
-                  custom={i}
-                  whileHover={{ y: -3 }}
-                  className="neon-card group relative overflow-hidden rounded-2xl p-5"
+              <motion.div
+                key={team.id}
+                variants={itemVariants}
+                custom={i}
+                whileHover={{ y: -3 }}
+                className="group relative"
+              >
+                <Link href={`/teams/${team.id}`} className="block">
+                  <div className="neon-card relative overflow-hidden rounded-2xl p-5">
+                    <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
+                    <h3 className="text-surface-900 mb-2 truncate pr-9 font-semibold">{team.name}</h3>
+                    {team.code && (
+                      <p className="text-surface-500 mb-1 font-mono text-xs">{team.code}</p>
+                    )}
+                    {team.description && (
+                      <p className="text-surface-500 mb-2 line-clamp-2 text-sm">{team.description}</p>
+                    )}
+                    <div className="text-surface-500 flex items-center gap-3 text-xs">
+                      {team.leadUserId && <span>Lead: {team.leadUserId.substring(0, 8)}...</span>}
+                      {team.departmentId && <span>Dept: {team.departmentId.substring(0, 8)}...</span>}
+                    </div>
+                    <div className="mt-3">
+                      <Badge variant={team.isActive ? 'success' : 'default'} size="sm">
+                        {team.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  </div>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => openRenameTeam(team)}
+                  aria-label={`Rename ${team.name}`}
+                  className="text-surface-400 hover:bg-surface-200/70 hover:text-surface-700 absolute right-3 top-3 z-10 rounded-lg p-1.5 opacity-0 transition-all focus:opacity-100 focus:outline-none group-hover:opacity-100"
                 >
-                  <div className={'absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300'} />
-                  <div className="mb-2 flex items-start justify-between">
-                    <h3 className="text-surface-900 truncate font-semibold">{team.name}</h3>
-                    <Badge variant={team.isActive ? 'success' : 'default'} size="sm">
-                      {team.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                  {team.code && (
-                    <p className="text-surface-500 mb-1 font-mono text-xs">{team.code}</p>
-                  )}
-                  {team.description && (
-                    <p className="text-surface-500 mb-2 line-clamp-2 text-sm">{team.description}</p>
-                  )}
-                  <div className="text-surface-500 flex items-center gap-3 text-xs">
-                    {team.leadUserId && <span>Lead: {team.leadUserId.substring(0, 8)}...</span>}
-                    {team.departmentId && <span>Dept: {team.departmentId.substring(0, 8)}...</span>}
-                  </div>
-                </motion.div>
-              </Link>
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </motion.div>
             ))}
           </div>
         </motion.section>
@@ -606,6 +705,88 @@ export function TeamsClient({ initialData }: TeamsClientProps) {
                   )}
                   Delete
                 </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Rename Team / Department Modal */}
+      <AnimatePresence>
+        {renameTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="gradient-border-card w-full max-w-md p-6"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-surface-900 flex items-center gap-2 text-lg font-semibold">
+                  <Pencil className="h-4 w-4" />
+                  {renameTarget.kind === 'team' ? 'Rename team' : 'Rename department'}
+                </h3>
+                <button
+                  onClick={() => setRenameTarget(null)}
+                  className="text-surface-500 hover:bg-surface-200 rounded-lg p-1"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Name <span className="text-error">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    aria-label="Name"
+                    value={renameForm.name}
+                    onChange={(e) => setRenameForm({ ...renameForm, name: e.target.value })}
+                    autoFocus
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">
+                    Description
+                  </label>
+                  <textarea
+                    value={renameForm.description}
+                    onChange={(e) => setRenameForm({ ...renameForm, description: e.target.value })}
+                    placeholder="Optional description"
+                    rows={3}
+                    className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full resize-none rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
+                  />
+                </div>
+                {renameError && (
+                  <div className="bg-error/5 text-error flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {renameError}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setRenameTarget(null)}
+                    className="rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={saveRename} disabled={savingRename} className="rounded-xl">
+                    {savingRename ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1 h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

@@ -120,6 +120,8 @@ export async function mockTeamsApi(
     deleteDeptErrorStatus?: number;
     /** If set, DELETE /api/departments/[id] will fulfill with this error body. */
     deleteDeptErrorBody?: Record<string, unknown>;
+    /** If set, PATCH /api/teams/[id] and /api/departments/[id] fulfill with this error status. */
+    renameErrorStatus?: number;
   } = {},
 ) {
   const {
@@ -133,6 +135,7 @@ export async function mockTeamsApi(
     createDeptErrorBody,
     deleteDeptErrorStatus,
     deleteDeptErrorBody,
+    renameErrorStatus,
   } = options;
 
   // GET /api/teams — list teams and departments
@@ -206,9 +209,47 @@ export async function mockTeamsApi(
     });
   });
 
-  // DELETE /api/departments/[id] — delete department
+  // PATCH /api/teams/[id] — rename team
+  await page.route('**/api/teams/*', async (route) => {
+    if (route.request().method() !== 'PATCH') {
+      await route.fallback();
+      return;
+    }
+    if (renameErrorStatus) {
+      await route.fulfill({
+        status: renameErrorStatus,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'Rename failed' } }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true }),
+    });
+  });
+
+  // DELETE /api/departments/[id] — delete department; PATCH — rename department
   await page.route('**/api/departments/*', async (route) => {
-    if (route.request().method() !== 'DELETE') {
+    const method = route.request().method();
+    if (method === 'PATCH') {
+      if (renameErrorStatus) {
+        await route.fulfill({
+          status: renameErrorStatus,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'Rename failed' } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+      return;
+    }
+    if (method !== 'DELETE') {
       await route.fallback();
       return;
     }
