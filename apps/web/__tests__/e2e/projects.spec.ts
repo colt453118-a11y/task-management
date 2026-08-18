@@ -91,11 +91,11 @@ test.describe('Projects Page', () => {
       }
     }
 
-    // Status badges should be visible
-    await expect(page.getByText('active').first()).toBeVisible();
-    await expect(page.getByText('on_hold').first()).toBeVisible();
-    await expect(page.getByText('completed').first()).toBeVisible();
-    await expect(page.getByText('archived').first()).toBeVisible();
+    // Status badges should be visible (Title-Cased labels)
+    await expect(page.getByText('Active').first()).toBeVisible();
+    await expect(page.getByText('On Hold').first()).toBeVisible();
+    await expect(page.getByText('Completed').first()).toBeVisible();
+    await expect(page.getByText('Archived').first()).toBeVisible();
   });
 
   test('shows progress bars with correct percentages', async ({ page }) => {
