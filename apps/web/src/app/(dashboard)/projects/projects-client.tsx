@@ -20,6 +20,9 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { containerVariants, itemVariants } from '@/lib/motion/variants';
+import { AccentBar } from '@/components/ui/accent-bar';
+import { FormField } from '@/components/ui/form-field';
 
 export type Project = {
   id: string;
@@ -42,14 +45,10 @@ const statusBadge: Record<string, 'default' | 'primary' | 'success' | 'warning' 
   archived: 'default',
 };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-} as const;
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
-} as const;
+/** "on_hold" → "On Hold" for display; the Badge variant keeps the semantic color. */
+function formatStatus(status: string): string {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 interface ProjectsClientProps {
   /** Server-rendered projects; null means the server load failed and the client should fetch. */
@@ -325,7 +324,7 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                 whileHover={{ y: -3 }}
                 className="neon-card group relative overflow-hidden rounded-2xl p-5"
               >
-                <div className="from-brand-500 to-brand-400 absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r opacity-60" />
+                <AccentBar className="transition-opacity duration-300 group-hover:opacity-100" />
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-surface-900 truncate font-semibold">{project.name}</h3>
@@ -353,7 +352,7 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                       </button>
                     </div>
                     <Badge variant={statusBadge[project.status] ?? 'default'} size="sm">
-                      {project.status}
+                      {formatStatus(project.status)}
                     </Badge>
                   </div>
                 </div>
@@ -362,17 +361,21 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                     {project.description}
                   </p>
                 )}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-surface-500">Progress</span>
-                    <span className="text-surface-700 font-medium">{project.progress}%</span>
+                    <span className="text-surface-500 font-medium uppercase tracking-wider text-[10px]">
+                      Progress
+                    </span>
+                    <span className="text-brand-400 font-semibold tabular-nums">
+                      {project.progress}%
+                    </span>
                   </div>
                   <div className="bg-surface-300/40 h-1.5 overflow-hidden rounded-full">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${project.progress}%` }}
                       transition={{ duration: 1, ease: 'easeOut' }}
-                      className="from-brand-500 to-brand-400 h-full rounded-full bg-gradient-to-r"
+                      className="from-brand-500 to-brand-400 h-full rounded-full bg-gradient-to-r shadow-[0_0_6px_rgba(138,120,255,0.5)]"
                     />
                   </div>
                 </div>
@@ -419,62 +422,52 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
-                    Name <span className="text-error">*</span>
-                  </label>
+                <FormField label="Name" htmlFor="project-name" required>
                   <Input
+                    id="project-name"
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g. Q4 Product Launch"
                     autoFocus
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
-                    Code
-                  </label>
+                </FormField>
+                <FormField label="Code" htmlFor="project-code">
                   <Input
+                    id="project-code"
                     type="text"
                     value={form.code}
                     onChange={(e) => setForm({ ...form, code: e.target.value })}
                     placeholder="e.g. Q4-2026"
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
-                    Description
-                  </label>
+                </FormField>
+                <FormField label="Description" htmlFor="project-description">
                   <Textarea
+                    id="project-description"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="Optional description"
                     rows={3}
                     className="resize-none"
                   />
-                </div>
+                </FormField>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
-                      Start Date
-                    </label>
+                  <FormField label="Start Date" htmlFor="project-start">
                     <Input
+                      id="project-start"
                       type="date"
                       value={form.startDate}
                       onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-surface-500 block text-xs font-semibold uppercase tracking-wider">
-                      End Date
-                    </label>
+                  </FormField>
+                  <FormField label="End Date" htmlFor="project-end">
                     <Input
+                      id="project-end"
                       type="date"
                       value={form.endDate}
                       onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                     />
-                  </div>
+                  </FormField>
                 </div>
                 {formError && (
                   <div className="bg-error/5 text-error flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
