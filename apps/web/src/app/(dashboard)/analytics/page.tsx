@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo, startTransition } from 'reac
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
+import { STATUS_CHART_COLORS as STATUS_COLORS } from '@/lib/theme/chart-colors';
 import { motion } from 'framer-motion';
 import {
   BarChart,
@@ -70,18 +71,6 @@ interface AnalyticsData {
 
 // ─── Constants ──────────────────────────────────────────────
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: '#6b7280',
-  open: '#60a5fa',
-  in_progress: '#fbbf24',
-  blocked: '#f87171',
-  under_review: '#22d3ee',
-  on_hold: '#a78bfa',
-  completed: '#34d399',
-  closed: '#818cf8',
-  cancelled: '#9ca3af',
-  archived: '#6b7280',
-};
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
