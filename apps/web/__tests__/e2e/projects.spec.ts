@@ -96,6 +96,12 @@ test.describe('Projects Page', () => {
     await expect(page.getByText('On Hold').first()).toBeVisible();
     await expect(page.getByText('Completed').first()).toBeVisible();
     await expect(page.getByText('Archived').first()).toBeVisible();
+
+    // Each card links to its project detail page
+    await expect(page.getByRole('link', { name: 'Open Website Redesign' })).toHaveAttribute(
+      'href',
+      '/projects/proj-1',
+    );
   });
 
   test('shows progress bars with correct percentages', async ({ page }) => {
