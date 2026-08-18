@@ -119,6 +119,9 @@ test.describe('Command Palette (⌘K)', () => {
   });
 
   test('quick-create form submits and navigates to the new task page', async ({ page }) => {
+    // The RSC /tasks/[id] route cold-compiles on first navigation; firefox CI can
+    // take ~30s, which exceeds the 30s default *test* timeout. Give it more budget.
+    test.slow();
     await mockDashboardApis(page);
     // The task detail page renders after navigation — mock its APIs. Override
     // the detail GET (registered after mockPageApis, so last-wins) to return a
@@ -205,9 +208,9 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 30_000,
+      timeout: 60_000,
     });
-    await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 60_000 });
   });
 
   test('quick-create shows an inline error and stays open when POST /api/tasks fails', async ({ page }) => {
@@ -273,6 +276,7 @@ test.describe('Command Palette (⌘K)', () => {
   });
 
   test('quick-create form submits with Enter (header: "Press Enter to submit")', async ({ page }) => {
+    test.slow(); // RSC /tasks/[id] cold-compile on first nav can exceed the 30s test timeout
     await mockDashboardApis(page);
     // The task detail page renders after navigation — mock its APIs. Override
     // the detail GET (registered after mockPageApis, so last-wins) to return a
@@ -345,14 +349,15 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 30_000,
+      timeout: 60_000,
     });
     await expect(page.getByText('Created with Enter')).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     });
   });
 
   test('quick-create opens via ⌘T shortcut and submits', async ({ page }) => {
+    test.slow(); // RSC /tasks/[id] cold-compile on first nav can exceed the 30s test timeout
     await mockDashboardApis(page);
     // The task detail page renders after navigation — mock its APIs. Override
     // the detail GET (registered after mockPageApis, so last-wins) to return a
@@ -422,10 +427,10 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 30_000,
+      timeout: 60_000,
     });
     await expect(page.getByText('Created via Cmd-T')).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     });
   });
 
@@ -558,7 +563,7 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 30_000,
+      timeout: 60_000,
     });
     await expect(page.getByText('Created via Quick btn')).toBeVisible({
       timeout: 15_000,
@@ -590,6 +595,7 @@ test.describe('Command Palette (⌘K)', () => {
   });
 
   test('navigates with arrow keys and runs a nav command on Enter', async ({ page }) => {
+    test.slow(); // route cold-compile on first nav can exceed the 30s test timeout
     await mockDashboardApis(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({
