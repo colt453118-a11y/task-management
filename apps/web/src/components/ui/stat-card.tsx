@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AccentBar } from '@/components/ui/accent-bar';
 
 /**
  * StatCard — the canonical KPI / metric tile: a glass card with a big Sora
@@ -50,11 +51,7 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         {...props}
       >
         {/* Top accent bar */}
-        <div
-          className="absolute inset-x-0 top-0 h-0.5 opacity-70"
-          style={{ background: `linear-gradient(to right, ${color}, ${tint('35%')})` }}
-          aria-hidden
-        />
+        <AccentBar color={color} />
         <div className="flex items-start justify-between gap-2">
           <p className="text-surface-500 text-[10px] font-semibold uppercase tracking-wider">{label}</p>
           {icon && (
