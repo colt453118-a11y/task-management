@@ -359,4 +359,60 @@ test.describe('Teams Page', () => {
     await expect(page.getByRole('heading', { name: /delete department/i })).toBeVisible();
     await expect(page.getByText('Engineering').first()).toBeVisible();
   });
+
+  test('renames a team via the rename button', async ({ page }) => {
+    await mockTeamsApi(page);
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Frontend').first()).toBeVisible();
+
+    // Open the rename modal for a team (hover-revealed button)
+    await page.getByRole('button', { name: 'Rename Frontend' }).click();
+    await expect(page.getByRole('heading', { name: /rename team/i })).toBeVisible();
+
+    // Name is prefilled; change it and save
+    const nameInput = page.getByRole('textbox', { name: 'Name' });
+    await expect(nameInput).toHaveValue('Frontend');
+    await nameInput.fill('Frontend Platform');
+    await page.getByRole('button', { name: /save/i }).click();
+
+    await expect(page.getByRole('heading', { name: /rename team/i })).not.toBeVisible();
+    await expect(page.getByText('Frontend Platform').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('renames a department via the rename button', async ({ page }) => {
+    await mockTeamsApi(page, { teams: [] });
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Rename Engineering' }).click();
+    await expect(page.getByRole('heading', { name: /rename department/i })).toBeVisible();
+
+    const nameInput = page.getByRole('textbox', { name: 'Name' });
+    await expect(nameInput).toHaveValue('Engineering');
+    await nameInput.fill('Platform Engineering');
+    await page.getByRole('button', { name: /save/i }).click();
+
+    await expect(page.getByRole('heading', { name: /rename department/i })).not.toBeVisible();
+    await expect(page.getByText('Platform Engineering').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('shows an error when a rename fails', async ({ page }) => {
+    await mockTeamsApi(page, { teams: [], renameErrorStatus: 400 });
+
+    await page.goto('/teams');
+    await expect(teamsHeading(page)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Engineering').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Rename Engineering' }).click();
+    await expect(page.getByRole('heading', { name: /rename department/i })).toBeVisible();
+    await page.getByRole('button', { name: /save/i }).click();
+
+    // Error surfaces and the modal stays open
+    await expect(page.getByText(/rename failed/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: /rename department/i })).toBeVisible();
+  });
 });
