@@ -205,9 +205,9 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 15_000,
+      timeout: 30_000,
     });
-    await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Ship the palette')).toBeVisible({ timeout: 30_000 });
   });
 
   test('quick-create shows an inline error and stays open when POST /api/tasks fails', async ({ page }) => {
@@ -345,10 +345,10 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 15_000,
+      timeout: 30_000,
     });
     await expect(page.getByText('Created with Enter')).toBeVisible({
-      timeout: 15_000,
+      timeout: 30_000,
     });
   });
 
@@ -422,10 +422,10 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 15_000,
+      timeout: 30_000,
     });
     await expect(page.getByText('Created via Cmd-T')).toBeVisible({
-      timeout: 15_000,
+      timeout: 30_000,
     });
   });
 
@@ -558,7 +558,7 @@ test.describe('Command Palette (⌘K)', () => {
     // Generous timeout: on a cold firefox CI runner Next.js compiles the
     // target route on first navigation, which can exceed the 5s default.
     await expect(page).toHaveURL(new RegExp(`/tasks/${TASK_ID}`), {
-      timeout: 15_000,
+      timeout: 30_000,
     });
     await expect(page.getByText('Created via Quick btn')).toBeVisible({
       timeout: 15_000,
