@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import {
   FolderOpen,
   AlertCircle,
@@ -325,6 +326,13 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                 className="neon-card group relative overflow-hidden rounded-2xl p-5"
               >
                 <AccentBar className="transition-opacity duration-300 group-hover:opacity-100" />
+                {/* Stretched link: the whole card opens the project; the edit/delete
+                    buttons sit above it (z-10) so they stay clickable. */}
+                <Link
+                  href={`/projects/${project.id}`}
+                  aria-label={`Open ${project.name}`}
+                  className="absolute inset-0 z-[1] rounded-2xl"
+                />
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-surface-900 truncate font-semibold">{project.name}</h3>
@@ -332,7 +340,7 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
                       <p className="text-surface-500 mt-0.5 font-mono text-xs">{project.code}</p>
                     )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="relative z-10 flex shrink-0 items-center gap-1.5">
                     <div className="flex items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                       <button
                         type="button"
