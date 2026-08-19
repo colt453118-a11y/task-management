@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/table';
 import {
   Search,
   Filter,
@@ -1192,59 +1193,39 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
         </motion.div>
       ) : (
         <>
-          <motion.div
-            variants={itemVariants}
-            className="neon-card overflow-hidden rounded-2xl"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-surface-500/20 bg-surface-300/40 border-b">
-                    <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5">
-                      <Checkbox
-                        aria-label="Select all tasks"
-                        checked={
-                          tasks.length > 0 && (selectedIds.size === tasks.length || allSelectedMode)
-                        }
-                        onCheckedChange={toggleSelectAll}
-                        className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                      />
-                    </th>
-                    <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
-                      ID
-                    </th>
-                    <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
-                      Title
-                    </th>
-                    <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
-                      Status
-                    </th>
-                    <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
-                      Priority
-                    </th>
-                    {showTrash ? (
-                      <>
-                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
-                          Deleted By
-                        </th>
-                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
-                          Deleted At
-                        </th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="text-surface-500 hidden px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
-                          Assignee
-                        </th>
-                        <th className="text-surface-500 px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider sm:px-4 sm:py-3.5 sm:text-xs">
-                          Due
-                        </th>
-                      </>
-                    )}
-                    <th className="w-8 px-2 py-2.5 sm:w-10 sm:px-4 sm:py-3.5" />
-                  </tr>
-                </thead>
-                <tbody>
+          <motion.div variants={itemVariants}>
+            <Table>
+              <THead>
+                <TR header>
+                  <TH className="w-8 sm:w-10">
+                    <Checkbox
+                      aria-label="Select all tasks"
+                      checked={
+                        tasks.length > 0 && (selectedIds.size === tasks.length || allSelectedMode)
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    />
+                  </TH>
+                  <TH className="hidden sm:table-cell">ID</TH>
+                  <TH>Title</TH>
+                  <TH>Status</TH>
+                  <TH className="hidden sm:table-cell">Priority</TH>
+                  {showTrash ? (
+                    <>
+                      <TH className="hidden sm:table-cell">Deleted By</TH>
+                      <TH className="hidden sm:table-cell">Deleted At</TH>
+                    </>
+                  ) : (
+                    <>
+                      <TH className="hidden sm:table-cell">Assignee</TH>
+                      <TH>Due</TH>
+                    </>
+                  )}
+                  <TH className="w-8 sm:w-10" />
+                </TR>
+              </THead>
+              <TBody>
                   {tasks.map((task, idx) => (
                     <motion.tr
                       key={task.id}
@@ -1263,23 +1244,23 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                           : 'hover:bg-surface-200/30 hover:-translate-y-px',
                       )}
                     >
-                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
+                      <TD>
                         <Checkbox
                           aria-label={`Select task: ${task.title}`}
                           checked={selectedIds.has(task.id)}
                           onCheckedChange={() => toggleSelect(task.id)}
                           className="h-3.5 w-3.5 transition-transform duration-150 hover:scale-110 sm:h-4 sm:w-4"
                         />
-                      </td>
-                      <td className="hidden px-2 py-2.5 sm:table-cell sm:px-4 sm:py-3.5">
+                      </TD>
+                      <TD className="hidden sm:table-cell">
                         <Link
                           href={`/tasks/${task.id}`}
                           className="text-surface-500 hover:text-brand-500 font-mono text-[10px] transition-colors duration-200 sm:text-xs"
                         >
                           {task.taskIdDisplay}
                         </Link>
-                      </td>
-                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
+                      </TD>
+                      <TD>
                         <Link
                           href={`/tasks/${task.id}`}
                           className="text-surface-900 hover:text-brand-500 inline-block text-xs font-medium transition-all duration-200 group-hover:translate-x-0.5 sm:text-sm"
@@ -1287,13 +1268,13 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                           <span className="line-clamp-1">{task.title}</span>
                           <span className="absolute inset-0" aria-hidden="true" />
                         </Link>
-                      </td>
-                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
+                      </TD>
+                      <TD>
                         <Badge variant={statusColors[task.status] ?? 'default'} size="sm" className="px-1.5 py-0 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs">
                           {task.status.replace(/_/g, ' ')}
                         </Badge>
-                      </td>
-                      <td className="hidden px-2 py-2.5 sm:table-cell sm:px-4 sm:py-3.5">
+                      </TD>
+                      <TD className="hidden sm:table-cell">
                         <span
                           className={cn(
                             'inline-flex items-center rounded-full px-1.5 py-0 text-[10px] font-medium transition-transform duration-200 hover:scale-105 sm:px-2 sm:py-0.5 sm:text-xs',
@@ -1303,10 +1284,10 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                         >
                           {priorityBadge[task.priority]?.label ?? task.priority}
                         </span>
-                      </td>
+                      </TD>
                       {showTrash ? (
                         <>
-                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
+                          <TD className="text-surface-500 hidden text-[10px] sm:table-cell sm:text-xs">
                             {task.updatedByName ? (
                               <div className="flex items-center gap-1.5">
                                 <div className="from-error/70 to-error ring-surface-200/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 sm:h-6 sm:w-6 sm:text-[9px]">
@@ -1317,8 +1298,8 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                             ) : (
                               <span className="text-surface-400 italic">Unknown</span>
                             )}
-                          </td>
-                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
+                          </TD>
+                          <TD className="text-surface-500 hidden text-[10px] sm:table-cell sm:text-xs">
                             {task.deletedAt ? (
                               <span className="flex items-center gap-1">
                                 <span className="text-[10px] sm:text-xs">
@@ -1331,11 +1312,11 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                             ) : (
                               <span className="text-surface-400 italic">N/A</span>
                             )}
-                          </td>
+                          </TD>
                         </>
                       ) : (
                         <>
-                          <td className="text-surface-500 hidden px-2 py-2.5 text-[10px] sm:table-cell sm:px-4 sm:py-3.5 sm:text-xs">
+                          <TD className="text-surface-500 hidden text-[10px] sm:table-cell sm:text-xs">
                             {task.assignedTo ? (
                               <div className="group/assignee flex items-center gap-1.5">
                                 <div className="from-brand-400 to-brand-600 ring-surface-200/50 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br text-[8px] font-medium text-white ring-2 transition-transform duration-200 group-hover/assignee:scale-110 sm:h-6 sm:w-6 sm:text-[9px]">
@@ -1346,10 +1327,10 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                             ) : (
                               <span className="text-surface-500">—</span>
                             )}
-                          </td>
-                          <td
+                          </TD>
+                          <TD
                             className={cn(
-                              'px-2 py-2.5 text-[10px] sm:px-4 sm:py-3.5 sm:text-xs',
+                              'text-[10px] sm:text-xs',
                               task.dueDate &&
                                 new Date(task.dueDate) < new Date() &&
                                 !['completed', 'closed', 'cancelled'].includes(task.status)
@@ -1363,10 +1344,10 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                                   day: 'numeric',
                                 })
                               : '—'}
-                          </td>
+                          </TD>
                         </>
                       )}
-                      <td className="px-2 py-2.5 sm:px-4 sm:py-3.5">
+                      <TD>
                         {showTrash ? (
                           <div className="flex items-center gap-1 sm:gap-1.5">
                             <Button
@@ -1397,12 +1378,11 @@ export function TasksClient({ initialTasks, initialTotal, initialUsers }: TasksC
                             <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                         )}
-                      </td>
+                      </TD>
                     </motion.tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+              </TBody>
+            </Table>
           </motion.div>
 
           {/* Pagination */}
