@@ -5,6 +5,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/ui/stat-card';
+import { PageHeader } from '@/components/ui/page-header';
+import { staggerContainer, fadeUpItem } from '@/lib/motion/variants';
+import { statusChartColor, priorityChartColor } from '@/lib/theme/chart-colors';
 import { motion } from 'framer-motion';
 import {
   ListTodo,
@@ -34,20 +37,8 @@ const RechartsCharts = lazy(() => import('@/components/dashboard/recharts-charts
 
 type DashboardView = 'executive' | 'manager' | 'employee';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-} as const;
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 15 },
-  },
-} as const;
+const containerVariants = staggerContainer(0.05);
+const itemVariants = fadeUpItem({ y: 20, scale: 0.95 });
 
 const statusDotColors: Record<string, string> = {
   draft: 'bg-surface-400',
@@ -272,17 +263,22 @@ export function DashboardClient({ initialMetrics, initialUserName }: DashboardCl
       className="space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-surface-900 text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-surface-500 mt-1 text-sm">
-            Welcome back, <span className="text-surface-700 font-medium">{userName}</span>
-          </p>
-        </div>
-        <div className="text-surface-500 flex items-center gap-2 text-xs">
-          <span className="flex h-2 w-2 rounded-full bg-green-500" />
-          <span>All systems operational</span>
-        </div>
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          className="mb-0"
+          title="Dashboard"
+          subtitle={
+            <>
+              Welcome back, <span className="text-surface-700 font-medium">{userName}</span>
+            </>
+          }
+          actions={
+            <div className="text-surface-500 flex items-center gap-2 text-xs">
+              <span className="flex h-2 w-2 rounded-full bg-green-500" />
+              <span>All systems operational</span>
+            </div>
+          }
+        />
       </motion.div>
 
       {/* View Switcher Tabs */}
@@ -349,14 +345,20 @@ export function DashboardClient({ initialMetrics, initialUserName }: DashboardCl
             { name: 'Review', value: metrics.awaitingReview },
           ].filter((d) => d.value > 0)}
           barData={[
-            { name: 'Overdue', value: metrics.overdueTasks, fill: '#f87171' },
-            { name: 'Blocked', value: metrics.blockedTasks, fill: '#fb923c' },
-            { name: 'Review', value: metrics.awaitingReview, fill: '#22d3ee' },
-            { name: 'In Progress', value: metrics.inProgress, fill: '#fbbf24' },
-            { name: 'Completed', value: metrics.completedTasks, fill: '#34d399' },
+            { name: 'Overdue', value: metrics.overdueTasks, fill: statusChartColor('blocked') },
+            { name: 'Blocked', value: metrics.blockedTasks, fill: priorityChartColor('high') },
+            { name: 'Review', value: metrics.awaitingReview, fill: statusChartColor('under_review') },
+            { name: 'In Progress', value: metrics.inProgress, fill: statusChartColor('in_progress') },
+            { name: 'Completed', value: metrics.completedTasks, fill: statusChartColor('completed') },
           ]}
           total={metrics.totalTasks || 1}
-          pieColors={['#60a5fa', '#fbbf24', '#34d399', '#f87171', '#22d3ee']}
+          pieColors={[
+            statusChartColor('open'),
+            statusChartColor('in_progress'),
+            statusChartColor('completed'),
+            statusChartColor('blocked'),
+            statusChartColor('under_review'),
+          ]}
         />
       </Suspense>
 
