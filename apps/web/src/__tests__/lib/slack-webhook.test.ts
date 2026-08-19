@@ -102,17 +102,18 @@ describe('Slack Webhook Library', () => {
 
       await sendSlackNotification('org-123', { text: 'Test message' });
 
-      // Should call fetch with correct parameters
+      // Should call fetch with correct parameters (plus the SSRF-hardening
+      // options — signal/redirect/dispatcher — which objectContaining ignores).
       expect(mockFetch).toHaveBeenCalledWith(
         'https://hooks.slack.com/services/T00/B00/xxx',
-        {
+        expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: 'Test message',
             blocks: undefined,
           }),
-        },
+        }),
       );
 
       // Should update integration with lastUsedAt
@@ -206,6 +207,23 @@ describe('Slack Webhook Library', () => {
         sendSlackNotification('org-123', { text: 'Test' }),
       ).resolves.toBeUndefined();
     });
+
+    it('blocks an integration whose webhook URL is private/reserved (SSRF guard)', async () => {
+      const integration = {
+        id: 'int-1',
+        webhookUrl: 'http://169.254.169.254/latest/meta-data/', // cloud metadata
+        organizationId: 'org-123',
+      };
+      mockChain = createMockChain([integration]);
+
+      await sendSlackNotification('org-123', { text: 'Test' });
+
+      // Never reaches the network, and the block reason is recorded.
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockChain.set).toHaveBeenCalledWith(
+        expect.objectContaining({ lastError: expect.stringMatching(/^Blocked:/) }),
+      );
+    });
   });
 
   describe('testSlackWebhook', () => {
@@ -222,13 +240,13 @@ describe('Slack Webhook Library', () => {
       expect(result).toEqual({ success: true });
       expect(mockFetch).toHaveBeenCalledWith(
         'https://hooks.slack.com/services/T00/B00/xxx',
-        {
+        expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: '✅ WorkManager test notification - connection successful!',
           }),
-        },
+        }),
       );
     });
 
@@ -285,6 +303,22 @@ describe('Slack Webhook Library', () => {
         success: false,
         error: 'Request timeout',
       });
+    });
+
+    it('blocks a private/metadata URL without making a request (SSRF guard)', async () => {
+      const result = await testSlackWebhook('http://169.254.169.254/latest/meta-data/');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/^Blocked:/);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('blocks a non-http(s) protocol without making a request (SSRF guard)', async () => {
+      const result = await testSlackWebhook('file:///etc/passwd');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/^Blocked:/);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 });
