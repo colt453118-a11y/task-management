@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, startTransition } from 'react';
+import { useEffect, useState, startTransition, type ElementType, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { StatusChip, PriorityChip } from '@/components/ui/chip';
@@ -37,6 +37,7 @@ import {
   Timer,
   History,
   Copy,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { TaskDependencySection } from '@/components/tasks/task-dependency-section';
 
@@ -115,6 +116,43 @@ const itemVariants = {
   hidden: { y: 16 },
   visible: { y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
 } as const;
+
+// ─── Section primitives (presentational, no hooks/motion) ───
+
+// The shared surface for every detail section. Soft depth + a hairline inset
+// ring lift the flat cards without changing their layout or the motion tree.
+const sectionCardClass =
+  'border-surface-300/20 bg-surface-100/70 ring-1 ring-inset ring-white/[0.015] shadow-lg shadow-black/5 overflow-hidden rounded-2xl border transition-colors';
+
+// A uniform section header: an electric-violet icon chip + title (+ optional
+// count and a right-aligned action). Purely presentational so it can live at
+// module scope and be reused across every card.
+function SectionHeading({
+  icon: Icon,
+  title,
+  count,
+  action,
+}: {
+  icon: ElementType;
+  title: string;
+  count?: number;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="border-surface-300/10 flex items-center justify-between gap-3 border-b px-5 py-4">
+      <h2 className="text-surface-900 flex items-center gap-2.5 text-base font-semibold">
+        <span className="from-brand-500/15 to-brand-400/5 text-brand-400 ring-brand-500/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ring-1 ring-inset">
+          <Icon className="h-4 w-4" />
+        </span>
+        {title}
+        {count !== undefined && (
+          <span className="text-surface-500 ml-0.5 text-xs font-normal">({count})</span>
+        )}
+      </h2>
+      {action}
+    </div>
+  );
+}
 
 // ─── Page Component ─────────────────────────────────────────
 
@@ -571,7 +609,7 @@ export function TaskDetailClient({
               <span className="text-surface-600">/</span>
               <span className="font-mono">{task.taskIdDisplay}</span>
             </div>
-            <h1 className="font-display text-surface-900 text-2xl font-bold tracking-tight">
+            <h1 className="font-display text-surface-900 text-2xl font-bold tracking-tight sm:text-[28px]">
               {task.title}
             </h1>
             <div className="mt-2.5 flex flex-wrap items-center gap-2">
@@ -636,26 +674,26 @@ export function TaskDetailClient({
           {/* Description */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 flex items-center justify-between border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <FileText className="text-surface-500 h-4 w-4" />
-                Description
-              </h2>
-              {!editingDescription && (
-                <button
-                  onClick={() => {
-                    setDescriptionDraft(task.description ?? '');
-                    setEditingDescription(true);
-                  }}
-                  className="text-surface-500 hover:bg-surface-200 hover:text-surface-300 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all"
-                >
-                  <Edit3 className="h-3.5 w-3.5" />
-                  Edit
-                </button>
-              )}
-            </div>
+            <SectionHeading
+              icon={FileText}
+              title="Description"
+              action={
+                !editingDescription ? (
+                  <button
+                    onClick={() => {
+                      setDescriptionDraft(task.description ?? '');
+                      setEditingDescription(true);
+                    }}
+                    className="text-surface-500 hover:bg-surface-200 hover:text-surface-300 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                ) : undefined
+              }
+            />
             <div className="px-5 py-4">
               {editingDescription ? (
                 <div className="space-y-3">
@@ -700,14 +738,9 @@ export function TaskDetailClient({
           {/* Checklist */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <Check className="text-surface-500 h-4 w-4" />
-                Checklist
-              </h2>
-            </div>
+            <SectionHeading icon={Check} title="Checklist" />
             <div className="px-5 py-4">
               <TaskChecklist taskId={task.id} taskStatus={task.status} />
             </div>
@@ -715,17 +748,9 @@ export function TaskDetailClient({
           {/* Comments */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <MessageSquare className="text-surface-500 h-4 w-4" />
-                Comments
-                <span className="text-surface-500 ml-1 text-xs font-normal">
-                  ({comments.length})
-                </span>
-              </h2>
-            </div>
+            <SectionHeading icon={MessageSquare} title="Comments" count={comments.length} />
             <div className="space-y-4 px-5 py-4">
               {/* Comment input */}
               <div className="flex gap-3">
@@ -840,14 +865,9 @@ export function TaskDetailClient({
           {/* Activity Feed */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <History className="text-surface-500 h-4 w-4" />
-                Activity
-              </h2>
-            </div>
+            <SectionHeading icon={History} title="Activity" />
             <div className="px-5 py-4">
               <TaskActivityFeed taskId={task.id} />
             </div>
@@ -855,17 +875,9 @@ export function TaskDetailClient({
           {/* Attachments */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <Paperclip className="text-surface-500 h-4 w-4" />
-                Attachments
-                <span className="text-surface-500 ml-1 text-xs font-normal">
-                  ({attachments.length})
-                </span>
-              </h2>
-            </div>
+            <SectionHeading icon={Paperclip} title="Attachments" count={attachments.length} />
             <div className="space-y-4 px-5 py-4">
               {/* Upload button */}
               <AnimatePresence>
@@ -944,11 +956,9 @@ export function TaskDetailClient({
           {/* Properties card */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 text-base font-semibold">Properties</h2>
-            </div>
+            <SectionHeading icon={SlidersHorizontal} title="Properties" />
             <div className="space-y-4 px-5 py-4">
               {/* Status */}
               <div>
@@ -1070,14 +1080,9 @@ export function TaskDetailClient({
           {/* Time Tracking */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 flex items-center gap-2 text-base font-semibold">
-                <Timer className="text-surface-500 h-4 w-4" />
-                Time Tracking
-              </h2>
-            </div>
+            <SectionHeading icon={Timer} title="Time Tracking" />
             <div className="space-y-4 px-5 py-4">
               {/* Current timer */}
               {runningTimer ? (
@@ -1316,11 +1321,9 @@ export function TaskDetailClient({
           {/* Metadata card */}
           <motion.div
             variants={itemVariants}
-            className="border-surface-300/20 bg-surface-100/80 overflow-hidden rounded-2xl border"
+            className={sectionCardClass}
           >
-            <div className="border-surface-300/10 border-b px-5 py-4">
-              <h2 className="text-surface-900 text-base font-semibold">Details</h2>
-            </div>
+            <SectionHeading icon={Calendar} title="Details" />
             <div className="text-surface-500 space-y-3 px-5 py-4 text-sm">
               <motion.div className="group flex items-center gap-2" whileHover={{ x: 2 }}>
                 <Clock className="text-surface-400 group-hover:text-brand-500 h-3.5 w-3.5 transition-colors" />
