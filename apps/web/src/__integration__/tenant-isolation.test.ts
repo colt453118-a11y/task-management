@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { schema } from '@workmanagement/database';
 import { hasTestDb, testDb, resetDb, insertOrg, insertUser, insertTask } from './helpers/db';
 import { enforceOrgScope } from '@/lib/auth/api-auth';
@@ -74,5 +74,37 @@ describe.skipIf(!hasTestDb)('Multi-tenant isolation', () => {
     }, {});
     expect(byOrg[orgA]).toBe(1);
     expect(byOrg[orgB]).toBe(1);
+  });
+
+  it('an org-scoped UPDATE cannot mutate another org\'s row', async () => {
+    const orgA = await insertOrg('Org A');
+    const orgB = await insertOrg('Org B');
+    const userB = await insertUser();
+    const taskB = await insertTask(orgB, userB, 'B task');
+
+    // The mutation pattern every PATCH /[id] route uses:
+    //   UPDATE … WHERE id = ? AND organization_id = <caller org>.
+    // A caller in org A must not be able to touch org B's row — the scoped
+    // predicate matches nothing, so the update is a no-op (not a 200-that-lies).
+    const asOrgA = await testDb()
+      .update(schema.tasks)
+      .set({ title: 'hacked' })
+      .where(and(eq(schema.tasks.id, taskB), eq(schema.tasks.organizationId, orgA)))
+      .returning({ id: schema.tasks.id });
+    expect(asOrgA).toHaveLength(0);
+
+    const [after] = await testDb()
+      .select({ title: schema.tasks.title })
+      .from(schema.tasks)
+      .where(eq(schema.tasks.id, taskB));
+    expect(after!.title).toBe('B task'); // unchanged
+
+    // The owning org can update it.
+    const asOrgB = await testDb()
+      .update(schema.tasks)
+      .set({ title: 'renamed by owner' })
+      .where(and(eq(schema.tasks.id, taskB), eq(schema.tasks.organizationId, orgB)))
+      .returning({ id: schema.tasks.id });
+    expect(asOrgB).toHaveLength(1);
   });
 });
