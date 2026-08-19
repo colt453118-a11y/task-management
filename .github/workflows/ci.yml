@@ -105,7 +105,11 @@ jobs:
   e2e:
     name: E2E (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 15 min was too tight for slow shared runners — the Playwright suite runs
+    # ~9–15 min per browser, so busy runners intermittently tripped the timeout
+    # and cancelled a browser job (surfacing as a spurious "E2E (…)" failure that
+    # blocked otherwise-green PRs). Give headroom (the sibling e2e.yml uses 45).
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
