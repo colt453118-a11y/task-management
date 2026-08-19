@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, startTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -605,12 +606,16 @@ export default function SettingsPage() {
     >
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-surface-900 text-2xl font-bold tracking-tight">
-          Settings
-        </h1>
-        <p className="text-surface-500 mt-0.5 text-sm">
-          Manage your workspace settings
-        </p>
+        <PageHeader
+          icon={
+            <span className="from-brand-500/15 to-brand-400/5 text-brand-400 ring-brand-500/10 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ring-inset">
+              <SettingsIcon className="h-5 w-5" />
+            </span>
+          }
+          title="Settings"
+          subtitle="Manage your workspace settings"
+          className="mb-0"
+        />
       </motion.div>
 
       {/* Tabs */}
@@ -628,7 +633,7 @@ export default function SettingsPage() {
               onClick={() => setTab(t.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                 tab === t.id
-                  ? 'bg-surface-50 text-surface-900 shadow-sm'
+                  ? 'bg-brand-500/15 text-brand-500 shadow-sm shadow-brand-500/10'
                   : 'text-surface-500 hover:text-surface-700 '
               }`}
             >
