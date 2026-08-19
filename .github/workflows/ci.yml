@@ -156,7 +156,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Cache the browser binaries so the slow `playwright install --with-deps`
+      # (an apt step that was re-running on every job and intermittently hanging
+      # past the job timeout) only runs on a cache miss. Uses the same key as the
+      # sibling e2e.yml, so this job hits an already-warm cache. The key includes
+      # matrix.install so a chromium cache doesn't wrongly satisfy the firefox job.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.install }}-${{ hashFiles('apps/web/pnpm-lock.yaml', 'apps/web/package.json') }}
+
       - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @workmanagement/web exec playwright install --with-deps ${{ matrix.install }}
 
       - name: Run E2E tests
