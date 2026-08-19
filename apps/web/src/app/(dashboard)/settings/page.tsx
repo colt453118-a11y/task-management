@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, startTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { FormField } from '@/components/ui/form-field';
 import { EmptyState } from '@/components/ui/state-display';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -664,19 +665,16 @@ export default function SettingsPage() {
                   { label: 'Slug', value: org?.slug ?? '' },
                   { label: 'Domain', value: org?.domain ?? '', placeholder: 'your-company.com' },
                 ].map((field) => (
-                  <div key={field.label}>
-                    <label className="text-surface-500 mb-1.5 block text-xs font-semibold uppercase tracking-wider">
-                      {field.label}
-                    </label>
+                  <FormField key={field.label} label={field.label} className="max-w-md">
                     <input
                       type="text"
                       aria-label={field.label}
                       value={field.value}
                       disabled
                       placeholder={field.placeholder}
-                      className="border-surface-300/20 bg-surface-200/50 text-surface-500 w-full max-w-md cursor-not-allowed rounded-xl border px-3 py-2.5 text-sm"
+                      className="border-surface-300/20 bg-surface-200/50 text-surface-500 w-full cursor-not-allowed rounded-xl border px-3 py-2.5 text-sm"
                     />
-                  </div>
+                  </FormField>
                 ))}
                 <p className="text-surface-500 text-xs pt-1">General settings cannot be edited yet.</p>
               </div>
@@ -1302,36 +1300,36 @@ export default function SettingsPage() {
                 </button>
               </div>
               <div className="space-y-4">
-                <div>
-                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">Name</label>
+                <FormField label="Name" htmlFor="role-name">
                   <input
+                    id="role-name"
                     type="text"
                     value={roleForm.name}
                     onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value, slug: editingRole ? roleForm.slug : e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                     placeholder="e.g. Project Manager"
                     className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
-                </div>
-                <div>
-                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">Slug</label>
+                </FormField>
+                <FormField label="Slug" htmlFor="role-slug">
                   <input
+                    id="role-slug"
                     type="text"
                     value={roleForm.slug}
                     onChange={(e) => setRoleForm({ ...roleForm, slug: e.target.value })}
                     placeholder="e.g. project-manager"
                     className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
-                </div>
-                <div>
-                  <label className="text-surface-500 mb-1 block text-xs font-semibold uppercase tracking-wider">Description</label>
+                </FormField>
+                <FormField label="Description" htmlFor="role-description">
                   <input
+                    id="role-description"
                     type="text"
                     value={roleForm.description}
                     onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
                     placeholder="Optional description"
                     className="border-surface-300/30 bg-surface-100 focus:border-brand-500 focus:ring-brand-500/20 w-full rounded-xl border px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2"
                   />
-                </div>
+                </FormField>
                 <div>
                   <label className="text-surface-500 mb-2 block text-xs font-semibold uppercase tracking-wider">Permissions</label>
                   <div className="border-surface-300/30 max-h-64 space-y-3 overflow-y-auto rounded-xl border p-3">
