@@ -65,7 +65,10 @@ test.describe('Project Detail Page', () => {
     // Task rows
     await expect(page.getByText('Design the new homepage')).toBeVisible();
     await expect(page.getByText('Migrate the blog content')).toBeVisible();
-    await expect(page.getByText('WM-1001').first()).toBeVisible();
+    // The task-code (ID) column is intentionally collapsed below the `sm`
+    // breakpoint, so assert it renders rather than that it's visible — this
+    // keeps the check correct on mobile viewports too.
+    await expect(page.getByText('WM-1001').first()).toBeAttached();
 
     // Task title links to the task detail page
     await expect(page.getByRole('link', { name: 'Design the new homepage' })).toHaveAttribute(
