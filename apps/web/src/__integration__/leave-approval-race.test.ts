@@ -119,4 +119,44 @@ describe.skipIf(!hasTestDb)('WM-001 — concurrent leave approval is atomic', ()
 
     expect(await approveOnce(reqId, orgId, reviewerId)).toBe('invalid_state');
   });
+
+  it('applies every deduction when different requests on one balance are approved at once (no lost update)', async () => {
+    const orgId = await insertOrg();
+    const userId = await insertUser();
+    const reviewerId = await insertUser();
+    const leaveTypeId = await insertLeaveType(orgId);
+    // One shared balance; two distinct pending requests of 3 days each.
+    await insertLeaveBalance(orgId, userId, leaveTypeId, 2026, { allocated: 20, used: 0, pending: 6 });
+    const reqA = await insertLeaveRequest(orgId, userId, leaveTypeId, {
+      daysCount: 3,
+      startDate: '2026-03-02',
+    });
+    const reqB = await insertLeaveRequest(orgId, userId, leaveTypeId, {
+      daysCount: 3,
+      startDate: '2026-04-02',
+    });
+
+    // Approve both at the same instant.
+    const [oA, oB] = await Promise.all([
+      approveOnce(reqA, orgId, reviewerId),
+      approveOnce(reqB, orgId, reviewerId),
+    ]);
+    expect(oA).toBe('ok');
+    expect(oB).toBe('ok');
+
+    // Both deductions must land on the shared balance row. The route uses an
+    // atomic `used + daysCount` SQL increment; a read-modify-write would have
+    // lost one of the two concurrent updates (final used=3 instead of 6).
+    const [bal] = await testDb()
+      .select({ used: schema.leaveBalances.usedDays, pending: schema.leaveBalances.pendingDays })
+      .from(schema.leaveBalances)
+      .where(
+        and(
+          eq(schema.leaveBalances.userId, userId),
+          eq(schema.leaveBalances.leaveTypeId, leaveTypeId),
+        ),
+      );
+    expect(bal!.used).toBe(6);
+    expect(bal!.pending).toBe(0);
+  });
 });
