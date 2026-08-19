@@ -268,11 +268,19 @@ export function Sidebar() {
                       className={cn(
                         'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                         isActive
-                          ? 'bg-brand-500/12 text-brand-500 active-neon shadow-sm shadow-brand-500/10'
+                          ? 'from-brand-500/[0.16] to-brand-500/[0.04] text-brand-500 active-neon bg-gradient-to-r shadow-sm shadow-brand-500/10'
                           : 'text-surface-600 hover:bg-surface-200/60 hover:text-surface-800',
                       )}
                       title={collapsed && !isMobile ? item.label : undefined}
                     >
+                      {/* Active indicator — a left accent rail (the canonical vertical-nav cue) */}
+                      {isActive && (
+                        <motion.span
+                          layoutId="activeNavIndicator"
+                          className="bg-brand-500 shadow-brand-500/50 absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full shadow-[0_0_6px]"
+                          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                      )}
                       <div className="relative">
                         <item.icon
                           className={cn(
@@ -296,17 +304,7 @@ export function Sidebar() {
                         )}
                       </div>
                       {(!collapsed || isMobile) && (
-                        <span className="relative">
-                          {item.label}
-                          {/* Active indicator underline */}
-                          {isActive && (
-                            <motion.span
-                              layoutId="activeNavIndicator"
-                              className="bg-brand-500 absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full"
-                              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            />
-                          )}
-                        </span>
+                        <span className="relative">{item.label}</span>
                       )}
 
                       {/* Subtle glow on hover for active items */}
