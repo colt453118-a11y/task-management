@@ -4,6 +4,8 @@ import { db, schema, handleApiError } from '@/lib/api/db';
 import { withAuth, requirePermission } from '@/lib/auth/api-auth';
 import { eq, and } from 'drizzle-orm';
 import { createHmac } from 'crypto';
+import { isPublicWebhookUrl } from '@/lib/webhooks/url-guard';
+import { safeWebhookDispatcher } from '@/lib/webhooks/pinned-lookup';
 
 export const runtime = 'nodejs';
 
@@ -72,6 +74,14 @@ export const POST = withAuth(
 
       // Attempt to send the webhook
       try {
+        // SSRF guard + connect-time IP pinning (mirrors the delivery path):
+        // reject literal private hosts and pin the socket to a validated public
+        // IP so a public host that resolves to an internal address is blocked.
+        const guard = isPublicWebhookUrl(subscription.url);
+        if (!guard.ok) {
+          throw new Error(`Blocked: ${guard.reason}`);
+        }
+
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -86,7 +96,9 @@ export const POST = withAuth(
           },
           body: payloadJson,
           signal: controller.signal,
-        });
+          redirect: 'error',
+          dispatcher: safeWebhookDispatcher,
+        } as RequestInit & { dispatcher: unknown });
 
         clearTimeout(timeout);
 
