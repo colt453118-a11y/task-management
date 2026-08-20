@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SettingsPage from '@/app/(dashboard)/settings/page';
+import { SettingsClient } from '@/app/(dashboard)/settings/settings-client';
 
 // ─── Hoisted mocks ───────────────────────────────
 vi.mock('@/lib/notification-sound', () => ({
@@ -164,7 +164,7 @@ describe('Channel Toggle Interactions', () => {
 
   it('toggles email channel off and on', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -188,7 +188,7 @@ describe('Channel Toggle Interactions', () => {
 
   it('toggles in-app channel off', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -206,7 +206,7 @@ describe('Channel Toggle Interactions', () => {
 
   it('enables slack channel toggle when connected', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -218,7 +218,7 @@ describe('Channel Toggle Interactions', () => {
 
   it('disables slack channel toggle when not connected', async () => {
     setupFetchMock(undefined, { integration: null });
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -230,7 +230,7 @@ describe('Channel Toggle Interactions', () => {
 
   it('disables push toggle (coming soon)', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -251,7 +251,7 @@ describe('Per-Event Channel Toggle Interactions', () => {
 
   it('toggles email for task assigned event', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -277,7 +277,7 @@ describe('Per-Event Channel Toggle Interactions', () => {
 
   it('toggles slack for new comment event', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -303,7 +303,7 @@ describe('Per-Event Channel Toggle Interactions', () => {
 
   it('independently toggles channels for different events', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -339,7 +339,7 @@ describe('Save Flow Interactions', () => {
 
   it('saves modified preferences and shows success', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -370,7 +370,7 @@ describe('Save Flow Interactions', () => {
 
   it('saves per-event channel override', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -412,7 +412,7 @@ describe('Save Flow Interactions', () => {
       return Promise.resolve(new Response(JSON.stringify({})));
     });
 
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -457,7 +457,7 @@ describe('Save Flow Interactions', () => {
       return Promise.resolve(new Response(JSON.stringify({})));
     });
 
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -486,7 +486,7 @@ describe('Digest Toggle Interactions', () => {
 
   it('toggles digest on and shows frequency selector', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -509,7 +509,7 @@ describe('Digest Toggle Interactions', () => {
 
   it('hides frequency selector when digest is toggled off', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -533,7 +533,7 @@ describe('Digest Toggle Interactions', () => {
 
   it('changes digest frequency', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -569,7 +569,7 @@ describe('Keyboard Shortcut Interactions', () => {
 
   it('navigates to notifications tab with key 7', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await waitFor(() => {
       expect(screen.getByText('General')).toBeInTheDocument();
     });
@@ -583,7 +583,7 @@ describe('Keyboard Shortcut Interactions', () => {
 
   it('navigates back to general tab with key 1', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await waitFor(() => {
       expect(screen.getByText('General')).toBeInTheDocument();
     });
@@ -603,7 +603,7 @@ describe('Keyboard Shortcut Interactions', () => {
 
   it('keyboard shortcuts only work on window, not inputs', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await waitFor(() => {
       expect(screen.getByText('General')).toBeInTheDocument();
     });
@@ -633,7 +633,7 @@ describe('Edge Case Interactions', () => {
 
   it('handles rapid toggle clicks', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
@@ -667,7 +667,7 @@ describe('Edge Case Interactions', () => {
       return Promise.resolve(new Response(JSON.stringify({})));
     });
 
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
 
     // Wait for loading to complete
@@ -697,7 +697,7 @@ describe('Edge Case Interactions', () => {
       return Promise.resolve(new Response(JSON.stringify({})));
     });
 
-    render(<SettingsPage />);
+    render(<SettingsClient />);
     await openNotificationsTab();
     await waitForPrefsLoaded();
 
