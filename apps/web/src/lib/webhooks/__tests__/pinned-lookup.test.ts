@@ -34,6 +34,17 @@ describe('pinnedLookup — webhook SSRF / DNS-rebinding pin', () => {
     expect(err!.code).toBe('EAI_BLOCKED');
   });
 
+  it('blocks an IPv4-mapped IPv6 that embeds the metadata IP (::ffff:169.254.169.254)', () => {
+    const lookup = makePinnedLookup(
+      resolverReturning([{ address: '::ffff:169.254.169.254', family: 6 }]),
+    );
+    let err: NodeJS.ErrnoException | null = null;
+    lookup('rebind.example.com', {}, (e) => {
+      err = e;
+    });
+    expect(err!.code).toBe('EAI_BLOCKED');
+  });
+
   it('fails closed when ANY resolved address is private (mixed public + private)', () => {
     const lookup = makePinnedLookup(
       resolverReturning([

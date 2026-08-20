@@ -15,6 +15,15 @@ describe('isPublicWebhookUrl — webhook SSRF guard (WM-007)', () => {
     'http://192.168.1.1/',
     'http://0.0.0.0/',
     'http://[::1]/',
+    // IPv4-mapped IPv6 pointing at loopback / cloud metadata (DNS-rebind + literal bypass)
+    'http://[::ffff:127.0.0.1]/',
+    'http://[::ffff:169.254.169.254]/',
+    'http://[::ffff:10.0.0.1]/',
+    // NAT64 (64:ff9b::/96) embedding cloud metadata
+    'http://[64:ff9b::a9fe:a9fe]/',
+    // Carrier-grade NAT (100.64.0.0/10) — reachable internal infra
+    'http://100.64.0.1/',
+    'http://100.127.255.255/',
     'ftp://example.com/',
     'file:///etc/passwd',
     'gopher://example.com/',
@@ -25,6 +34,8 @@ describe('isPublicWebhookUrl — webhook SSRF guard (WM-007)', () => {
     'http://example.com:8080/hook',
     'https://api.github.com/repos/x',
     'http://172.32.0.1/', // just outside the private 172.16/12 range
+    'http://100.128.0.1/', // just outside the 100.64/10 CGNAT range
+    'http://[::ffff:8.8.8.8]/', // IPv4-mapped but a public address — RFC-correct to allow
   ];
 
   it.each(blocked)('blocks %s', (u) => {
