@@ -12,6 +12,24 @@ charts, automation emails, reports, teams, kanban, calendar, dashboard). Repo:
 Monorepo: pnpm + Turbo; `apps/web` (Next.js App Router + Tailwind + Radix UI),
 alert-service, drizzle ORM + Postgres.
 
+## LCP-RSC rollout — shipped (Phase 3c, 2026-08-20)
+
+All dashboard pages are now React Server Components that seed their initial data
+server-side via `serverFetchJson`, instead of `'use client'` shells that fetched
+after paint. This phase finished the last **7** pages (one PR each, squash-merged):
+milestones #149, notifications #150, calendar #151, gantt #152, reports #153,
+analytics #154, **settings #155** (final `main` 5006a09). Same-harness LCP
+(`scripts/measure-lcp.mjs`, prod build, CPU ×4) dropped **~73–89%** on 6 routes
+(to ~160–260 ms); settings only −10% because just its general-tab org form is
+seeded. Full write-up (recipe, before/after table, gotchas): **`docs/perf/LCP-RSC-ROLLOUT.md`**.
+
+- Web unit suite is now **1609 tests / 89 files** green (was 1526).
+- **Prod-build gotcha:** `next start` doesn't support `output: standalone`; run
+  `node .next/standalone/apps/web/server.js` with `.next/static`+`public` copied
+  in and a `BETTER_AUTH_SECRET` set, or prod auth 500s and you measure the login
+  page. `serverFetchJson` returns null without a valid cookie, so E2E specs
+  (fake session) keep exercising the old client path unchanged.
+
 ## Current baseline (post #57/#58, 2026-08-05)
 
 - **E2E (Playwright):** 311 tests — 311 passed · 0 failed · 0 skipped · 0 flaky
