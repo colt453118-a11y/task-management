@@ -14,7 +14,7 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────
 
-interface EODSettings {
+export interface EODSettings {
   preferredTime: string;
   aiSummaryEnabled: boolean;
 }
@@ -35,7 +35,7 @@ const TIME_OPTIONS = [
   { value: '23:59', label: 'End of day (11:59 PM)' },
 ];
 
-const DEFAULT_SETTINGS: EODSettings = {
+export const DEFAULT_EOD_SETTINGS: EODSettings = {
   preferredTime: '17:00',
   aiSummaryEnabled: true,
 };
@@ -66,13 +66,21 @@ function Toggle({ enabled, onChange, disabled, ariaLabel }: { enabled: boolean; 
 
 // ─── Component ──────────────────────────────────────────────
 
-export function EODScheduleSettings() {
-  const [loading, setLoading] = useState(true);
+export function EODScheduleSettings({
+  initialSettings = null,
+}: {
+  initialSettings?: EODSettings | null;
+} = {}) {
+  // When the parent seeds the EOD settings from the server-rendered organization
+  // payload, paint immediately (this card's description is the settings page's
+  // LCP element) instead of showing a shimmer until a client fetch resolves.
+  const [hadInitial] = useState(() => initialSettings != null);
+  const [loading, setLoading] = useState(initialSettings == null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const [settings, setSettings] = useState<EODSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<EODSettings>(initialSettings ?? DEFAULT_EOD_SETTINGS);
 
   // ── Fetch current settings ─────────────────────────────
   const fetchSettings = useCallback(async () => {
@@ -84,8 +92,8 @@ export function EODScheduleSettings() {
       if (org?.settings?.eod) {
         const eod = org.settings.eod as EODSettings;
         setSettings({
-          preferredTime: eod.preferredTime ?? DEFAULT_SETTINGS.preferredTime,
-          aiSummaryEnabled: eod.aiSummaryEnabled ?? DEFAULT_SETTINGS.aiSummaryEnabled,
+          preferredTime: eod.preferredTime ?? DEFAULT_EOD_SETTINGS.preferredTime,
+          aiSummaryEnabled: eod.aiSummaryEnabled ?? DEFAULT_EOD_SETTINGS.aiSummaryEnabled,
         });
       }
     } catch (err) {
@@ -96,10 +104,12 @@ export function EODScheduleSettings() {
   }, []);
 
   useEffect(() => {
+    // The server already seeded these settings — skip the redundant mount fetch.
+    if (hadInitial) return;
     startTransition(() => {
       fetchSettings();
     });
-  }, [fetchSettings]);
+  }, [fetchSettings, hadInitial]);
 
   // ── Save settings ──────────────────────────────────────
   const saveSettings = async () => {

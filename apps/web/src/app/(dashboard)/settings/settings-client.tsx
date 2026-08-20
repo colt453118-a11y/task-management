@@ -41,7 +41,11 @@ import {
 
 import { AISettings } from '@/components/settings/ai-settings';
 import { WebhookSettings } from '@/components/settings/webhook-settings';
-import { EODScheduleSettings } from '@/components/settings/eod-schedule-settings';
+import {
+  EODScheduleSettings,
+  DEFAULT_EOD_SETTINGS,
+  type EODSettings,
+} from '@/components/settings/eod-schedule-settings';
 import { SlackSettings } from '@/components/settings/slack-settings';
 import { setMediaPrefs } from '@/lib/notification-media';
 import { useToast } from '@/hooks/use-toast';
@@ -275,6 +279,13 @@ export function SettingsClient({ initialOrg = null }: { initialOrg?: Organizatio
   // When the server seeded the org, paint the general tab immediately (no
   // shimmer, no fade-in) so it becomes the LCP without a client round-trip.
   const [hadInitialData] = useState(() => initialOrg !== null);
+  // The EOD-schedule card (its description is the page's LCP element) reads the
+  // same /api/organization payload, so seed it from the org we already have:
+  // when the org loaded server-side, hand the card its settings (or defaults)
+  // to skip its client fetch; otherwise (null) let it fetch on mount as before.
+  const initialEodSettings: EODSettings | null = initialOrg
+    ? { ...DEFAULT_EOD_SETTINGS, ...((initialOrg.settings?.eod as Partial<EODSettings>) ?? {}) }
+    : null;
   const [tab, setTab] = useState<Tab>('general');
   const [org, setOrg] = useState<Organization | null>(initialOrg);
   const [loading, setLoading] = useState(initialOrg === null);
@@ -656,7 +667,10 @@ export function SettingsClient({ initialOrg = null }: { initialOrg?: Organizatio
           <motion.div
             key="general"
             variants={tabContentVariants}
-            initial="hidden"
+            // Seeded general tab (org + EOD card) is the LCP content — render it
+            // visible immediately rather than fading from opacity:0, which would
+            // delay the largest-contentful-paint even though the HTML is present.
+            initial={hadInitialData ? false : 'hidden'}
             animate="visible"
             exit="exit"
           >
@@ -693,7 +707,7 @@ export function SettingsClient({ initialOrg = null }: { initialOrg?: Organizatio
 
             {/* EOD Report Schedule */}
             <SectionCard gradient={CARD_GRADIENTS.general ?? 'from-blue-500 to-blue-400'} className="mt-6">
-              <EODScheduleSettings />
+              <EODScheduleSettings initialSettings={initialEodSettings} />
             </SectionCard>
           </motion.div>
         )}
