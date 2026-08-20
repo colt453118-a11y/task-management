@@ -207,28 +207,36 @@ endpoints with `CRON_SECRET` as a repo secret.
 ## Step 8 — Backups (do NOT skip — free tier has none)
 
 Render free Postgres has **no automated backups** and **auto-deletes after 90
-days**. Until you upgrade, the DB survives only if you export it:
+days**. Until you upgrade, the DB survives only if you export it. Two committed,
+tested scripts do this — `scripts/backup-db.sh` and `scripts/verify-restore.sh`.
+
+**Take an encrypted backup** (weekly, from a machine that can reach the DB —
+cron-job.org, crontab, or by hand). The passphrase lives in your password
+manager, never on the server:
 
 ```bash
-# Weekly (cron-job.org or crontab), from a machine with access:
-pg_dump "$PROD_DB_URL" | gzip > "wm-$(date +%F).sql.gz"
-# then copy the file off-box (cloud drive / object storage), encrypted if it
-# contains anything sensitive
+export PROD_DB_URL='postgres://wmuser:...@...:5432/workmanager'   # Render → DB → External URL
+export BACKUP_PASSPHRASE='<from your password manager>'
+./scripts/backup-db.sh
+# → writes ./backups/wm-<timestamp>.sql.gz.enc — copy that file off-box
+#   (cloud drive / object storage). Keep the passphrase OUT of the server.
 ```
 
-**Prove a restore once before relying on it:**
+**Prove the restore before relying on it** — spins a throwaway Postgres,
+restores into it, prints row counts, tears it down:
+
 ```bash
-docker run -d --name wm-restore-test -e POSTGRES_DB=workmanager \
-  -e POSTGRES_USER=wmuser -e POSTGRES_PASSWORD=wmtest \
-  -p 55433:5432 postgres:17.10-alpine
-gunzip -c wm-2026-08-05.sql.gz | \
-  PGPASSWORD=wmtest psql -h localhost -p 55433 -U wmuser -d workmanager
-# query the restored DB (e.g. count users/tasks), then tear it down
-docker rm -f wm-restore-test
+export BACKUP_FILE=backups/wm-<timestamp>.sql.gz.enc
+export BACKUP_PASSPHRASE='<same passphrase>'
+./scripts/verify-restore.sh
+# → "✓ backup restores cleanly" with organizations/users/tasks counts
 ```
 
-Untested backup = no backup. This is the last gate before pointing real users
-at the URL.
+> The round-trip (dump → encrypt → decrypt → restore → verify counts) was proven
+> locally against a seeded DB. **Re-run `verify-restore.sh` against your first
+> real production backup** before pointing users at the URL.
+
+Untested backup = no backup. This is the last gate before go-live.
 
 ## Step 9 — Rotate the leaked admin password
 
