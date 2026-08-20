@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SettingsPage from '@/app/(dashboard)/settings/page';
+import { SettingsClient } from '@/app/(dashboard)/settings/settings-client';
 import { isNotificationSoundSupported } from '@/lib/notification-sound';
 
 // ─── Hoisted mocks ───────────────────────────────
@@ -158,7 +158,7 @@ describe('Preview chime button', () => {
 
   it('renders the preview chime button next to the Sound toggle', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('Preview chime button', () => {
   it('calls playNotificationChime when clicked', async () => {
     const { playNotificationChime } = await import('@/lib/notification-sound');
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('Preview chime button', () => {
 
   it('is enabled by default when sound is on', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('Preview chime button', () => {
 
   it('is disabled when sound is toggled off', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('Preview chime button', () => {
   it('is disabled when isNotificationSoundSupported returns false', async () => {
     vi.mocked(isNotificationSoundSupported).mockReturnValue(false);
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -244,7 +244,7 @@ describe('Preview chime button', () => {
         media: { soundEnabled: true, hapticEnabled: false },
       },
     });
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -258,7 +258,7 @@ describe('Preview chime button', () => {
 
   it('starts disabled when sound is off, then becomes re-enabled when toggled back on', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -284,7 +284,7 @@ describe('Preview chime button', () => {
 
   it('toggles sound off after toggling it on twice (round-trip)', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -319,7 +319,7 @@ describe('Preview vibration button', () => {
 
   it('renders the preview vibration button next to the Vibration toggle', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -335,7 +335,7 @@ describe('Preview vibration button', () => {
   it('calls triggerHaptic with "light" when clicked', async () => {
     const { triggerHaptic } = await import('@/lib/haptics');
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -352,7 +352,7 @@ describe('Preview vibration button', () => {
 
   it('is enabled by default when haptic is on', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -366,7 +366,7 @@ describe('Preview vibration button', () => {
 
   it('is disabled when haptic is toggled off', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -391,7 +391,7 @@ describe('Preview vibration button', () => {
         media: { soundEnabled: false, hapticEnabled: true },
       },
     });
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -405,7 +405,7 @@ describe('Preview vibration button', () => {
 
   it('starts disabled when haptic is off, then becomes re-enabled when toggled back on', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -430,7 +430,7 @@ describe('Preview vibration button', () => {
 
   it('toggles haptic off after toggling it on twice (round-trip)', async () => {
     setupFetchMock();
-    render(<SettingsPage />);
+    render(<SettingsClient />);
 
     await waitFor(() => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
