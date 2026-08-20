@@ -1,7 +1,36 @@
 # Release Readiness Checklist — WorkManager
 
-> **Date:** July 30, 2026  
-> **Branch:** `chore/cleanup-dead-code-css-deps` (PR #44)
+> **Original:** July 30, 2026 (`chore/cleanup-dead-code-css-deps`, PR #44)
+> **Re-verified:** 2026-08-21 on `main` `f815ef9` (see update below)
+
+---
+
+## Update — 2026-08-21 (harden re-verify on current `main`)
+
+Verified fresh end-to-end this pass (`cross-check` green):
+
+- **Tests:** unit **1618/1618**, integration **15/15** (real DB, org-isolation +
+  concurrency invariants), E2E green in CI across chromium/firefox/mobile.
+- **Build:** prod build clean; all dashboard routes server-render.
+- **Live-smoke:** authed walk of every page + a real DB mutation round-trip → **0
+  console/page errors**.
+- **Perf:** the LCP-RSC rollout is **complete** — every `(dashboard)` page now
+  server-renders its initial data (LCP ~160–260 ms, down from 0.7–2.0 s;
+  full write-up `docs/perf/LCP-RSC-ROLLOUT.md`).
+- **Security hardening since the QA engagement:** SSRF guard now IP-pins outbound
+  webhook/Slack fetches at connect time (DNS-rebind) **and** decodes IPv4-in-IPv6
+  bypasses (`::ffff:169.254.169.254`, NAT64) + CGNAT (PRs #145/#158).
+- **Two P1s found + fixed this pass** (both proven on a prod build):
+  - `AUTH_SECRET` env-var mismatch → prod login would have 500'd on day one; now
+    honors `BETTER_AUTH_SECRET ?? AUTH_SECRET` (PR #160).
+  - Host-header SSRF in `serverFetchJson` (RSC seeding forwarded the session
+    cookie to a URL built from the client-controllable `Host` header); now calls
+    the app's own API over loopback (PR #162).
+
+Multi-tenant (org) isolation is **proven** (cross-org denied, tested under
+concurrency) — the July "no `tenant_id`" caveat is superseded; org scoping exists.
+Still operational-only (configure at `go-live`, not code blockers): **prod secrets,
+DB backups proven, data-retention policy.**
 
 ---
 
@@ -90,14 +119,21 @@
 
 ## Overall Verdict
 
-**✅ GO for internal/single-tenant launch** after:
+**✅ GO for internal / single-org (or few trusted orgs) launch** after the
+operational steps below — code is release-ready (QA verdict release-ready, no P0;
+LCP + SSRF hardening done; both P1s found this pass are fixed — `AUTH_SECRET` #160
+and the `serverFetchJson` Host-header SSRF #162):
 1. Configuring production secrets (`AUTH_SECRET`, `ENCRYPTION_KEY`, `SENTRY_DSN`, `RESEND_API_KEY`)
 2. Running database migrations and seed
-3. Verifying health checks in production
-4. Taking initial database backup
+3. Verifying health checks + a login in production (confirms the secret is set)
+4. **Backups proven** (not just configured) — and, on a free-tier DB that
+   auto-deletes after 90 days, a plan for persistent storage
+5. Merging PRs #160 + #162 first (blueprint `AUTH_SECRET` works; no Host-header cookie exfil)
 
 **❌ NO-GO for public multi-tenant SaaS** until:
-1. Tenant isolation via `tenant_id` (currently single-org per deployment)
-2. Rate limiting enforced per-tenant (currently per-user/IP)
-3. Usage quotas and billing integration
-4. Formal vulnerability disclosure policy
+1. Per-tenant rate limiting + usage quotas (limits are currently per-user/IP)
+2. Billing / plan enforcement
+3. Formal vulnerability-disclosure policy
+   _(Org-level data isolation itself is present and proven — cross-org access is
+   denied, tested under concurrency — so this is about SaaS commercial controls,
+   not data-leak risk.)_
