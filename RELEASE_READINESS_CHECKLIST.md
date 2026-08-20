@@ -20,9 +20,12 @@ Verified fresh end-to-end this pass (`cross-check` green):
 - **Security hardening since the QA engagement:** SSRF guard now IP-pins outbound
   webhook/Slack fetches at connect time (DNS-rebind) **and** decodes IPv4-in-IPv6
   bypasses (`::ffff:169.254.169.254`, NAT64) + CGNAT (PRs #145/#158).
-- **P1 fixed this pass:** the deploy blueprint set `AUTH_SECRET` but Better Auth
-  read only `BETTER_AUTH_SECRET` → prod login would have 500'd on day one. Now
-  honors either (PR #160), **proven** with an AUTH_SECRET-only prod boot.
+- **Two P1s found + fixed this pass** (both proven on a prod build):
+  - `AUTH_SECRET` env-var mismatch → prod login would have 500'd on day one; now
+    honors `BETTER_AUTH_SECRET ?? AUTH_SECRET` (PR #160).
+  - Host-header SSRF in `serverFetchJson` (RSC seeding forwarded the session
+    cookie to a URL built from the client-controllable `Host` header); now calls
+    the app's own API over loopback (PR #162).
 
 Multi-tenant (org) isolation is **proven** (cross-org denied, tested under
 concurrency) — the July "no `tenant_id`" caveat is superseded; org scoping exists.
@@ -118,13 +121,14 @@ DB backups proven, data-retention policy.**
 
 **✅ GO for internal / single-org (or few trusted orgs) launch** after the
 operational steps below — code is release-ready (QA verdict release-ready, no P0;
-LCP + SSRF hardening done; the one P1 this pass, `AUTH_SECRET`, is fixed in #160):
+LCP + SSRF hardening done; both P1s found this pass are fixed — `AUTH_SECRET` #160
+and the `serverFetchJson` Host-header SSRF #162):
 1. Configuring production secrets (`AUTH_SECRET`, `ENCRYPTION_KEY`, `SENTRY_DSN`, `RESEND_API_KEY`)
 2. Running database migrations and seed
 3. Verifying health checks + a login in production (confirms the secret is set)
 4. **Backups proven** (not just configured) — and, on a free-tier DB that
    auto-deletes after 90 days, a plan for persistent storage
-5. Merging PR #160 first (so the blueprint's `AUTH_SECRET` actually works)
+5. Merging PRs #160 + #162 first (blueprint `AUTH_SECRET` works; no Host-header cookie exfil)
 
 **❌ NO-GO for public multi-tenant SaaS** until:
 1. Per-tenant rate limiting + usage quotas (limits are currently per-user/IP)
