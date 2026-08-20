@@ -24,6 +24,14 @@ export function getAuth(): ReturnType<typeof betterAuth> {
       process.env.AUTH_URL ??
       process.env.NEXT_PUBLIC_APP_URL ??
       'http://localhost:3000',
+    // Accept either name: Better Auth's native BETTER_AUTH_SECRET or the
+    // AUTH_SECRET used by our deploy blueprint / env examples (matching the
+    // AUTH_* prefix of the OAuth secrets). Without this, a deploy that follows
+    // the docs sets AUTH_SECRET while Better Auth silently reads only
+    // BETTER_AUTH_SECRET — so production runs on the default secret and, in
+    // production mode, throws on every request. Undefined when neither is set,
+    // which keeps Better Auth's fail-closed default-secret guard intact.
+    secret: process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET,
     database: drizzleAdapter(getDb(), {
       provider: 'pg',
       schema: {
