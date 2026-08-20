@@ -22,6 +22,21 @@ A comprehensive security audit found **0 critical**, **3 high**, **2 moderate**,
 
 ---
 
+## Update — 2026-08-21 (harden re-verify on `main` f815ef9)
+
+Incremental pass after the LCP-RSC rollout. New findings:
+
+| # | Severity | Finding | Impact | Fix |
+| -- | -------- | ------- | ------ | --- |
+| 10 | **P1 — High** | **Auth secret env-var mismatch.** Deploy blueprint (`render.yaml`, `.env.production.example`, `DEPLOYMENT.md`) sets `AUTH_SECRET`, but Better Auth reads only `BETTER_AUTH_SECRET` — so a by-the-docs deploy runs on the built-in **default secret**, which throws on every request in production. | Prod login **500s on day one**; reproduced against a prod standalone boot. | **✅ Fixed** — `secret: BETTER_AUTH_SECRET ?? AUTH_SECRET` (PR #160); proven with an `AUTH_SECRET`-only prod boot (health + login 200, no default-secret error). |
+| 11 | **Hardening (positive)** | **SSRF DNS-rebinding + IPv4-in-IPv6.** Outbound webhook/Slack fetches now pin the connection to a validated public IP at connect time (custom undici dispatcher, `redirect:'error'`), and the host guard decodes IPv4-mapped (`::ffff:169.254.169.254`), NAT64 (`64:ff9b::`) and CGNAT (`100.64/10`) that previously bypassed it. | Closes server-side request forgery to loopback / cloud metadata / internal ranges. | **✅ Shipped** — PRs #145, #158 (with rebind + mapped-address negative tests). |
+
+The prior audit's defense layers (authn/authz/CSRF/XSS/SQLi/headers/rate-limit/
+audit-log) were re-confirmed unchanged by this session's work (RSC conversions
+reuse the same hardened, cookie-forwarded API routes — no authz duplicated).
+
+---
+
 ## Findings
 
 ### P1 — High Severity (All Fixed)
