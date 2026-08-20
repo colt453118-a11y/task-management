@@ -15,7 +15,10 @@ import { headers } from 'next/headers';
  * is not ok, or when parsing fails, so callers can fall back to client-side
  * fetching and the page degrades gracefully.
  */
-export async function serverFetchJson<T = unknown>(path: string): Promise<T | null> {
+export async function serverFetchJson<T = unknown>(
+  path: string,
+  init?: { method?: string; body?: string },
+): Promise<T | null> {
   try {
     const h = await headers();
     const cookie = h.get('cookie') ?? '';
@@ -26,7 +29,12 @@ export async function serverFetchJson<T = unknown>(path: string): Promise<T | nu
     const proto = h.get('x-forwarded-proto') ?? 'http';
 
     const res = await fetch(`${proto}://${host}${path}`, {
-      headers: { cookie },
+      method: init?.method ?? 'GET',
+      headers: {
+        cookie,
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: init?.body,
       cache: 'no-store',
     });
     if (!res.ok) return null;
