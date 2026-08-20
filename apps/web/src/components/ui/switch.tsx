@@ -27,6 +27,8 @@ const Switch = React.forwardRef<
     />
   </SwitchPrimitives.Root>
 ));
-Switch.displayName = SwitchPrimitives.Root.displayName;
+// Set an explicit name rather than inheriting from the Radix primitive, which
+// stopped exposing `displayName` in newer versions.
+Switch.displayName = 'Switch';
 
 export { Switch };

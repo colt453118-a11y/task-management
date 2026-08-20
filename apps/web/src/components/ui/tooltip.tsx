@@ -9,6 +9,9 @@ const TooltipProvider = TooltipPrimitive.Provider;
 const Tooltip = TooltipPrimitive.Root;
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
+// Newer Radix versions no longer set `displayName` on the primitives; name it
+// explicitly so it stays legible in React DevTools (and stable for tests).
+TooltipTrigger.displayName = 'TooltipTrigger';
 
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
@@ -28,6 +31,6 @@ const TooltipContent = React.forwardRef<
     {...props}
   />
 ));
-TooltipContent.displayName = TooltipPrimitive.Content.displayName;
+TooltipContent.displayName = 'TooltipContent';
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
